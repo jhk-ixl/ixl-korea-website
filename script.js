@@ -1,0 +1,1 @@
+console.log("IXL Korea Website Loaded");

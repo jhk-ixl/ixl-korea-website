@@ -1,0 +1,36 @@
+# =========================================
+# IXL KOREA WEBSITE - GIT IGNORE
+# =========================================
+
+
+# Backup / working copies
+*최종*.html
+*최종*.css
+
+
+# PowerPoint source / working files
+*.pptx
+
+
+# Local / old working folders
+Formspree/
+Insights/
+
+
+# Unused image files
+images/hero-innovation1.png
+images/hero-innovation2.png
+images/akaio-logo.png
+images/gimi-logo.png
+images/ixl-center-logo.png
+images/logos.avif
+
+
+# Unused Insights content
+insightscontent/Audit Pitch deck_clients.pdf
+
+# Original large AKAIO video
+insightscontent/AKAIO-1.0-Product-Launch-Spanish-Subtitles.mp4
+
+# FFmpeg temporary pass files
+insightscontent/akaio-pass*
