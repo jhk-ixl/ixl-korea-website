@@ -79,6 +79,15 @@
       "url": "https://www.youtube.com/watch?v=f_iHVWSs5cE",
       "asset": "",
       "featured": true
+    },
+    {
+      "featured": false,
+      "type": "news",
+      "date": "2026-08-11",
+      "dateLabel": "August 11, 2026",
+      "title": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024​",
+      "summary": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024 CAMBRIDGE, Mass. — August 11, 2026 — The Global Innovation",
+      "url": "https://www.giminstitute.org/global-innovation-management-institute-becomes-worlds-first-and-only-innovation-management-body-accredited-to-iso-iec-17024/"
     }
   ]
 }
