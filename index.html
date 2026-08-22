@@ -1605,10 +1605,9 @@ document.addEventListener('click', function (e) {
     }
 });
 </script>
-<script src="insightscontent/insights-data.js"></script>
 <script>
 (function () {
-    const insightsContent = window.insightsContent || [];
+    let insightsContent = [];
 
     const typeConfig = {
         news: {panel:'news', latestLabel:'LATEST NEWS', selectedLabel:'SELECTED NEWS', archiveTitle:'All News', action:'Read More →'},
@@ -1619,6 +1618,10 @@ document.addEventListener('click', function (e) {
 
     function isExternalUrl(url) {
         return /^https?:\/\//i.test(url || '');
+    }
+
+    function itemUrl(item) {
+        return item.asset || item.url || '#';
     }
 
     function needsNewTab(url) {
@@ -1633,8 +1636,9 @@ document.addEventListener('click', function (e) {
     }
 
     function actionLinkHtml(item, config) {
-        const target = needsNewTab(item.url) ? ' target="_blank" rel="noopener noreferrer"' : '';
-        return `<a href="${item.url}"${target}>${config.action}</a>`;
+        const url = itemUrl(item);
+        const target = needsNewTab(url) ? ' target="_blank" rel="noopener noreferrer"' : '';
+        return `<a href="${url}"${target}>${config.action}</a>`;
     }
 
     function featuredHtml(item, config, isLatest) {
@@ -1706,12 +1710,40 @@ document.addEventListener('click', function (e) {
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
+    function renderAllInsights() {
         renderType('news');
         renderType('article');
         renderType('video');
         renderType('external');
-    });
+    }
+
+    async function loadInsights() {
+        try {
+            const response = await fetch('insightscontent/insights-data.json', {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+            insightsContent = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+            renderAllInsights();
+        } catch (error) {
+            console.error('Failed to load Insights data:', error);
+            document.querySelectorAll(
+                '.insights-panel[data-panel="news"], ' +
+                '.insights-panel[data-panel="article"], ' +
+                '.insights-panel[data-panel="video"], ' +
+                '.insights-panel[data-panel="links"]'
+            ).forEach(function (panel) {
+                panel.innerHTML = '<div class="insights-empty">Insights content could not be loaded.</div>';
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInsights);
 })();
 </script>
 
