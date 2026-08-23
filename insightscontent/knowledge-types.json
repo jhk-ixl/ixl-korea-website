@@ -43,6 +43,10 @@
     {
       "name": "Project Knowledge",
       "description": "Lessons, insights and reusable knowledge generated from projects."
+    },
+    {
+      "name": "foresight",
+      "description": "Future scenarios, emerging trends and strategic foresight knowledge."
     }
   ]
 }
