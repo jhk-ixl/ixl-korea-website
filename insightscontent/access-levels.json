@@ -1,0 +1,24 @@
+{
+  "accessLevels": [
+    {
+      "name": "Public",
+      "description": "Content available to all website visitors."
+    },
+    {
+      "name": "Members",
+      "description": "Content available to registered IXL Korea community members."
+    },
+    {
+      "name": "Professionals",
+      "description": "Content available to approved professionals and expert participants."
+    },
+    {
+      "name": "Clients",
+      "description": "Content available to authorized client organizations and project participants."
+    },
+    {
+      "name": "Internal",
+      "description": "Content restricted to IXL Korea internal users and administrators."
+    }
+  ]
+}

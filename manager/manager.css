@@ -546,3 +546,19 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+.knowledge-topics {
+  min-width: 180px;
+}
+
+.topic-tag {
+  display: inline-block;
+  margin: 2px 5px 2px 0;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #eef7f1;
+  color: #14804a;
+  font-size: 11px;
+  font-weight: 700;
+}

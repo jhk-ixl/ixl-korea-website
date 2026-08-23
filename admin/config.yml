@@ -1,4 +1,5 @@
 # IXL KOREA CMS — GitHub production backend
+
 backend:
   name: github
   repo: jhk-ixl/ixl-korea-website
@@ -14,6 +15,7 @@ collections:
 
   - name: "insights"
     label: "Insights"
+
     files:
       - name: "insights_content"
         label: "Insights Content"
@@ -35,6 +37,28 @@ collections:
                   - { label: "Article", value: "article" }
                   - { label: "Video", value: "video" }
                   - { label: "External Link", value: "external" }
+
+              - label: "Topics"
+                name: "topics"
+                widget: "list"
+                required: false
+                allow_add: true
+                field:
+                  label: "Topic"
+                  name: "topic"
+                  widget: "string"
+                hint: "Add one or more topics. Topic master data is managed in Knowledge Management > Topics."
+
+              - label: "Access Level"
+                name: "access"
+                widget: "select"
+                options:
+                  - { label: "Public", value: "Public" }
+                  - { label: "Members", value: "Members" }
+                  - { label: "Professionals", value: "Professionals" }
+                  - { label: "Clients", value: "Clients" }
+                  - { label: "Internal", value: "Internal" }
+                default: "Public"
 
               - label: "Date"
                 name: "date"
@@ -86,6 +110,56 @@ collections:
         fields:
           - label: "Types"
             name: "types"
+            widget: "list"
+            summary: "{{fields.name}}"
+
+            fields:
+              - label: "Name"
+                name: "name"
+                widget: "string"
+
+              - label: "Description"
+                name: "description"
+                widget: "text"
+
+
+  - name: "topics"
+    label: "Topics"
+
+    files:
+      - name: "topics_data"
+        label: "Topics"
+        file: "insightscontent/topics.json"
+        format: "json"
+
+        fields:
+          - label: "Topics"
+            name: "topics"
+            widget: "list"
+            summary: "{{fields.name}}"
+
+            fields:
+              - label: "Name"
+                name: "name"
+                widget: "string"
+
+              - label: "Description"
+                name: "description"
+                widget: "text"
+
+
+  - name: "access_levels"
+    label: "Access Levels"
+
+    files:
+      - name: "access_levels_data"
+        label: "Access Levels"
+        file: "insightscontent/access-levels.json"
+        format: "json"
+
+        fields:
+          - label: "Access Levels"
+            name: "accessLevels"
             widget: "list"
             summary: "{{fields.name}}"
 

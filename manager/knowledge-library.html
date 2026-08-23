@@ -85,14 +85,15 @@
 
       <table class="library-table">
         <thead>
-          <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Title</th>
-            <th>Access</th>
-            <th>Featured</th>
-            <th>Open</th>
-          </tr>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Topics</th>
+                <th>Access</th>
+                <th>Featured</th>
+                <th>Open</th>
+            </tr>
         </thead>
 
         <tbody id="knowledge-table-body">
@@ -114,11 +115,31 @@
     return item.asset || item.url || '';
   }
 
+  function getKnowledgeTopics(item) {
+    if (Array.isArray(item.topics)) {
+      return item.topics.filter(Boolean);
+    }
+
+    if (item.topic) {
+      return [item.topic];
+    }
+
+    return [];
+  }
+
   function createRow(item) {
     const url = getKnowledgeUrl(item);
 
     const access = item.access || 'Public';
     const featured = item.featured ? 'Yes' : 'No';
+
+    const topics = getKnowledgeTopics(item);
+
+    const topicsHtml = topics.length
+      ? topics
+          .map(topic => `<span class="topic-tag">${topic}</span>`)
+          .join('')
+      : '—';
 
     let openLink = '—';
 
@@ -149,6 +170,10 @@
           ${item.title || ''}
         </td>
 
+        <td class="knowledge-topics">
+          ${topicsHtml}
+        </td>
+
         <td>${access}</td>
 
         <td>${featured}</td>
@@ -157,7 +182,6 @@
       </tr>
     `;
   }
-
 
   function renderKnowledge(items) {
     const tableBody =
@@ -169,9 +193,7 @@
     const count =
       document.getElementById('knowledge-count');
 
-
     count.textContent = items.length;
-
 
     if (!items.length) {
       tableBody.innerHTML = '';
@@ -184,13 +206,11 @@
       return;
     }
 
-
     tableBody.innerHTML =
       items.map(createRow).join('');
 
     empty.style.display = 'none';
   }
-
 
   function buildTypeFilter(items) {
     const select =
@@ -203,7 +223,6 @@
           .filter(Boolean)
       )
     ].sort();
-
 
     types.forEach(type => {
       const option =
@@ -220,7 +239,6 @@
     });
   }
 
-
   function filterKnowledge() {
     const searchValue =
       document
@@ -229,12 +247,10 @@
         .trim()
         .toLowerCase();
 
-
     const selectedType =
       document
         .getElementById('knowledge-type-filter')
         .value;
-
 
     const filtered =
       allKnowledgeItems.filter(item => {
@@ -251,36 +267,38 @@
         const dateLabel =
           (item.dateLabel || '').toLowerCase();
 
+        const access =
+          (item.access || 'Public').toLowerCase();
+
+        const topics =
+          getKnowledgeTopics(item)
+            .join(' ')
+            .toLowerCase();
 
         const matchesType =
           selectedType === 'all' ||
           type === selectedType;
-
 
         const matchesSearch =
           !searchValue ||
           title.includes(searchValue) ||
           summary.includes(searchValue) ||
           type.includes(searchValue) ||
-          dateLabel.includes(searchValue);
-
+          dateLabel.includes(searchValue) ||
+          access.includes(searchValue) ||
+          topics.includes(searchValue);
 
         return matchesType && matchesSearch;
       });
 
-
     renderKnowledge(filtered);
   }
 
-
   async function loadKnowledgeLibrary() {
-
     const empty =
       document.getElementById('library-empty');
 
-
     try {
-
       const response =
         await fetch(
           '../insightscontent/insights-data.json',
@@ -289,17 +307,14 @@
           }
         );
 
-
       if (!response.ok) {
         throw new Error(
           'HTTP ' + response.status
         );
       }
 
-
       const data =
         await response.json();
-
 
       allKnowledgeItems =
         Array.isArray(data)
@@ -310,23 +325,19 @@
                 : []
             );
 
-
       allKnowledgeItems.sort(
         (a, b) =>
           new Date(b.date || 0) -
           new Date(a.date || 0)
       );
 
-
       buildTypeFilter(
         allKnowledgeItems
       );
 
-
       renderKnowledge(
         allKnowledgeItems
       );
-
 
       document
         .getElementById('knowledge-search')
@@ -335,7 +346,6 @@
           filterKnowledge
         );
 
-
       document
         .getElementById('knowledge-type-filter')
         .addEventListener(
@@ -343,9 +353,7 @@
           filterKnowledge
         );
 
-
     } catch (error) {
-
       console.error(
         'Failed to load Knowledge Library:',
         error
@@ -355,7 +363,6 @@
         'Knowledge data could not be loaded.';
     }
   }
-
 
   document.addEventListener(
     'DOMContentLoaded',

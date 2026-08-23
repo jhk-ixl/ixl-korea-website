@@ -1,0 +1,41 @@
+{
+  "topics": [
+    {
+      "name": "Innovation Management",
+      "description": "Innovation management systems, methods, standards and organizational capabilities."
+    },
+    {
+      "name": "Growth Strategy",
+      "description": "Growth opportunities, market development and strategic growth."
+    },
+    {
+      "name": "Foresight",
+      "description": "Trends, scenarios, uncertainty and future-oriented strategic thinking."
+    },
+    {
+      "name": "Innovation Opportunities",
+      "description": "Opportunity discovery, evaluation and development."
+    },
+    {
+      "name": "Concept Development",
+      "description": "Idea generation, concept design and innovation concepts."
+    },
+    {
+      "name": "Implementation",
+      "description": "Experimentation, commercialization and innovation implementation."
+    },
+    {
+      "name": "ISO 56001",
+      "description": "Innovation management system standards, readiness, audit and certification."
+    },
+    {
+      "name": "Professional Certification",
+      "description": "Innovation professional development and certification."
+    },
+    {
+      "name": "AI for Innovation",
+      "description": "Artificial intelligence applications for innovation and knowledge work."
+    }
+  ]
+}
+
