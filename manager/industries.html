@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Industries | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+
+      <h2>Industries</h2>
+
+      <p>
+        
+        Manage flexible industry classifications used to organize and connect
+        innovation knowledge across the IXL Korea ecosystem.
+      
+      </p>
+    </section>
+
+
+    <section class="type-toolbar">
+
+      <div>
+        <strong id="industry-count">0</strong>
+        <span>Industries</span>
+      </div>
+
+      <div class="library-actions">
+
+        <a href="../admin/#/collections/industries" class="library-button primary">
+          Add / Edit Industries
+        </a>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <section class="type-grid" id="industry-grid">
+    </section>
+
+  </main>
+
+
+  <script>
+    let industries = [];
+
+    function renderIndustries() {
+
+      const grid =
+        document.getElementById('industry-grid');
+
+      const count =
+        document.getElementById('industry-count');
+
+      count.textContent =
+        industries.length;
+
+      grid.innerHTML =
+        industries.map((industry, index) => {
+
+          const number =
+            String(index + 1).padStart(2, '0');
+
+          return `
+            <article class="type-card">
+              <span>${number}</span>
+              <h3>${industry.name}</h3>
+              <p>${industry.description || ''}</p>
+            </article>
+          `;
+
+        }).join('');
+    }
+
+
+    async function loadIndustries() {
+
+      try {
+
+        const response =
+          await fetch(
+            '../insightscontent/industries.json',
+            {
+              cache: 'no-store'
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            'HTTP ' + response.status
+          );
+        }
+
+        const data =
+          await response.json();
+
+        industries =
+          Array.isArray(data.industries)
+            ? data.industries
+            : [];
+
+        renderIndustries();
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load Industries:',
+          error
+        );
+
+        document.getElementById(
+          'industry-grid'
+        ).innerHTML =
+          '<p>Industries could not be loaded.</p>';
+
+        document.getElementById(
+          'industry-count'
+        ).textContent =
+          '0';
+      }
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadIndustries
+    );
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "industries": [
+    {
+      "name": "Energy & Battery",
+      "description": "Energy, batteries, cathode materials and related technologies."
+    },
+    {
+      "name": "Automotive & Mobility",
+      "description": "Automotive, mobility and future transportation."
+    },
+    {
+      "name": "Chemicals & Materials",
+      "description": "Chemicals, advanced materials and industrial materials."
+    },
+    {
+      "name": "Healthcare & Life Sciences",
+      "description": "Healthcare, diagnostics, therapeutics and life sciences."
+    },
+    {
+      "name": "Technology & AI",
+      "description": "Digital technologies, artificial intelligence and software."
+    },
+    {
+      "name": "Education",
+      "description": "Universities, education and professional learning."
+    }
+  ]
+}

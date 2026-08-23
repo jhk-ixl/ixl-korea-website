@@ -49,6 +49,17 @@ collections:
                   widget: "string"
                 hint: "Add one or more topics. Topic master data is managed in Knowledge Management > Topics."
 
+              - label: "Industries"
+                name: "industries"
+                widget: "list"
+                required: false
+                allow_add: true
+                field:
+                  label: "Industry"
+                  name: "industry"
+                  widget: "string"
+                hint: "Add one or more industries. Industry master data is managed in Knowledge Management > Industries."  
+
               - label: "Access Level"
                 name: "access"
                 widget: "select"
@@ -171,3 +182,27 @@ collections:
               - label: "Description"
                 name: "description"
                 widget: "text"
+
+  - name: "industries"
+    label: "Industries"
+
+    files:
+      - name: "industries_data"
+        label: "Industries"
+        file: "insightscontent/industries.json"
+        format: "json"
+
+        fields:
+          - label: "Industries"
+            name: "industries"
+            widget: "list"
+            summary: "{{fields.name}}"
+
+            fields:
+              - label: "Name"
+                name: "name"
+                widget: "string"
+
+              - label: "Description"
+                name: "description"
+                widget: "text"                
