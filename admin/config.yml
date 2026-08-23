@@ -11,6 +11,7 @@ media_folder: "insightscontent/uploads"
 public_folder: "/insightscontent/uploads"
 
 collections:
+
   - name: "insights"
     label: "Insights"
     files:
@@ -18,11 +19,13 @@ collections:
         label: "Insights Content"
         file: "insightscontent/insights-data.json"
         format: "json"
+
         fields:
           - label: "Items"
             name: "items"
             widget: "list"
             summary: "{{fields.date}} · {{fields.type}} · {{fields.title}}"
+
             fields:
               - label: "Type"
                 name: "type"
@@ -32,33 +35,65 @@ collections:
                   - { label: "Article", value: "article" }
                   - { label: "Video", value: "video" }
                   - { label: "External Link", value: "external" }
+
               - label: "Date"
                 name: "date"
                 widget: "datetime"
                 date_format: "YYYY-MM-DD"
                 time_format: false
                 format: "YYYY-MM-DD"
+
               - label: "Display Label"
                 name: "dateLabel"
                 widget: "string"
                 hint: "Examples: AUG 2026, MAY 2024, AKAIO 1.0"
+
               - label: "Title"
                 name: "title"
                 widget: "string"
+
               - label: "Summary"
                 name: "summary"
                 widget: "text"
+
               - label: "External / Existing URL"
                 name: "url"
                 widget: "string"
                 required: false
                 hint: "Use for YouTube, external websites, or an existing file path."
+
               - label: "Upload PDF / Video / File"
                 name: "asset"
                 widget: "file"
                 required: false
                 hint: "If both Upload and URL are entered, the uploaded file is used."
+
               - label: "Featured"
                 name: "featured"
                 widget: "boolean"
                 default: false
+
+
+  - name: "knowledge_types"
+    label: "Knowledge Types"
+
+    files:
+      - name: "knowledge_types_data"
+        label: "Knowledge Types"
+        file: "insightscontent/knowledge-types.json"
+        format: "json"
+
+        fields:
+          - label: "Types"
+            name: "types"
+            widget: "list"
+            summary: "{{fields.name}}"
+
+            fields:
+              - label: "Name"
+                name: "name"
+                widget: "string"
+
+              - label: "Description"
+                name: "description"
+                widget: "text"

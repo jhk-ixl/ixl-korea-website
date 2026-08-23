@@ -1,0 +1,48 @@
+{
+  "types": [
+    {
+      "name": "News",
+      "description": "Announcements, updates and timely innovation developments."
+    },
+    {
+      "name": "Article",
+      "description": "Insights, perspectives and thought leadership content."
+    },
+    {
+      "name": "Video",
+      "description": "Video-based knowledge, interviews, presentations and events."
+    },
+    {
+      "name": "External Resource",
+      "description": "Selected external websites, references and knowledge resources."
+    },
+    {
+      "name": "Case",
+      "description": "Innovation cases, project experiences and business applications."
+    },
+    {
+      "name": "Research",
+      "description": "Research findings, studies, evidence and analytical material."
+    },
+    {
+      "name": "Framework",
+      "description": "Innovation frameworks, methodologies and structured approaches."
+    },
+    {
+      "name": "Report",
+      "description": "Reports, white papers, assessments and analytical publications."
+    },
+    {
+      "name": "Presentation",
+      "description": "Presentation materials, briefings and executive content."
+    },
+    {
+      "name": "Learning Material",
+      "description": "Education, workshop, university and certification materials."
+    },
+    {
+      "name": "Project Knowledge",
+      "description": "Lessons, insights and reusable knowledge generated from projects."
+    }
+  ]
+}

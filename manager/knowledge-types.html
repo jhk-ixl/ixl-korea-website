@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Knowledge Types | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+
+      <h2>Knowledge Types</h2>
+
+      <p>
+        Manage the different forms of knowledge used across the IXL Korea
+        Innovation Knowledge Ecosystem. Knowledge types are designed to expand
+        as new content and use cases emerge.
+      </p>
+    </section>
+
+
+    <section class="type-toolbar">
+
+      <div>
+        <strong id="type-count">11</strong>
+        <span>Knowledge Types</span>
+      </div>
+
+      <div class="library-actions">
+        <button class="library-button primary" type="button" id="add-type-button">
+          + Add Knowledge Type
+        </button>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+      </div>
+
+    </section>
+
+
+    <section class="type-grid" id="type-grid">
+
+
+
+    </section>
+
+  </main>
+
+    <script>
+    let knowledgeTypes = [];
+
+    function renderKnowledgeTypes() {
+        const grid = document.getElementById('type-grid');
+        const count = document.getElementById('type-count');
+
+        count.textContent = knowledgeTypes.length;
+
+        grid.innerHTML = knowledgeTypes.map((type, index) => {
+        const number = String(index + 1).padStart(2, '0');
+
+        return `
+            <article class="type-card">
+            <span>${number}</span>
+            <h3>${type.name}</h3>
+            <p>${type.description || ''}</p>
+            </article>
+        `;
+        }).join('');
+    }
+
+    async function loadKnowledgeTypes() {
+        try {
+        const response = await fetch(
+            '../insightscontent/knowledge-types.json',
+            {
+            cache: 'no-store'
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
+
+        const data = await response.json();
+
+        knowledgeTypes = Array.isArray(data.types)
+            ? data.types
+            : [];
+
+        renderKnowledgeTypes();
+
+        } catch (error) {
+        console.error('Failed to load Knowledge Types:', error);
+
+        document.getElementById('type-grid').innerHTML =
+            '<p>Knowledge Types could not be loaded.</p>';
+
+        document.getElementById('type-count').textContent = '0';
+        }
+    }
+
+    document
+        .getElementById('add-type-button')
+        .addEventListener('click', function () {
+
+        const name = window.prompt(
+            'Enter a new Knowledge Type name:'
+        );
+
+        if (!name || !name.trim()) return;
+
+        knowledgeTypes.push({
+            name: name.trim(),
+            description: 'New knowledge type. Description can be defined later.'
+        });
+
+        renderKnowledgeTypes();
+
+        alert(
+            'The new type is currently temporary. Persistent saving will be connected in the next step.'
+        );
+        });
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        loadKnowledgeTypes
+    );
+    </script>
+ 
+
+</body>
+</html>
