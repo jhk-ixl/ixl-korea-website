@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>tags | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+
+      <h2>tags</h2>
+
+      <p>
+        
+        Manage flexible tags used to classify, connect and discover
+        knowledge across the IXL Korea ecosystem.
+        
+      </p>
+    </section>
+
+
+    <section class="type-toolbar">
+
+      <div>
+        <strong id="tag-count">0</strong>
+        <span>tags</span>
+      </div>
+
+      <div class="library-actions">
+
+        <a
+          href="../admin/#/collections/tags"
+          class="library-button primary"
+        >
+          Add / Edit tags
+        </a>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <section class="type-grid" id="tag-grid">
+    </section>
+
+  </main>
+
+
+  <script>
+    let tags = [];
+
+    function renderPrograms() {
+      const grid =
+        document.getElementById('tag-grid');
+
+      const count =
+        document.getElementById('tag-count');
+
+      count.textContent =
+        tags.length;
+
+      grid.innerHTML =
+        tags.map((tag, index) => {
+
+          const number =
+            String(index + 1).padStart(2, '0');
+
+          return `
+            <article class="type-card">
+              <span>${number}</span>
+              <h3>${tag.name}</h3>
+              <p>${tag.description || ''}</p>
+            </article>
+          `;
+
+        }).join('');
+    }
+
+
+    async function loadPrograms() {
+      try {
+
+        const response =
+          await fetch(
+            '../insightscontent/tags.json',
+            {
+              cache: 'no-store'
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            'HTTP ' + response.status
+          );
+        }
+
+        const data =
+          await response.json();
+
+        tags =
+          Array.isArray(data.tags)
+            ? data.tags
+            : [];
+
+        renderPrograms();
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load tags:',
+          error
+        );
+
+        document.getElementById(
+          'tag-grid'
+        ).innerHTML =
+          '<p>tags could not be loaded.</p>';
+
+        document.getElementById(
+          'tag-count'
+        ).textContent =
+          '0';
+      }
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadPrograms
+    );
+  </script>
+
+</body>
+</html>

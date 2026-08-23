@@ -121,6 +121,7 @@
             <th>Topics</th>
             <th>Industries</th>
             <th>Programs</th>
+            <th>Tags</th>
             <th>Access</th>
             <th>Featured</th>
             <th>Open</th>
@@ -195,6 +196,19 @@
     }
 
 
+
+    function getKnowledgeTags(item) {
+        if (Array.isArray(item.tags)) {
+            return item.tags.filter(Boolean);
+        }
+
+        if (item.tag) {
+            return [item.tag];
+        }
+
+        return [];
+    }
+
     function createRow(item) {
 
       const url = getKnowledgeUrl(item);
@@ -214,6 +228,9 @@
 
       const programs =
         getKnowledgePrograms(item);
+
+      const tags =
+        getKnowledgeTags(item);
 
 
       const topicsHtml =
@@ -248,6 +265,15 @@
               .join('')
           : '—';
 
+      const tagsHtml =
+        tags.length
+            ? tags
+                .map(
+                tag =>
+                    `<span class="tag-tag">${tag}</span>`
+                )
+                .join('')
+            : '—';
 
       let openLink = '—';
 
@@ -304,6 +330,9 @@
             ${programsHtml}
           </td>
 
+          <td class="knowledge-tags">
+            ${tagsHtml}
+            </td>
 
           <td>
             ${access}
@@ -481,6 +510,10 @@
                 .join(' ')
                 .toLowerCase();
 
+            const tags =
+                getKnowledgeTags(item)
+                    .join(' ')
+                    .toLowerCase();    
 
             const matchesType =
               selectedType === 'all' ||
@@ -496,7 +529,8 @@
               access.includes(searchValue) ||
               topics.includes(searchValue) ||
               industries.includes(searchValue) ||
-              programs.includes(searchValue);
+              programs.includes(searchValue) ||
+              tags.includes(searchValue);
 
 
             return (

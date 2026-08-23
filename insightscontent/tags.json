@@ -1,0 +1,36 @@
+{
+  "tags": [
+    {
+      "name": "AI",
+      "description": "Artificial intelligence and AI-enabled innovation."
+    },
+    {
+      "name": "ISO",
+      "description": "ISO standards, certification and management systems."
+    },
+    {
+      "name": "CIP",
+      "description": "Certified Innovation Professional and related professional development."
+    },
+    {
+      "name": "Foresight",
+      "description": "Future trends, scenarios and strategic foresight."
+    },
+    {
+      "name": "Open Innovation",
+      "description": "External collaboration, ecosystems and open innovation."
+    },
+    {
+      "name": "Growth",
+      "description": "Growth opportunities, strategy and market development."
+    },
+    {
+      "name": "Innovation Capability",
+      "description": "Innovation skills, organizational capability and maturity."
+    },
+    {
+      "name": "University",
+      "description": "University programs, education and academic collaboration."
+    }
+  ]
+}
