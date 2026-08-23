@@ -1,14 +1,18 @@
 {
   "items": [
     {
-      "type": "news",
-      "date": "2026-08-01",
-      "dateLabel": "AUG 2026",
-      "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
+      "topics": [
+        "Certification",
+        "Innovation Management"
+      ],
       "summary": "The Global Innovation Management Institute (GIMI) announced that its professional certification framework is accredited to ISO/IEC 17024 (IAS PCB-169), strengthening independent recognition of innovation-management professional competence and the global portability of the CIP credential.",
+      "dateLabel": "AUG 2026",
+      "featured": true,
+      "date": "2026-08-01",
       "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
       "asset": "",
-      "featured": true
+      "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
+      "type": "news"
     },
     {
       "type": "article",
