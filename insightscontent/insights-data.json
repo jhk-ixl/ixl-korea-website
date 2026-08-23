@@ -10,6 +10,9 @@
       "featured": true,
       "date": "2026-08-01",
       "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
+      "programs": [
+        "CIP Certification"
+      ],
       "asset": "",
       "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
       "type": "news",
