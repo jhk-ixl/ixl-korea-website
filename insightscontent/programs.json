@@ -1,0 +1,28 @@
+{
+  "programs": [
+    {
+      "name": "Innovation Olympics",
+      "description": "Action-learning innovation program connecting real business challenges with structured innovation projects."
+    },
+    {
+      "name": "IXLerator",
+      "description": "Innovation acceleration program supporting pursuit, validation and implementation of growth opportunities."
+    },
+    {
+      "name": "Jump Start",
+      "description": "Innovation assessment and capability-development program using IPA and OIA."
+    },
+    {
+      "name": "CIP Certification",
+      "description": "Professional innovation-management certification program based on GIMI methodology."
+    },
+    {
+      "name": "ISO 56001",
+      "description": "Innovation Management System development, readiness and certification program."
+    },
+    {
+      "name": "AKAIO",
+      "description": "AI-powered innovation platform implementation and application program."
+    }
+  ]
+}

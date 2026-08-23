@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Programs | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+
+      <h2>Programs</h2>
+
+      <p>
+        Manage flexible program classifications used to organize and connect
+        innovation knowledge across the IXL Korea ecosystem.
+      </p>
+    </section>
+
+
+    <section class="type-toolbar">
+
+      <div>
+        <strong id="program-count">0</strong>
+        <span>Programs</span>
+      </div>
+
+      <div class="library-actions">
+
+        <a
+          href="../admin/#/collections/programs"
+          class="library-button primary"
+        >
+          Add / Edit Programs
+        </a>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <section class="type-grid" id="program-grid">
+    </section>
+
+  </main>
+
+
+  <script>
+    let programs = [];
+
+    function renderPrograms() {
+      const grid =
+        document.getElementById('program-grid');
+
+      const count =
+        document.getElementById('program-count');
+
+      count.textContent =
+        programs.length;
+
+      grid.innerHTML =
+        programs.map((program, index) => {
+
+          const number =
+            String(index + 1).padStart(2, '0');
+
+          return `
+            <article class="type-card">
+              <span>${number}</span>
+              <h3>${program.name}</h3>
+              <p>${program.description || ''}</p>
+            </article>
+          `;
+
+        }).join('');
+    }
+
+
+    async function loadPrograms() {
+      try {
+
+        const response =
+          await fetch(
+            '../insightscontent/programs.json',
+            {
+              cache: 'no-store'
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            'HTTP ' + response.status
+          );
+        }
+
+        const data =
+          await response.json();
+
+        programs =
+          Array.isArray(data.programs)
+            ? data.programs
+            : [];
+
+        renderPrograms();
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load Programs:',
+          error
+        );
+
+        document.getElementById(
+          'program-grid'
+        ).innerHTML =
+          '<p>Programs could not be loaded.</p>';
+
+        document.getElementById(
+          'program-count'
+        ).textContent =
+          '0';
+      }
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadPrograms
+    );
+  </script>
+
+</body>
+</html>

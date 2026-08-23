@@ -32,25 +32,38 @@
 
   </header>
 
+
   <main class="manager-main">
 
     <section class="manager-intro">
-      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+
+      <span class="section-eyebrow">
+        KNOWLEDGE MANAGEMENT
+      </span>
+
       <h2>Knowledge Library</h2>
+
       <p>
         Browse and review the knowledge currently available in the IXL Korea ecosystem.
-        This library will later expand to support flexible types, topics, industries,
-        programs, access levels and tags.
+        This library supports flexible types, topics, industries, programs,
+        access levels and future knowledge classifications.
       </p>
+
     </section>
 
+
     <section class="library-toolbar">
+
       <div class="library-count">
+
         <strong id="knowledge-count">0</strong>
         <span>Knowledge Items</span>
+
       </div>
 
+
       <div class="library-actions">
+
         <a href="../admin/" class="library-button primary">
           Add / Edit Knowledge
         </a>
@@ -58,47 +71,68 @@
         <a href="knowledge.html" class="library-button">
           Back to Knowledge Hub
         </a>
+
       </div>
+
     </section>
 
-<section class="library-filters">
 
-  <div class="library-search">
-    <label for="knowledge-search">Search</label>
-    <input
-      type="search"
-      id="knowledge-search"
-      placeholder="Search title, summary or type..."
-    >
-  </div>
+    <section class="library-filters">
 
-  <div class="library-filter">
-    <label for="knowledge-type-filter">Type</label>
-    <select id="knowledge-type-filter">
-      <option value="all">All Types</option>
-    </select>
-  </div>
+      <div class="library-search">
 
-</section>
+        <label for="knowledge-search">
+          Search
+        </label>
+
+        <input
+          type="search"
+          id="knowledge-search"
+          placeholder="Search title, summary, type, topic, industry or program..."
+        >
+
+      </div>
+
+
+      <div class="library-filter">
+
+        <label for="knowledge-type-filter">
+          Type
+        </label>
+
+        <select id="knowledge-type-filter">
+          <option value="all">All Types</option>
+        </select>
+
+      </div>
+
+    </section>
+
 
     <section class="library-table-wrap">
 
       <table class="library-table">
+
         <thead>
-            <tr>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Title</th>
-                <th>Topics</th>
-                <th>Access</th>
-                <th>Featured</th>
-                <th>Open</th>
-            </tr>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Topics</th>
+            <th>Industries</th>
+            <th>Programs</th>
+            <th>Access</th>
+            <th>Featured</th>
+            <th>Open</th>
+          </tr>
         </thead>
+
 
         <tbody id="knowledge-table-body">
         </tbody>
+
       </table>
+
 
       <div id="library-empty" class="library-empty">
         Loading knowledge...
@@ -108,267 +142,480 @@
 
   </main>
 
-<script>
-  let allKnowledgeItems = [];
 
-  function getKnowledgeUrl(item) {
-    return item.asset || item.url || '';
-  }
+  <script>
 
-  function getKnowledgeTopics(item) {
-    if (Array.isArray(item.topics)) {
-      return item.topics.filter(Boolean);
+    let allKnowledgeItems = [];
+
+
+    function getKnowledgeUrl(item) {
+      return item.asset || item.url || '';
     }
 
-    if (item.topic) {
-      return [item.topic];
+
+    function getKnowledgeTopics(item) {
+
+      if (Array.isArray(item.topics)) {
+        return item.topics.filter(Boolean);
+      }
+
+      if (item.topic) {
+        return [item.topic];
+      }
+
+      return [];
     }
 
-    return [];
-  }
 
-  function createRow(item) {
-    const url = getKnowledgeUrl(item);
+    function getKnowledgeIndustries(item) {
 
-    const access = item.access || 'Public';
-    const featured = item.featured ? 'Yes' : 'No';
+      if (Array.isArray(item.industries)) {
+        return item.industries.filter(Boolean);
+      }
 
-    const topics = getKnowledgeTopics(item);
+      if (item.industry) {
+        return [item.industry];
+      }
 
-    const topicsHtml = topics.length
-      ? topics
-          .map(topic => `<span class="topic-tag">${topic}</span>`)
-          .join('')
-      : '—';
-
-    let openLink = '—';
-
-    if (url) {
-      const isExternal =
-        url.startsWith('http://') ||
-        url.startsWith('https://');
-
-      const finalUrl = isExternal
-        ? url
-        : '../' + url.replace(/^\/+/, '');
-
-      openLink =
-        `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">Open ↗</a>`;
+      return [];
     }
 
-    return `
-      <tr>
-        <td>${item.dateLabel || item.date || ''}</td>
 
-        <td>
-          <span class="knowledge-type">
-            ${item.type || 'Unclassified'}
-          </span>
-        </td>
+    function getKnowledgePrograms(item) {
 
-        <td class="knowledge-title">
-          ${item.title || ''}
-        </td>
+      if (Array.isArray(item.programs)) {
+        return item.programs.filter(Boolean);
+      }
 
-        <td class="knowledge-topics">
-          ${topicsHtml}
-        </td>
+      if (item.program) {
+        return [item.program];
+      }
 
-        <td>${access}</td>
-
-        <td>${featured}</td>
-
-        <td>${openLink}</td>
-      </tr>
-    `;
-  }
-
-  function renderKnowledge(items) {
-    const tableBody =
-      document.getElementById('knowledge-table-body');
-
-    const empty =
-      document.getElementById('library-empty');
-
-    const count =
-      document.getElementById('knowledge-count');
-
-    count.textContent = items.length;
-
-    if (!items.length) {
-      tableBody.innerHTML = '';
-
-      empty.textContent =
-        'No knowledge matches your search.';
-
-      empty.style.display = 'block';
-
-      return;
+      return [];
     }
 
-    tableBody.innerHTML =
-      items.map(createRow).join('');
 
-    empty.style.display = 'none';
-  }
+    function createRow(item) {
 
-  function buildTypeFilter(items) {
-    const select =
-      document.getElementById('knowledge-type-filter');
+      const url = getKnowledgeUrl(item);
 
-    const types = [
-      ...new Set(
+      const access =
+        item.access || 'Public';
+
+      const featured =
+        item.featured ? 'Yes' : 'No';
+
+
+      const topics =
+        getKnowledgeTopics(item);
+
+      const industries =
+        getKnowledgeIndustries(item);
+
+      const programs =
+        getKnowledgePrograms(item);
+
+
+      const topicsHtml =
+        topics.length
+          ? topics
+              .map(
+                topic =>
+                  `<span class="topic-tag">${topic}</span>`
+              )
+              .join('')
+          : '—';
+
+
+      const industriesHtml =
+        industries.length
+          ? industries
+              .map(
+                industry =>
+                  `<span class="industry-tag">${industry}</span>`
+              )
+              .join('')
+          : '—';
+
+
+      const programsHtml =
+        programs.length
+          ? programs
+              .map(
+                program =>
+                  `<span class="program-tag">${program}</span>`
+              )
+              .join('')
+          : '—';
+
+
+      let openLink = '—';
+
+
+      if (url) {
+
+        const isExternal =
+          url.startsWith('http://') ||
+          url.startsWith('https://');
+
+
+        const finalUrl =
+          isExternal
+            ? url
+            : '../' + url.replace(/^\/+/, '');
+
+
+        openLink =
+          `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">Open ↗</a>`;
+      }
+
+
+      return `
+        <tr>
+
+          <td>
+            ${item.dateLabel || item.date || ''}
+          </td>
+
+
+          <td>
+            <span class="knowledge-type">
+              ${item.type || 'Unclassified'}
+            </span>
+          </td>
+
+
+          <td class="knowledge-title">
+            ${item.title || ''}
+          </td>
+
+
+          <td class="knowledge-topics">
+            ${topicsHtml}
+          </td>
+
+
+          <td class="knowledge-industries">
+            ${industriesHtml}
+          </td>
+
+
+          <td class="knowledge-programs">
+            ${programsHtml}
+          </td>
+
+
+          <td>
+            ${access}
+          </td>
+
+
+          <td>
+            ${featured}
+          </td>
+
+
+          <td>
+            ${openLink}
+          </td>
+
+        </tr>
+      `;
+    }
+
+
+    function renderKnowledge(items) {
+
+      const tableBody =
+        document.getElementById(
+          'knowledge-table-body'
+        );
+
+
+      const empty =
+        document.getElementById(
+          'library-empty'
+        );
+
+
+      const count =
+        document.getElementById(
+          'knowledge-count'
+        );
+
+
+      count.textContent =
+        items.length;
+
+
+      if (!items.length) {
+
+        tableBody.innerHTML = '';
+
+        empty.textContent =
+          'No knowledge matches your search.';
+
+        empty.style.display =
+          'block';
+
+        return;
+      }
+
+
+      tableBody.innerHTML =
         items
-          .map(item => item.type)
-          .filter(Boolean)
-      )
-    ].sort();
+          .map(createRow)
+          .join('');
 
-    types.forEach(type => {
-      const option =
-        document.createElement('option');
 
-      option.value =
-        type.toLowerCase();
+      empty.style.display =
+        'none';
+    }
 
-      option.textContent =
-        type.charAt(0).toUpperCase() +
-        type.slice(1);
 
-      select.appendChild(option);
-    });
-  }
+    function buildTypeFilter(items) {
 
-  function filterKnowledge() {
-    const searchValue =
-      document
-        .getElementById('knowledge-search')
-        .value
-        .trim()
-        .toLowerCase();
+      const select =
+        document.getElementById(
+          'knowledge-type-filter'
+        );
 
-    const selectedType =
-      document
-        .getElementById('knowledge-type-filter')
-        .value;
 
-    const filtered =
-      allKnowledgeItems.filter(item => {
+      const types = [
+        ...new Set(
+          items
+            .map(item => item.type)
+            .filter(Boolean)
+        )
+      ].sort();
 
-        const type =
-          (item.type || '').toLowerCase();
 
-        const title =
-          (item.title || '').toLowerCase();
+      types.forEach(type => {
 
-        const summary =
-          (item.summary || '').toLowerCase();
+        const option =
+          document.createElement(
+            'option'
+          );
 
-        const dateLabel =
-          (item.dateLabel || '').toLowerCase();
 
-        const access =
-          (item.access || 'Public').toLowerCase();
+        option.value =
+          type.toLowerCase();
 
-        const topics =
-          getKnowledgeTopics(item)
-            .join(' ')
-            .toLowerCase();
 
-        const matchesType =
-          selectedType === 'all' ||
-          type === selectedType;
+        option.textContent =
+          type.charAt(0).toUpperCase() +
+          type.slice(1);
 
-        const matchesSearch =
-          !searchValue ||
-          title.includes(searchValue) ||
-          summary.includes(searchValue) ||
-          type.includes(searchValue) ||
-          dateLabel.includes(searchValue) ||
-          access.includes(searchValue) ||
-          topics.includes(searchValue);
 
-        return matchesType && matchesSearch;
+        select.appendChild(
+          option
+        );
       });
+    }
 
-    renderKnowledge(filtered);
-  }
 
-  async function loadKnowledgeLibrary() {
-    const empty =
-      document.getElementById('library-empty');
+    function filterKnowledge() {
 
-    try {
-      const response =
-        await fetch(
-          '../insightscontent/insights-data.json',
-          {
-            cache: 'no-store'
+      const searchValue =
+        document
+          .getElementById(
+            'knowledge-search'
+          )
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const selectedType =
+        document
+          .getElementById(
+            'knowledge-type-filter'
+          )
+          .value;
+
+
+      const filtered =
+        allKnowledgeItems.filter(
+          item => {
+
+
+            const type =
+              (item.type || '')
+                .toLowerCase();
+
+
+            const title =
+              (item.title || '')
+                .toLowerCase();
+
+
+            const summary =
+              (item.summary || '')
+                .toLowerCase();
+
+
+            const dateLabel =
+              (item.dateLabel || '')
+                .toLowerCase();
+
+
+            const access =
+              (item.access || 'Public')
+                .toLowerCase();
+
+
+            const topics =
+              getKnowledgeTopics(item)
+                .join(' ')
+                .toLowerCase();
+
+
+            const industries =
+              getKnowledgeIndustries(item)
+                .join(' ')
+                .toLowerCase();
+
+
+            const programs =
+              getKnowledgePrograms(item)
+                .join(' ')
+                .toLowerCase();
+
+
+            const matchesType =
+              selectedType === 'all' ||
+              type === selectedType;
+
+
+            const matchesSearch =
+              !searchValue ||
+              title.includes(searchValue) ||
+              summary.includes(searchValue) ||
+              type.includes(searchValue) ||
+              dateLabel.includes(searchValue) ||
+              access.includes(searchValue) ||
+              topics.includes(searchValue) ||
+              industries.includes(searchValue) ||
+              programs.includes(searchValue);
+
+
+            return (
+              matchesType &&
+              matchesSearch
+            );
           }
         );
 
-      if (!response.ok) {
-        throw new Error(
-          'HTTP ' + response.status
-        );
-      }
-
-      const data =
-        await response.json();
-
-      allKnowledgeItems =
-        Array.isArray(data)
-          ? data
-          : (
-              Array.isArray(data.items)
-                ? data.items
-                : []
-            );
-
-      allKnowledgeItems.sort(
-        (a, b) =>
-          new Date(b.date || 0) -
-          new Date(a.date || 0)
-      );
-
-      buildTypeFilter(
-        allKnowledgeItems
-      );
 
       renderKnowledge(
-        allKnowledgeItems
+        filtered
       );
-
-      document
-        .getElementById('knowledge-search')
-        .addEventListener(
-          'input',
-          filterKnowledge
-        );
-
-      document
-        .getElementById('knowledge-type-filter')
-        .addEventListener(
-          'change',
-          filterKnowledge
-        );
-
-    } catch (error) {
-      console.error(
-        'Failed to load Knowledge Library:',
-        error
-      );
-
-      empty.textContent =
-        'Knowledge data could not be loaded.';
     }
-  }
 
-  document.addEventListener(
-    'DOMContentLoaded',
-    loadKnowledgeLibrary
-  );
-</script>
+
+    async function loadKnowledgeLibrary() {
+
+      const empty =
+        document.getElementById(
+          'library-empty'
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+            '../insightscontent/insights-data.json',
+            {
+              cache: 'no-store'
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            'HTTP ' +
+            response.status
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        allKnowledgeItems =
+          Array.isArray(data)
+            ? data
+            : (
+                Array.isArray(data.items)
+                  ? data.items
+                  : []
+              );
+
+
+        allKnowledgeItems.sort(
+          (a, b) =>
+            new Date(
+              b.date || 0
+            ) -
+            new Date(
+              a.date || 0
+            )
+        );
+
+
+        buildTypeFilter(
+          allKnowledgeItems
+        );
+
+
+        renderKnowledge(
+          allKnowledgeItems
+        );
+
+
+        document
+          .getElementById(
+            'knowledge-search'
+          )
+          .addEventListener(
+            'input',
+            filterKnowledge
+          );
+
+
+        document
+          .getElementById(
+            'knowledge-type-filter'
+          )
+          .addEventListener(
+            'change',
+            filterKnowledge
+          );
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load Knowledge Library:',
+          error
+        );
+
+
+        empty.textContent =
+          'Knowledge data could not be loaded.';
+      }
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadKnowledgeLibrary
+    );
+
+  </script>
 
 </body>
 </html>

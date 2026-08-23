@@ -562,3 +562,33 @@ body {
   font-size: 11px;
   font-weight: 700;
 }
+
+.knowledge-industries {
+  min-width: 180px;
+}
+
+.industry-tag {
+  display: inline-block;
+  margin: 2px 5px 2px 0;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #eef3f8;
+  color: #344054;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.knowledge-programs {
+  min-width: 170px;
+}
+
+.program-tag {
+  display: inline-block;
+  margin: 2px 5px 2px 0;
+  padding: 4px 8px;
+  border-radius: 20px;
+  background: #f3f0fa;
+  color: #51456b;
+  font-size: 11px;
+  font-weight: 700;
+}

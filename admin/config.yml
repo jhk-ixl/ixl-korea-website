@@ -59,6 +59,18 @@ collections:
                   name: "industry"
                   widget: "string"
                 hint: "Add one or more industries. Industry master data is managed in Knowledge Management > Industries."  
+              
+              
+              - label: "Programs"
+                name: "programs"
+                widget: "list"
+                required: false
+                allow_add: true
+                field:
+                  label: "Program"
+                  name: "program"
+                  widget: "string"
+                hint: "Add one or more programs. Program master data is managed in Knowledge Management > Programs."              
 
               - label: "Access Level"
                 name: "access"
@@ -195,6 +207,30 @@ collections:
         fields:
           - label: "Industries"
             name: "industries"
+            widget: "list"
+            summary: "{{fields.name}}"
+
+            fields:
+              - label: "Name"
+                name: "name"
+                widget: "string"
+
+              - label: "Description"
+                name: "description"
+                widget: "text"                
+
+  - name: "programs"
+    label: "Programs"
+
+    files:
+      - name: "programs_data"
+        label: "Programs"
+        file: "insightscontent/programs.json"
+        format: "json"
+
+        fields:
+          - label: "Programs"
+            name: "programs"
             widget: "list"
             summary: "{{fields.name}}"
 
