@@ -12,7 +12,10 @@
       "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
       "asset": "",
       "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
-      "type": "news"
+      "type": "news",
+      "industries": [
+        "Energy & Battery"
+      ]
     },
     {
       "type": "article",
