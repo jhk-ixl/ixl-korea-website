@@ -2,22 +2,45 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Distribution Queue | IXL Korea Manager</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <link rel="stylesheet" href="manager.css">
+  <title>
+    Distribution Queue | IXL Korea Manager
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="manager.css"
+  >
+
 </head>
 
 
 <body>
 
+
+  <!-- =========================================
+       HEADER
+       ========================================= -->
+
   <header class="manager-header">
 
     <div class="manager-brand">
-      <h1>IXL KOREA MANAGER</h1>
-      <p>Innovation Knowledge Ecosystem Control Center</p>
+
+      <h1>
+        IXL KOREA MANAGER
+      </h1>
+
+      <p>
+        Innovation Knowledge Ecosystem Control Center
+      </p>
+
     </div>
 
 
@@ -31,7 +54,10 @@
         Knowledge
       </a>
 
-      <a href="distribution.html" class="active">
+      <a
+        href="distribution.html"
+        class="active"
+      >
         Distribution
       </a>
 
@@ -55,7 +81,6 @@
         System
       </a>
 
-
       <a
         href="../index.html"
         class="website-link"
@@ -68,6 +93,10 @@
   </header>
 
 
+
+  <!-- =========================================
+       MAIN
+       ========================================= -->
 
   <main class="manager-main">
 
@@ -200,7 +229,7 @@
         id="queue-empty"
         class="library-empty"
       >
-        Loading distribution queue from GitHub...
+        Loading distribution queue...
       </div>
 
     </section>
@@ -212,43 +241,18 @@
   <script>
 
     /* =========================================
-       GITHUB DATA SOURCE
+       DATA SOURCE
+       VERCEL API
        ========================================= */
 
-    const GITHUB_OWNER =
-      'jhk-ixl';
-
-    const GITHUB_REPO =
-      'ixl-korea-website';
-
-    const GITHUB_BRANCH =
-      'master';
-
-    const QUEUE_FOLDER =
-      'insightscontent/distributionqueue';
+    const DISTRIBUTION_QUEUE_API =
+      '/api/distribution-queue';
 
 
 
     /* =========================================
        HELPERS
        ========================================= */
-
-    function getQueueApiUrl() {
-
-      return (
-        'https://api.github.com/repos/' +
-        GITHUB_OWNER +
-        '/' +
-        GITHUB_REPO +
-        '/contents/' +
-        QUEUE_FOLDER +
-        '?ref=' +
-        GITHUB_BRANCH
-      );
-
-    }
-
-
 
     function getFinalLink(link) {
 
@@ -291,6 +295,36 @@
 
 
 
+    function escapeHtml(value) {
+
+      return String(
+        value ?? ''
+      )
+        .replace(
+          /&/g,
+          '&amp;'
+        )
+        .replace(
+          /</g,
+          '&lt;'
+        )
+        .replace(
+          />/g,
+          '&gt;'
+        )
+        .replace(
+          /"/g,
+          '&quot;'
+        )
+        .replace(
+          /'/g,
+          '&#039;'
+        );
+
+    }
+
+
+
     /* =========================================
        CREATE ROW
        ========================================= */
@@ -303,52 +337,100 @@
         );
 
 
+      const createdDate =
+        escapeHtml(
+          formatDate(
+            item.createdDate
+          )
+        );
+
+
+      const channel =
+        escapeHtml(
+          item.channel || '—'
+        );
+
+
+      const title =
+        escapeHtml(
+          item.title || ''
+        );
+
+
+      const status =
+        escapeHtml(
+          item.status || 'Draft'
+        );
+
+
+      const scheduledDate =
+        escapeHtml(
+          formatDate(
+            item.scheduledDate
+          )
+        );
+
+
+      const publishedDate =
+        escapeHtml(
+          formatDate(
+            item.publishedDate
+          )
+        );
+
+
+      const safeLink =
+        escapeHtml(
+          finalLink
+        );
+
+
       return `
 
         <tr>
 
           <td>
-            ${formatDate(item.createdDate)}
+            ${createdDate}
           </td>
 
 
           <td>
 
             <span class="knowledge-type">
-              ${item.channel || '—'}
+              ${channel}
             </span>
 
           </td>
 
 
           <td class="knowledge-title">
-            ${item.title || ''}
+            ${title}
           </td>
 
 
           <td>
-            ${item.status || 'Draft'}
+            ${status}
           </td>
 
 
           <td>
-            ${formatDate(item.scheduledDate)}
+            ${scheduledDate}
           </td>
 
 
           <td>
-            ${formatDate(item.publishedDate)}
+            ${publishedDate}
           </td>
 
 
           <td>
 
             ${
-              finalLink
+              safeLink
 
                 ? `
                   <a
-                    href="${finalLink}"
+                    href="${safeLink}"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -413,15 +495,17 @@
 
 
         return;
+
       }
 
 
 
       tableBody.innerHTML =
         queue
-          .map(createQueueRow)
+          .map(
+            createQueueRow
+          )
           .join('');
-
 
 
       empty.style.display =
@@ -432,50 +516,8 @@
 
 
     /* =========================================
-       LOAD ONE QUEUE FILE
-       ========================================= */
-
-    async function loadQueueFile(file) {
-
-      if (!file.download_url) {
-        return null;
-      }
-
-
-      const response =
-        await fetch(
-          file.download_url,
-          {
-            cache: 'no-store'
-          }
-        );
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          'Failed to load ' +
-          file.name
-        );
-
-      }
-
-
-      const data =
-        await response.json();
-
-
-      return {
-        ...data,
-        _fileName: file.name
-      };
-
-    }
-
-
-
-    /* =========================================
-       LOAD QUEUE FROM GITHUB
+       LOAD QUEUE
+       DATA SOURCE: VERCEL API
        ========================================= */
 
     async function loadDistributionQueue() {
@@ -486,113 +528,60 @@
         );
 
 
+      const count =
+        document.getElementById(
+          'queue-count'
+        );
+
+
       try {
+
+        empty.textContent =
+          'Loading distribution queue...';
+
 
         const response =
           await fetch(
-            getQueueApiUrl(),
+            DISTRIBUTION_QUEUE_API,
             {
+              method: 'GET',
+
               cache: 'no-store',
+
               headers: {
                 'Accept':
-                  'application/vnd.github+json'
+                  'application/json'
               }
             }
           );
 
 
-
-        /*
-          Folder does not exist yet.
-          Treat this as an empty queue.
-        */
-
-        if (response.status === 404) {
-
-          renderQueue([]);
-
-          return;
-        }
-
-
-
         if (!response.ok) {
 
           throw new Error(
-            'GitHub API HTTP ' +
+            'Distribution Queue API HTTP ' +
             response.status
           );
 
         }
 
 
-
-        const files =
+        const queue =
           await response.json();
 
 
-
-        if (!Array.isArray(files)) {
+        if (!Array.isArray(queue)) {
 
           throw new Error(
-            'Unexpected GitHub API response.'
+            'Unexpected Distribution Queue API response.'
           );
 
         }
 
 
-
-        const jsonFiles =
-          files.filter(
-            file =>
-              file.type === 'file' &&
-              file.name
-                .toLowerCase()
-                .endsWith('.json')
-          );
-
-
-
-        const results =
-          await Promise.all(
-            jsonFiles.map(
-              loadQueueFile
-            )
-          );
-
-
-
-        const queue =
-          results
-            .filter(Boolean)
-            .sort(
-              (a, b) => {
-
-                const dateA =
-                  new Date(
-                    a.createdDate || 0
-                  );
-
-                const dateB =
-                  new Date(
-                    b.createdDate || 0
-                  );
-
-
-                return (
-                  dateB -
-                  dateA
-                );
-
-              }
-            );
-
-
-
         renderQueue(
           queue
         );
-
 
 
       } catch (error) {
@@ -603,8 +592,24 @@
         );
 
 
+        count.textContent =
+          '0';
+
+
+        document
+          .getElementById(
+            'queue-table-body'
+          )
+          .innerHTML =
+            '';
+
+
         empty.textContent =
-          'Distribution queue data could not be loaded from GitHub.';
+          'Distribution queue data could not be loaded.';
+
+
+        empty.style.display =
+          'block';
 
       }
 
