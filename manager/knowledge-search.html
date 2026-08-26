@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Knowledge Search | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+
+      <span class="section-eyebrow">
+        KNOWLEDGE MANAGEMENT
+      </span>
+
+      <h2>Knowledge Search</h2>
+
+      <p>
+        Search and filter knowledge across types, topics, industries,
+        programs, tags and access levels.
+      </p>
+
+    </section>
+
+
+    <section class="search-panel">
+
+      <div class="search-field search-field-wide">
+        <label for="search-keyword">Keyword</label>
+        <input
+          type="search"
+          id="search-keyword"
+          placeholder="Search title, summary or classification..."
+        >
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-type">Type</label>
+        <select id="filter-type">
+          <option value="all">All Types</option>
+        </select>
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-topic">Topic</label>
+        <select id="filter-topic">
+          <option value="all">All Topics</option>
+        </select>
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-industry">Industry</label>
+        <select id="filter-industry">
+          <option value="all">All Industries</option>
+        </select>
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-program">Program</label>
+        <select id="filter-program">
+          <option value="all">All Programs</option>
+        </select>
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-tag">Tag</label>
+        <select id="filter-tag">
+          <option value="all">All Tags</option>
+        </select>
+      </div>
+
+
+      <div class="search-field">
+        <label for="filter-access">Access</label>
+        <select id="filter-access">
+          <option value="all">All Access</option>
+        </select>
+      </div>
+
+
+      <div class="search-actions">
+        <button type="button" id="reset-search">
+          Reset Filters
+        </button>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+      </div>
+
+    </section>
+
+
+    <section class="search-summary">
+
+      <strong id="search-count">0</strong>
+      <span>Knowledge Items Found</span>
+
+    </section>
+
+
+    <section class="search-results" id="search-results">
+      Loading knowledge...
+    </section>
+
+  </main>
+
+
+  <script>
+
+    let knowledgeItems = [];
+
+
+    function normalizeArray(value) {
+      return Array.isArray(value)
+        ? value.filter(Boolean)
+        : [];
+    }
+
+
+    function uniqueValues(items, getter) {
+
+      return [
+        ...new Set(
+          items
+            .flatMap(getter)
+            .filter(Boolean)
+        )
+      ].sort(
+        (a, b) =>
+          a.localeCompare(b)
+      );
+    }
+
+
+    function addOptions(selectId, values) {
+
+      const select =
+        document.getElementById(selectId);
+
+      values.forEach(value => {
+
+        const option =
+          document.createElement('option');
+
+        option.value =
+          value.toLowerCase();
+
+        option.textContent =
+          value;
+
+        select.appendChild(option);
+      });
+    }
+
+
+    function buildFilters() {
+
+      addOptions(
+        'filter-type',
+        uniqueValues(
+          knowledgeItems,
+          item =>
+            item.type
+              ? [item.type]
+              : []
+        )
+      );
+
+
+      addOptions(
+        'filter-topic',
+        uniqueValues(
+          knowledgeItems,
+          item =>
+            normalizeArray(item.topics)
+        )
+      );
+
+
+      addOptions(
+        'filter-industry',
+        uniqueValues(
+          knowledgeItems,
+          item =>
+            normalizeArray(item.industries)
+        )
+      );
+
+
+      addOptions(
+        'filter-program',
+        uniqueValues(
+          knowledgeItems,
+          item =>
+            normalizeArray(item.programs)
+        )
+      );
+
+
+      addOptions(
+        'filter-tag',
+        uniqueValues(
+          knowledgeItems,
+          item =>
+            normalizeArray(item.tags)
+        )
+      );
+
+
+      addOptions(
+        'filter-access',
+        uniqueValues(
+          knowledgeItems,
+          item => [
+            item.access || 'Public'
+          ]
+        )
+      );
+    }
+
+
+    function matchesSelection(
+      selected,
+      values
+    ) {
+
+      if (selected === 'all') {
+        return true;
+      }
+
+      return values
+        .map(value =>
+          String(value).toLowerCase()
+        )
+        .includes(selected);
+    }
+
+
+    function renderResults(items) {
+
+      const container =
+        document.getElementById(
+          'search-results'
+        );
+
+      const count =
+        document.getElementById(
+          'search-count'
+        );
+
+      count.textContent =
+        items.length;
+
+
+      if (!items.length) {
+
+        container.innerHTML =
+          '<p>No knowledge matches the selected filters.</p>';
+
+        return;
+      }
+
+
+      container.innerHTML =
+        items.map(item => {
+
+          const topics =
+            normalizeArray(item.topics);
+
+          const industries =
+            normalizeArray(item.industries);
+
+          const programs =
+            normalizeArray(item.programs);
+
+          const tags =
+            normalizeArray(item.tags);
+
+          const access =
+            item.access || 'Public';
+
+          const url =
+            item.asset ||
+            item.url ||
+            '';
+
+          const openHtml =
+            url
+              ? `<a href="${
+                  url.startsWith('http')
+                    ? url
+                    : '../' + url.replace(/^\/+/, '')
+                }"
+                target="_blank"
+                rel="noopener noreferrer">
+                Open ↗
+              </a>`
+              : '';
+
+
+          return `
+            <article class="search-result-card">
+
+              <div class="search-result-meta">
+                <span>${item.dateLabel || item.date || ''}</span>
+                <span>${item.type || 'Unclassified'}</span>
+                <span>${access}</span>
+              </div>
+
+              <h3>
+                ${item.title || ''}
+              </h3>
+
+              <p>
+                ${item.summary || ''}
+              </p>
+
+              <div class="search-result-tags">
+
+                ${
+                  topics.map(
+                    value =>
+                      `<span class="topic-tag">${value}</span>`
+                  ).join('')
+                }
+
+                ${
+                  industries.map(
+                    value =>
+                      `<span class="industry-tag">${value}</span>`
+                  ).join('')
+                }
+
+                ${
+                  programs.map(
+                    value =>
+                      `<span class="program-tag">${value}</span>`
+                  ).join('')
+                }
+
+                ${
+                  tags.map(
+                    value =>
+                      `<span class="tag-tag">${value}</span>`
+                  ).join('')
+                }
+
+              </div>
+
+              <div class="search-result-open">
+                ${openHtml}
+              </div>
+
+            </article>
+          `;
+
+        }).join('');
+    }
+
+
+    function filterKnowledge() {
+
+      const keyword =
+        document
+          .getElementById('search-keyword')
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const selectedType =
+        document
+          .getElementById('filter-type')
+          .value;
+
+
+      const selectedTopic =
+        document
+          .getElementById('filter-topic')
+          .value;
+
+
+      const selectedIndustry =
+        document
+          .getElementById('filter-industry')
+          .value;
+
+
+      const selectedProgram =
+        document
+          .getElementById('filter-program')
+          .value;
+
+
+      const selectedTag =
+        document
+          .getElementById('filter-tag')
+          .value;
+
+
+      const selectedAccess =
+        document
+          .getElementById('filter-access')
+          .value;
+
+
+      const filtered =
+        knowledgeItems.filter(item => {
+
+          const topics =
+            normalizeArray(item.topics);
+
+          const industries =
+            normalizeArray(item.industries);
+
+          const programs =
+            normalizeArray(item.programs);
+
+          const tags =
+            normalizeArray(item.tags);
+
+          const access =
+            item.access || 'Public';
+
+
+          const searchableText = [
+            item.title || '',
+            item.summary || '',
+            item.type || '',
+            item.dateLabel || '',
+            access,
+            ...topics,
+            ...industries,
+            ...programs,
+            ...tags
+          ]
+            .join(' ')
+            .toLowerCase();
+
+
+          return (
+            (!keyword ||
+              searchableText.includes(keyword)) &&
+
+            matchesSelection(
+              selectedType,
+              item.type
+                ? [item.type]
+                : []
+            ) &&
+
+            matchesSelection(
+              selectedTopic,
+              topics
+            ) &&
+
+            matchesSelection(
+              selectedIndustry,
+              industries
+            ) &&
+
+            matchesSelection(
+              selectedProgram,
+              programs
+            ) &&
+
+            matchesSelection(
+              selectedTag,
+              tags
+            ) &&
+
+            matchesSelection(
+              selectedAccess,
+              [access]
+            )
+          );
+        });
+
+
+      renderResults(
+        filtered
+      );
+    }
+
+
+    function resetFilters() {
+
+      document
+        .getElementById(
+          'search-keyword'
+        )
+        .value = '';
+
+
+      [
+        'filter-type',
+        'filter-topic',
+        'filter-industry',
+        'filter-program',
+        'filter-tag',
+        'filter-access'
+      ].forEach(id => {
+
+        document
+          .getElementById(id)
+          .value = 'all';
+      });
+
+
+      renderResults(
+        knowledgeItems
+      );
+    }
+
+
+    async function loadKnowledge() {
+
+      try {
+
+        const response =
+          await fetch(
+            '../insightscontent/insights-data.json',
+            {
+              cache: 'no-store'
+            }
+          );
+
+
+        if (!response.ok) {
+          throw new Error(
+            'HTTP ' +
+            response.status
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        knowledgeItems =
+          Array.isArray(data.items)
+            ? data.items
+            : [];
+
+
+        knowledgeItems.sort(
+          (a, b) =>
+            new Date(b.date || 0) -
+            new Date(a.date || 0)
+        );
+
+
+        buildFilters();
+
+        renderResults(
+          knowledgeItems
+        );
+
+
+        document
+          .querySelectorAll(
+            '#search-keyword, .search-field select'
+          )
+          .forEach(element => {
+
+            element.addEventListener(
+              element.tagName === 'INPUT'
+                ? 'input'
+                : 'change',
+              filterKnowledge
+            );
+          });
+
+
+        document
+          .getElementById(
+            'reset-search'
+          )
+          .addEventListener(
+            'click',
+            resetFilters
+          );
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load Knowledge Search:',
+          error
+        );
+
+
+        document
+          .getElementById(
+            'search-results'
+          )
+          .innerHTML =
+            '<p>Knowledge data could not be loaded.</p>';
+      }
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadKnowledge
+    );
+
+  </script>
+
+</body>
+</html>

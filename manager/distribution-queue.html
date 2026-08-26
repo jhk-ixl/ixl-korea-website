@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Distribution Queue | IXL Korea Manager</title>
+
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+
+    <nav class="manager-nav">
+
+      <a href="index.html">
+        Dashboard
+      </a>
+
+      <a href="knowledge.html">
+        Knowledge
+      </a>
+
+      <a href="distribution.html" class="active">
+        Distribution
+      </a>
+
+      <a href="index.html#community">
+        Community
+      </a>
+
+      <a href="index.html#education">
+        Education
+      </a>
+
+      <a href="index.html#business">
+        Business
+      </a>
+
+      <a href="index.html#analytics">
+        Analytics
+      </a>
+
+      <a href="index.html#system">
+        System
+      </a>
+
+
+      <a
+        href="../index.html"
+        class="website-link"
+      >
+        View Website ↗
+      </a>
+
+    </nav>
+
+  </header>
+
+
+
+  <main class="manager-main">
+
+
+    <!-- =========================================
+         INTRO
+         ========================================= -->
+
+    <section class="manager-intro">
+
+      <span class="section-eyebrow">
+        DISTRIBUTION
+      </span>
+
+      <h2>
+        Distribution Queue
+      </h2>
+
+      <p>
+        Review and manage knowledge prepared for external distribution.
+        Queue items can move through Draft, Ready, Scheduled and Published status.
+      </p>
+
+    </section>
+
+
+
+    <!-- =========================================
+         TOOLBAR
+         ========================================= -->
+
+    <section class="library-toolbar">
+
+      <div class="library-count">
+
+        <strong id="queue-count">
+          0
+        </strong>
+
+        <span>
+          Queue Items
+        </span>
+
+      </div>
+
+
+      <div class="library-actions">
+
+        <a
+          href="sns-sharing.html"
+          class="library-button primary"
+        >
+          Prepare SNS Content
+        </a>
+
+
+        <a
+          href="../admin/#/collections/distribution_queue"
+          class="library-button"
+        >
+          Manage Queue
+        </a>
+
+
+        <a
+          href="distribution.html"
+          class="library-button"
+        >
+          Back to Distribution Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         QUEUE TABLE
+         ========================================= -->
+
+    <section class="library-table-wrap">
+
+      <table class="library-table">
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Created
+            </th>
+
+            <th>
+              Channel
+            </th>
+
+            <th>
+              Title
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Scheduled
+            </th>
+
+            <th>
+              Published
+            </th>
+
+            <th>
+              Link
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="queue-table-body">
+        </tbody>
+
+      </table>
+
+
+      <div
+        id="queue-empty"
+        class="library-empty"
+      >
+        Loading distribution queue from GitHub...
+      </div>
+
+    </section>
+
+  </main>
+
+
+
+  <script>
+
+    /* =========================================
+       GITHUB DATA SOURCE
+       ========================================= */
+
+    const GITHUB_OWNER =
+      'jhk-ixl';
+
+    const GITHUB_REPO =
+      'ixl-korea-website';
+
+    const GITHUB_BRANCH =
+      'master';
+
+    const QUEUE_FOLDER =
+      'insightscontent/distributionqueue';
+
+
+
+    /* =========================================
+       HELPERS
+       ========================================= */
+
+    function getQueueApiUrl() {
+
+      return (
+        'https://api.github.com/repos/' +
+        GITHUB_OWNER +
+        '/' +
+        GITHUB_REPO +
+        '/contents/' +
+        QUEUE_FOLDER +
+        '?ref=' +
+        GITHUB_BRANCH
+      );
+
+    }
+
+
+
+    function getFinalLink(link) {
+
+      if (!link) {
+        return '';
+      }
+
+
+      if (
+        link.startsWith('http://') ||
+        link.startsWith('https://')
+      ) {
+
+        return link;
+
+      }
+
+
+      return (
+        '../' +
+        link.replace(
+          /^\/+/,
+          ''
+        )
+      );
+
+    }
+
+
+
+    function formatDate(value) {
+
+      if (!value) {
+        return '—';
+      }
+
+      return value;
+
+    }
+
+
+
+    /* =========================================
+       CREATE ROW
+       ========================================= */
+
+    function createQueueRow(item) {
+
+      const finalLink =
+        getFinalLink(
+          item.link || ''
+        );
+
+
+      return `
+
+        <tr>
+
+          <td>
+            ${formatDate(item.createdDate)}
+          </td>
+
+
+          <td>
+
+            <span class="knowledge-type">
+              ${item.channel || '—'}
+            </span>
+
+          </td>
+
+
+          <td class="knowledge-title">
+            ${item.title || ''}
+          </td>
+
+
+          <td>
+            ${item.status || 'Draft'}
+          </td>
+
+
+          <td>
+            ${formatDate(item.scheduledDate)}
+          </td>
+
+
+          <td>
+            ${formatDate(item.publishedDate)}
+          </td>
+
+
+          <td>
+
+            ${
+              finalLink
+
+                ? `
+                  <a
+                    href="${finalLink}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Open ↗
+                  </a>
+                `
+
+                : '—'
+            }
+
+          </td>
+
+        </tr>
+
+      `;
+
+    }
+
+
+
+    /* =========================================
+       RENDER QUEUE
+       ========================================= */
+
+    function renderQueue(queue) {
+
+      const tableBody =
+        document.getElementById(
+          'queue-table-body'
+        );
+
+
+      const empty =
+        document.getElementById(
+          'queue-empty'
+        );
+
+
+      const count =
+        document.getElementById(
+          'queue-count'
+        );
+
+
+      count.textContent =
+        queue.length;
+
+
+
+      if (!queue.length) {
+
+        tableBody.innerHTML =
+          '';
+
+
+        empty.textContent =
+          'No items are currently in the distribution queue.';
+
+
+        empty.style.display =
+          'block';
+
+
+        return;
+      }
+
+
+
+      tableBody.innerHTML =
+        queue
+          .map(createQueueRow)
+          .join('');
+
+
+
+      empty.style.display =
+        'none';
+
+    }
+
+
+
+    /* =========================================
+       LOAD ONE QUEUE FILE
+       ========================================= */
+
+    async function loadQueueFile(file) {
+
+      if (!file.download_url) {
+        return null;
+      }
+
+
+      const response =
+        await fetch(
+          file.download_url,
+          {
+            cache: 'no-store'
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          'Failed to load ' +
+          file.name
+        );
+
+      }
+
+
+      const data =
+        await response.json();
+
+
+      return {
+        ...data,
+        _fileName: file.name
+      };
+
+    }
+
+
+
+    /* =========================================
+       LOAD QUEUE FROM GITHUB
+       ========================================= */
+
+    async function loadDistributionQueue() {
+
+      const empty =
+        document.getElementById(
+          'queue-empty'
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+            getQueueApiUrl(),
+            {
+              cache: 'no-store',
+              headers: {
+                'Accept':
+                  'application/vnd.github+json'
+              }
+            }
+          );
+
+
+
+        /*
+          Folder does not exist yet.
+          Treat this as an empty queue.
+        */
+
+        if (response.status === 404) {
+
+          renderQueue([]);
+
+          return;
+        }
+
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            'GitHub API HTTP ' +
+            response.status
+          );
+
+        }
+
+
+
+        const files =
+          await response.json();
+
+
+
+        if (!Array.isArray(files)) {
+
+          throw new Error(
+            'Unexpected GitHub API response.'
+          );
+
+        }
+
+
+
+        const jsonFiles =
+          files.filter(
+            file =>
+              file.type === 'file' &&
+              file.name
+                .toLowerCase()
+                .endsWith('.json')
+          );
+
+
+
+        const results =
+          await Promise.all(
+            jsonFiles.map(
+              loadQueueFile
+            )
+          );
+
+
+
+        const queue =
+          results
+            .filter(Boolean)
+            .sort(
+              (a, b) => {
+
+                const dateA =
+                  new Date(
+                    a.createdDate || 0
+                  );
+
+                const dateB =
+                  new Date(
+                    b.createdDate || 0
+                  );
+
+
+                return (
+                  dateB -
+                  dateA
+                );
+
+              }
+            );
+
+
+
+        renderQueue(
+          queue
+        );
+
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load Distribution Queue:',
+          error
+        );
+
+
+        empty.textContent =
+          'Distribution queue data could not be loaded from GitHub.';
+
+      }
+
+    }
+
+
+
+    /* =========================================
+       START
+       ========================================= */
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadDistributionQueue
+    );
+
+  </script>
+
+
+</body>
+
+</html>

@@ -279,3 +279,72 @@ collections:
               - label: "Description"
                 name: "description"
                 widget: "text"
+
+  - name: "distribution_queue"
+    label: "Distribution Queue"
+    label_singular: "Distribution Item"
+
+    folder: "insightscontent/distributionqueue"
+    create: true
+    extension: "json"
+    format: "json"
+
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+
+    summary: "{{createdDate}} · {{channel}} · {{title}}"
+
+    fields:
+
+      - label: "Created Date"
+        name: "createdDate"
+        widget: "datetime"
+        date_format: "YYYY-MM-DD"
+        time_format: false
+        format: "YYYY-MM-DD"
+
+      - label: "Channel"
+        name: "channel"
+        widget: "select"
+        options:
+          - { label: "LinkedIn", value: "LinkedIn" }
+          - { label: "Facebook", value: "Facebook" }
+          - { label: "X", value: "X" }
+
+      - label: "Title"
+        name: "title"
+        widget: "string"
+
+      - label: "Post Text"
+        name: "postText"
+        widget: "text"
+
+      - label: "Link"
+        name: "link"
+        widget: "string"
+        required: false
+
+      - label: "Status"
+        name: "status"
+        widget: "select"
+        options:
+          - { label: "Draft", value: "Draft" }
+          - { label: "Ready", value: "Ready" }
+          - { label: "Scheduled", value: "Scheduled" }
+          - { label: "Published", value: "Published" }
+        default: "Draft"
+
+      - label: "Scheduled Date"
+        name: "scheduledDate"
+        widget: "datetime"
+        required: false
+        date_format: "YYYY-MM-DD"
+        time_format: "HH:mm"
+        format: "YYYY-MM-DD HH:mm"
+
+      - label: "Published Date"
+        name: "publishedDate"
+        widget: "datetime"
+        required: false
+        date_format: "YYYY-MM-DD"
+        time_format: "HH:mm"
+        format: "YYYY-MM-DD HH:mm"

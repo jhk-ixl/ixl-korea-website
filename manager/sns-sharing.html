@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>SNS Sharing | IXL Korea Manager</title>
+
+  <link rel="stylesheet" href="manager.css">
+</head>
+
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+
+    <nav class="manager-nav">
+
+      <a href="index.html">
+        Dashboard
+      </a>
+
+      <a href="knowledge.html">
+        Knowledge
+      </a>
+
+      <a href="distribution.html" class="active">
+        Distribution
+      </a>
+
+      <a href="index.html#community">
+        Community
+      </a>
+
+      <a href="index.html#education">
+        Education
+      </a>
+
+      <a href="index.html#business">
+        Business
+      </a>
+
+      <a href="index.html#analytics">
+        Analytics
+      </a>
+
+      <a href="index.html#system">
+        System
+      </a>
+
+
+      <a
+        href="../index.html"
+        class="website-link"
+      >
+        View Website ↗
+      </a>
+
+    </nav>
+
+  </header>
+
+
+
+  <main class="manager-main">
+
+
+    <!-- =========================================
+         INTRO
+         ========================================= -->
+
+    <section class="manager-intro">
+
+      <span class="section-eyebrow">
+        DISTRIBUTION
+      </span>
+
+      <h2>
+        SNS Sharing
+      </h2>
+
+      <p>
+        Select knowledge content to prepare for external social media distribution.
+        Search and filter the Knowledge Library, then choose one or more items.
+      </p>
+
+    </section>
+
+
+
+    <!-- =========================================
+         STEP 1 — SELECT KNOWLEDGE
+         ========================================= -->
+
+    <section class="sns-toolbar">
+
+      <div class="sns-search">
+
+        <label for="sns-search">
+          Search Knowledge
+        </label>
+
+        <input
+          type="search"
+          id="sns-search"
+          placeholder="Search title, summary, topic, industry, program or tag..."
+        >
+
+      </div>
+
+
+      <div class="sns-filter">
+
+        <label for="sns-type-filter">
+          Type
+        </label>
+
+        <select id="sns-type-filter">
+          <option value="all">
+            All Types
+          </option>
+        </select>
+
+      </div>
+
+    </section>
+
+
+
+    <section class="sns-selection-summary">
+
+      <div>
+
+        <strong id="selected-count">
+          0
+        </strong>
+
+        <span>
+          Knowledge Items Selected
+        </span>
+
+      </div>
+
+
+      <div class="library-actions">
+
+        <button
+          type="button"
+          class="library-button"
+          id="clear-selection"
+        >
+          Clear Selection
+        </button>
+
+
+        <a
+          href="distribution.html"
+          class="library-button"
+        >
+          Back to Distribution Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+
+    <section
+      class="sns-knowledge-list"
+      id="sns-knowledge-list"
+    >
+      Loading knowledge...
+    </section>
+
+
+
+    <!-- =========================================
+         STEP 2 — DISTRIBUTION CHANNEL
+         ========================================= -->
+
+    <section
+      class="sns-compose-section"
+      id="sns-compose-section"
+    >
+
+      <div class="sns-step-heading">
+
+        <span>
+          STEP 2
+        </span>
+
+        <h3>
+          Distribution Channel
+        </h3>
+
+      </div>
+
+
+
+      <div class="sns-channel-options">
+
+
+        <label class="sns-channel-card">
+
+          <input
+            type="radio"
+            name="sns-channel"
+            value="LinkedIn"
+            checked
+          >
+
+          <strong>
+            LinkedIn
+          </strong>
+
+          <span>
+            Professional and business audience
+          </span>
+
+        </label>
+
+
+
+        <label class="sns-channel-card">
+
+          <input
+            type="radio"
+            name="sns-channel"
+            value="Facebook"
+          >
+
+          <strong>
+            Facebook
+          </strong>
+
+          <span>
+            Community and general audience
+          </span>
+
+        </label>
+
+
+
+        <label class="sns-channel-card">
+
+          <input
+            type="radio"
+            name="sns-channel"
+            value="X"
+          >
+
+          <strong>
+            X
+          </strong>
+
+          <span>
+            Short-form external communication
+          </span>
+
+        </label>
+
+
+      </div>
+
+
+
+      <!-- =========================================
+           STEP 3 — SHARE CONTENT
+           ========================================= -->
+
+      <div class="sns-step-heading sns-compose-heading">
+
+        <span>
+          STEP 3
+        </span>
+
+        <h3>
+          Share Content
+        </h3>
+
+      </div>
+
+
+
+      <div class="sns-compose-form">
+
+
+        <div class="sns-compose-field">
+
+          <label for="share-title">
+            Title
+          </label>
+
+          <input
+            type="text"
+            id="share-title"
+            placeholder="Select a Knowledge item first"
+          >
+
+        </div>
+
+
+
+        <div class="sns-compose-field">
+
+          <label for="share-text">
+            Post Text
+          </label>
+
+          <textarea
+            id="share-text"
+            rows="8"
+            placeholder="SNS sharing text will be prepared here."
+          ></textarea>
+
+        </div>
+
+
+
+        <div class="sns-compose-field">
+
+          <label for="share-link">
+            Link
+          </label>
+
+          <input
+            type="text"
+            id="share-link"
+            placeholder="Knowledge URL"
+          >
+
+        </div>
+
+
+
+        <div class="sns-compose-actions">
+
+          <button
+            type="button"
+            class="library-button primary"
+            id="prepare-preview"
+          >
+            Prepare Preview
+          </button>
+
+        </div>
+
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =========================================
+         STEP 4 — PREVIEW
+         ========================================= -->
+
+    <section
+      class="sns-preview-section"
+      id="sns-preview-section"
+    >
+
+      <div class="sns-step-heading">
+
+        <span>
+          STEP 4
+        </span>
+
+        <h3>
+          Preview
+        </h3>
+
+      </div>
+
+
+
+      <div class="sns-preview-card">
+
+
+        <div
+          class="sns-preview-channel"
+          id="preview-channel"
+        >
+          LinkedIn Preview
+        </div>
+
+
+        <h3 id="preview-title">
+          Select a Knowledge item and prepare the preview.
+        </h3>
+
+
+        <p id="preview-text">
+        </p>
+
+
+        <a
+          href="#"
+          id="preview-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        ></a>
+
+
+        <div class="sns-preview-actions">
+
+          <button
+            type="button"
+            class="library-button"
+            id="copy-post"
+          >
+            Copy Post
+          </button>
+
+
+          <button
+            type="button"
+            class="library-button primary"
+            id="add-to-queue"
+           
+          >
+            Add to Distribution Queue
+          </button>
+
+        </div>
+
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+
+
+  <script>
+
+    /* =========================================
+       DATA
+       ========================================= */
+
+    let allKnowledgeItems = [];
+
+    const selectedItems =
+      new Set();
+
+
+
+    /* =========================================
+       DATA HELPERS
+       ========================================= */
+
+    function normalizeArray(value) {
+
+      return Array.isArray(value)
+        ? value.filter(Boolean)
+        : [];
+    }
+
+
+
+    function getSearchText(item) {
+
+      return [
+
+        item.title || '',
+        item.summary || '',
+        item.type || '',
+        item.dateLabel || '',
+        item.access || 'Public',
+
+        ...normalizeArray(
+          item.topics
+        ),
+
+        ...normalizeArray(
+          item.industries
+        ),
+
+        ...normalizeArray(
+          item.programs
+        ),
+
+        ...normalizeArray(
+          item.tags
+        )
+
+      ]
+        .join(' ')
+        .toLowerCase();
+    }
+
+
+
+    /* =========================================
+       TYPE FILTER
+       ========================================= */
+
+    function buildTypeFilter(items) {
+
+      const select =
+        document.getElementById(
+          'sns-type-filter'
+        );
+
+
+      const types = [
+
+        ...new Set(
+
+          items
+            .map(
+              item => item.type
+            )
+            .filter(Boolean)
+
+        )
+
+      ].sort();
+
+
+
+      types.forEach(type => {
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+
+        option.value =
+          type.toLowerCase();
+
+
+        option.textContent =
+          type.charAt(0).toUpperCase() +
+          type.slice(1);
+
+
+        select.appendChild(
+          option
+        );
+
+      });
+
+    }
+
+
+
+    /* =========================================
+       SELECTION
+       ========================================= */
+
+    function updateSelectedCount() {
+
+      document
+        .getElementById(
+          'selected-count'
+        )
+        .textContent =
+          selectedItems.size;
+    }
+
+
+
+    function updateShareContent() {
+
+      const titleField =
+        document.getElementById(
+          'share-title'
+        );
+
+
+      const textField =
+        document.getElementById(
+          'share-text'
+        );
+
+
+      const linkField =
+        document.getElementById(
+          'share-link'
+        );
+
+
+
+      if (
+        selectedItems.size === 0
+      ) {
+
+        titleField.value =
+          '';
+
+        textField.value =
+          '';
+
+        linkField.value =
+          '';
+
+
+        titleField.placeholder =
+          'Select a Knowledge item first';
+
+
+        textField.placeholder =
+          'SNS sharing text will be prepared here.';
+
+
+        linkField.placeholder =
+          'Knowledge URL';
+
+
+        return;
+      }
+
+
+
+      const firstSelectedIndex =
+        [...selectedItems][0];
+
+
+
+      const item =
+        allKnowledgeItems[
+          firstSelectedIndex
+        ];
+
+
+
+      if (!item) {
+        return;
+      }
+
+
+
+      titleField.value =
+        item.title || '';
+
+
+
+      textField.value =
+        item.summary || '';
+
+
+
+      linkField.value =
+        item.asset ||
+        item.url ||
+        '';
+
+    }
+
+
+
+    function clearSelection() {
+
+      selectedItems.clear();
+
+
+      updateSelectedCount();
+
+      updateShareContent();
+
+      filterKnowledge();
+
+    }
+
+
+
+    /* =========================================
+       KNOWLEDGE CARDS
+       ========================================= */
+
+    function createKnowledgeCard(
+      item,
+      index
+    ) {
+
+      const topics =
+        normalizeArray(
+          item.topics
+        );
+
+
+      const industries =
+        normalizeArray(
+          item.industries
+        );
+
+
+      const programs =
+        normalizeArray(
+          item.programs
+        );
+
+
+      const tags =
+        normalizeArray(
+          item.tags
+        );
+
+
+      const checked =
+        selectedItems.has(index)
+          ? 'checked'
+          : '';
+
+
+
+      return `
+
+        <article class="sns-knowledge-card">
+
+
+          <label class="sns-select-control">
+
+            <input
+              type="checkbox"
+              class="sns-item-checkbox"
+              data-index="${index}"
+              ${checked}
+            >
+
+            <span class="sns-select-box"></span>
+
+          </label>
+
+
+
+          <div class="sns-knowledge-content">
+
+
+            <div class="sns-knowledge-meta">
+
+              <span>
+                ${item.type || 'Unclassified'}
+              </span>
+
+              <span>
+                ${item.dateLabel || item.date || ''}
+              </span>
+
+              <span>
+                ${item.access || 'Public'}
+              </span>
+
+            </div>
+
+
+
+            <h3>
+              ${item.title || ''}
+            </h3>
+
+
+
+            <p>
+              ${item.summary || ''}
+            </p>
+
+
+
+            <div class="sns-knowledge-tags">
+
+              ${
+                topics
+                  .map(
+                    value =>
+                      `<span class="topic-tag">${value}</span>`
+                  )
+                  .join('')
+              }
+
+
+              ${
+                industries
+                  .map(
+                    value =>
+                      `<span class="industry-tag">${value}</span>`
+                  )
+                  .join('')
+              }
+
+
+              ${
+                programs
+                  .map(
+                    value =>
+                      `<span class="program-tag">${value}</span>`
+                  )
+                  .join('')
+              }
+
+
+              ${
+                tags
+                  .map(
+                    value =>
+                      `<span class="tag-tag">${value}</span>`
+                  )
+                  .join('')
+              }
+
+            </div>
+
+
+          </div>
+
+
+        </article>
+
+      `;
+
+    }
+
+
+
+    function renderKnowledge(items) {
+
+      const container =
+        document.getElementById(
+          'sns-knowledge-list'
+        );
+
+
+
+      if (!items.length) {
+
+        container.innerHTML =
+          '<p>No knowledge matches your search.</p>';
+
+        return;
+      }
+
+
+
+      container.innerHTML =
+        items
+          .map(
+            entry =>
+              createKnowledgeCard(
+                entry.item,
+                entry.originalIndex
+              )
+          )
+          .join('');
+
+
+
+      document
+        .querySelectorAll(
+          '.sns-item-checkbox'
+        )
+        .forEach(
+          checkbox => {
+
+            checkbox.addEventListener(
+              'change',
+              event => {
+
+                const index =
+                  Number(
+                    event
+                      .target
+                      .dataset
+                      .index
+                  );
+
+
+
+                if (
+                  event.target.checked
+                ) {
+
+                  selectedItems.add(
+                    index
+                  );
+
+                } else {
+
+                  selectedItems.delete(
+                    index
+                  );
+
+                }
+
+
+
+                updateSelectedCount();
+
+                updateShareContent();
+
+              }
+            );
+
+          }
+        );
+
+    }
+
+
+
+    /* =========================================
+       KNOWLEDGE FILTER
+       ========================================= */
+
+    function filterKnowledge() {
+
+      const searchValue =
+        document
+          .getElementById(
+            'sns-search'
+          )
+          .value
+          .trim()
+          .toLowerCase();
+
+
+
+      const selectedType =
+        document
+          .getElementById(
+            'sns-type-filter'
+          )
+          .value;
+
+
+
+      const filtered =
+        allKnowledgeItems
+
+          .map(
+            (
+              item,
+              originalIndex
+            ) => ({
+              item,
+              originalIndex
+            })
+          )
+
+          .filter(
+            entry => {
+
+              const item =
+                entry.item;
+
+
+              const type =
+                (
+                  item.type || ''
+                )
+                  .toLowerCase();
+
+
+
+              const matchesType =
+                selectedType === 'all' ||
+                type === selectedType;
+
+
+
+              const matchesSearch =
+                !searchValue ||
+                getSearchText(item)
+                  .includes(
+                    searchValue
+                  );
+
+
+
+              return (
+                matchesType &&
+                matchesSearch
+              );
+
+            }
+          );
+
+
+
+      renderKnowledge(
+        filtered
+      );
+
+    }
+
+
+
+    /* =========================================
+       CHANNEL
+       ========================================= */
+
+    function getSelectedChannel() {
+
+      const selected =
+        document.querySelector(
+          'input[name="sns-channel"]:checked'
+        );
+
+
+      return selected
+        ? selected.value
+        : 'LinkedIn';
+
+    }
+
+
+
+    /* =========================================
+       PREVIEW
+       ========================================= */
+
+    function preparePreview() {
+
+      const title =
+        document
+          .getElementById(
+            'share-title'
+          )
+          .value
+          .trim();
+
+
+
+      const text =
+        document
+          .getElementById(
+            'share-text'
+          )
+          .value
+          .trim();
+
+
+
+      const link =
+        document
+          .getElementById(
+            'share-link'
+          )
+          .value
+          .trim();
+
+
+
+      const channel =
+        getSelectedChannel();
+
+
+
+      document
+        .getElementById(
+          'preview-channel'
+        )
+        .textContent =
+          channel +
+          ' Preview';
+
+
+
+      document
+        .getElementById(
+          'preview-title'
+        )
+        .textContent =
+          title ||
+          'Untitled Post';
+
+
+
+      document
+        .getElementById(
+          'preview-text'
+        )
+        .textContent =
+          text;
+
+
+
+      const previewLink =
+        document.getElementById(
+          'preview-link'
+        );
+
+
+
+      if (link) {
+
+        previewLink.textContent =
+          link;
+
+
+        if (
+          link.startsWith(
+            'http://'
+          ) ||
+          link.startsWith(
+            'https://'
+          )
+        ) {
+
+          previewLink.href =
+            link;
+
+        } else {
+
+          previewLink.href =
+            '../' +
+            link.replace(
+              /^\/+/,
+              ''
+            );
+
+        }
+
+
+        previewLink.style.display =
+          'inline-block';
+
+      } else {
+
+        previewLink.textContent =
+          '';
+
+
+        previewLink.removeAttribute(
+          'href'
+        );
+
+
+        previewLink.style.display =
+          'none';
+
+      }
+
+
+
+      document
+        .getElementById(
+          'sns-preview-section'
+        )
+        .scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+
+    }
+
+
+
+    /* =========================================
+       COPY POST
+       ========================================= */
+
+    async function copyPost() {
+
+      const title =
+        document
+          .getElementById(
+            'share-title'
+          )
+          .value
+          .trim();
+
+
+
+      const text =
+        document
+          .getElementById(
+            'share-text'
+          )
+          .value
+          .trim();
+
+
+
+      const link =
+        document
+          .getElementById(
+            'share-link'
+          )
+          .value
+          .trim();
+
+
+
+      const content = [
+
+        title,
+        text,
+        link
+
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+
+
+
+      if (!content) {
+        return;
+      }
+
+
+
+      try {
+
+        await navigator
+          .clipboard
+          .writeText(
+            content
+          );
+
+
+
+        const button =
+          document.getElementById(
+            'copy-post'
+          );
+
+
+        const originalText =
+          button.textContent;
+
+
+        button.textContent =
+          'Copied ✓';
+
+
+
+        setTimeout(
+          () => {
+
+            button.textContent =
+              originalText;
+
+          },
+          1500
+        );
+
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to copy post:',
+          error
+        );
+
+      }
+
+    }
+    function addToDistributionQueue() {
+
+      const channel =
+        document.querySelector(
+          'input[name="sns-channel"]:checked'
+        )?.value || 'LinkedIn';
+
+
+      const title =
+        document
+          .getElementById('share-title')
+          .value
+          .trim();
+
+
+      const postText =
+        document
+          .getElementById('share-text')
+          .value
+          .trim();
+
+
+      const link =
+        document
+          .getElementById('share-link')
+          .value
+          .trim();
+
+
+      if (!title || !postText) {
+
+        alert(
+          'Prepare the content first.'
+        );
+
+        return;
+      }
+
+
+      const createdDate =
+        new Date()
+          .toISOString()
+          .slice(0, 10);
+
+
+      const params =
+        new URLSearchParams({
+          'fields.createdDate': createdDate,
+          'fields.channel': channel,
+          'fields.title': title,
+          'fields.postText': postText,
+          'fields.link': link,
+          'fields.status': 'Draft'
+        });
+
+
+      window.location.href =
+        '../admin/#/collections/distribution_queue/new?' +
+        params.toString();
+    }
+
+    /* =========================================
+       LOAD KNOWLEDGE
+       DATA SOURCE: LOCAL JSON
+       ========================================= */
+
+    async function loadKnowledge() {
+
+      const container =
+        document.getElementById(
+          'sns-knowledge-list'
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+
+            '../insightscontent/insights-data.json',
+
+            {
+              cache: 'no-store'
+            }
+
+          );
+
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            'HTTP ' +
+            response.status
+          );
+
+        }
+
+
+
+        const data =
+          await response.json();
+
+
+
+        allKnowledgeItems =
+          Array.isArray(
+            data.items
+          )
+            ? data.items
+            : [];
+
+
+
+        allKnowledgeItems.sort(
+          (a, b) =>
+            new Date(
+              b.date || 0
+            ) -
+            new Date(
+              a.date || 0
+            )
+        );
+
+
+
+        buildTypeFilter(
+          allKnowledgeItems
+        );
+
+
+
+        filterKnowledge();
+
+
+
+        /* SEARCH */
+
+        document
+          .getElementById(
+            'sns-search'
+          )
+          .addEventListener(
+            'input',
+            filterKnowledge
+          );
+
+
+
+        /* TYPE FILTER */
+
+        document
+          .getElementById(
+            'sns-type-filter'
+          )
+          .addEventListener(
+            'change',
+            filterKnowledge
+          );
+
+
+
+        /* CLEAR SELECTION */
+
+        document
+          .getElementById(
+            'clear-selection'
+          )
+          .addEventListener(
+            'click',
+            clearSelection
+          );
+
+
+
+        /* PREPARE PREVIEW */
+
+        const preparePreviewButton =
+          document.getElementById(
+            'prepare-preview'
+          );
+
+
+        if (
+          preparePreviewButton
+        ) {
+
+          preparePreviewButton
+            .addEventListener(
+              'click',
+              preparePreview
+            );
+
+        }
+
+
+
+        /* COPY POST */
+
+        const copyPostButton =
+          document.getElementById(
+            'copy-post'
+          );
+
+
+        if (
+          copyPostButton
+        ) {
+
+          copyPostButton
+            .addEventListener(
+              'click',
+              copyPost
+            );
+
+        }
+
+      /* ADD TO DISTRIBUTION QUEUE */
+
+      const addToQueueButton =
+        document.getElementById(
+          'add-to-queue'
+        );
+
+      if (
+        addToQueueButton
+      ) {
+
+        addToQueueButton
+          .addEventListener(
+            'click',
+            addToDistributionQueue
+          );
+
+      }
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load SNS Sharing:',
+          error
+        );
+
+
+        container.innerHTML =
+          '<p>Knowledge data could not be loaded.</p>';
+
+      }
+
+    }
+
+
+
+    /* =========================================
+       START
+       ========================================= */
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadKnowledge
+    );
+
+  </script>
+
+
+</body>
+
+</html>
