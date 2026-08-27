@@ -1039,6 +1039,17 @@
 
         if (
           event.target.id ===
+          'queue-edit-save'
+        ) {
+
+          saveQueueItem();
+
+          return;
+
+        }
+
+        if (
+          event.target.id ===
           'queue-edit-cancel'
         ) {
 
