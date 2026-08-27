@@ -216,6 +216,10 @@
               Link
             </th>
 
+            <th>
+              Edit
+            </th>
+
           </tr>
 
         </thead>
@@ -236,6 +240,82 @@
 
     </section>
 
+
+<!-- =========================================
+     QUEUE EDITOR
+     ========================================= -->
+
+    <section
+      id="queue-editor"
+      class="queue-editor"
+      hidden
+    >
+
+      <div class="queue-editor-card">
+
+        <h3>Edit Distribution Item</h3>
+
+        <input
+          type="hidden"
+          id="queue-edit-file"
+        >
+
+        <label>
+          Status
+
+          <select id="queue-edit-status">
+            <option value="Draft">Draft</option>
+            <option value="Ready">Ready</option>
+            <option value="Scheduled">Scheduled</option>
+            <option value="Published">Published</option>
+          </select>
+        </label>
+
+        <label>
+          Scheduled Date
+
+          <input
+            type="datetime-local"
+            id="queue-edit-scheduled"
+          >
+        </label>
+
+        <label>
+          Published Date
+
+          <input
+            type="datetime-local"
+            id="queue-edit-published"
+          >
+        </label>
+
+        <div class="queue-editor-actions">
+
+          <button
+            type="button"
+            id="queue-edit-save"
+          >
+            Save
+          </button>
+
+          <button
+            type="button"
+            id="queue-edit-cancel"
+          >
+            Cancel
+          </button>
+
+        </div>
+
+        <p
+          id="queue-edit-message"
+          aria-live="polite"
+        ></p>
+
+      </div>
+
+    </section>
+
   </main>
 
 
@@ -250,7 +330,7 @@
     const DISTRIBUTION_QUEUE_API =
       '/api/distribution-queue';
 
-
+    let distributionQueue = []; 
 
     /* =========================================
        HELPERS
@@ -332,6 +412,11 @@
        ========================================= */
 
     function createQueueRow(item) {
+
+      const fileName =
+        escapeHtml(
+          item._fileName || ''
+        );
 
       const finalLink =
         getFinalLink(
@@ -445,6 +530,16 @@
 
           </td>
 
+          <td>
+            <button
+              type="button"
+              class="queue-edit-button"
+              data-file-name="${fileName}"
+            >
+              Edit
+            </button>
+          </td>
+
         </tr>
 
       `;
@@ -457,9 +552,12 @@
        RENDER QUEUE
        ========================================= */
 
-    function renderQueue(queue) {
+      function renderQueue(queue) {
 
-      const tableBody =
+        distributionQueue =
+          queue;
+
+        const tableBody =
         document.getElementById(
           'queue-table-body'
         );
@@ -617,7 +715,339 @@
 
     }
 
+    /* =========================================
+      EDIT QUEUE ITEM
+      ========================================= */
 
+    function toDateTimeLocal(value) {
+
+      if (!value) {
+        return '';
+      }
+
+      return String(value)
+        .replace(' ', 'T')
+        .slice(0, 16);
+
+    }
+
+
+    function openQueueEditor(fileName) {
+
+      const item =
+        distributionQueue.find(
+          queueItem =>
+            queueItem._fileName === fileName
+        );
+
+
+      if (!item) {
+        return;
+      }
+
+
+      document.getElementById(
+        'queue-edit-file'
+      ).value =
+        fileName;
+
+
+      document.getElementById(
+        'queue-edit-status'
+      ).value =
+        item.status || 'Draft';
+
+
+      document.getElementById(
+        'queue-edit-scheduled'
+      ).value =
+        toDateTimeLocal(
+          item.scheduledDate
+        );
+
+
+      document.getElementById(
+        'queue-edit-published'
+      ).value =
+        toDateTimeLocal(
+          item.publishedDate
+        );
+
+
+      document.getElementById(
+        'queue-edit-message'
+      ).textContent =
+        '';
+
+
+      document.getElementById(
+        'queue-editor'
+      ).hidden =
+        false;
+
+    }
+
+
+    function closeQueueEditor() {
+
+      document.getElementById(
+        'queue-editor'
+      ).hidden =
+        true;
+
+    }
+
+    /* =========================================
+   SAVE QUEUE ITEM
+   ========================================= */
+
+    async function saveQueueItem() {
+
+      const fileName =
+        document.getElementById(
+          'queue-edit-file'
+        ).value;
+
+
+      const status =
+        document.getElementById(
+          'queue-edit-status'
+        ).value;
+
+
+      const scheduledDate =
+        document.getElementById(
+          'queue-edit-scheduled'
+        ).value;
+
+
+      const publishedDate =
+        document.getElementById(
+          'queue-edit-published'
+        ).value;
+
+
+      const message =
+        document.getElementById(
+          'queue-edit-message'
+        );
+
+
+      const saveButton =
+        document.getElementById(
+          'queue-edit-save'
+        );
+
+
+      /* =========================================
+        BASIC VALIDATION
+        ========================================= */
+
+      if (!fileName) {
+
+        message.textContent =
+          'Queue file could not be identified.';
+
+        return;
+
+      }
+
+
+      if (
+        status === 'Scheduled' &&
+        !scheduledDate
+      ) {
+
+        message.textContent =
+          'Scheduled Date is required.';
+
+        return;
+
+      }
+
+
+      if (
+        status === 'Published' &&
+        !publishedDate
+      ) {
+
+        message.textContent =
+          'Published Date is required.';
+
+        return;
+
+      }
+
+
+      /* =========================================
+        SEND PATCH
+        ========================================= */
+
+      try {
+
+        saveButton.disabled =
+          true;
+
+        message.textContent =
+          'Saving...';
+
+
+        const response =
+          await fetch(
+            DISTRIBUTION_QUEUE_API,
+            {
+              method:
+                'PATCH',
+
+              cache:
+                'no-store',
+
+              headers: {
+                'Accept':
+                  'application/json',
+
+                'Content-Type':
+                  'application/json'
+              },
+
+              body:
+                JSON.stringify({
+                  fileName,
+                  status,
+                  scheduledDate,
+                  publishedDate
+                })
+            }
+          );
+
+
+        let result = {};
+
+
+        try {
+
+          result =
+            await response.json();
+
+        } catch {
+
+          result = {};
+
+        }
+
+
+        /* =========================================
+          SESSION EXPIRED
+          ========================================= */
+
+        if (
+          response.status === 401
+        ) {
+
+          window.location.href =
+            'login.html';
+
+          return;
+
+        }
+
+
+        /* =========================================
+          API ERROR
+          ========================================= */
+
+        if (!response.ok) {
+
+          throw new Error(
+            result.error ||
+            (
+              'Distribution Queue API HTTP ' +
+              response.status
+            )
+          );
+
+        }
+
+
+        /* =========================================
+          SUCCESS
+          ========================================= */
+
+        message.textContent =
+          'Saved successfully.';
+
+
+        await loadDistributionQueue();
+
+
+        setTimeout(
+          () => {
+
+            closeQueueEditor();
+
+          },
+          500
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to save Distribution Queue item:',
+          error
+        );
+
+
+        message.textContent =
+          error.message ||
+          'The queue item could not be saved.';
+
+
+      } finally {
+
+        saveButton.disabled =
+          false;
+
+      }
+
+    }
+
+    /* =========================================
+      EDIT BUTTON EVENTS
+      ========================================= */
+
+    document.addEventListener(
+      'click',
+      event => {
+
+        const editButton =
+          event.target.closest(
+            '.queue-edit-button'
+          );
+
+
+        if (editButton) {
+
+          openQueueEditor(
+            editButton.dataset.fileName
+          );
+
+          return;
+
+        }
+
+
+        if (
+          event.target.id ===
+          'queue-edit-cancel'
+        ) {
+
+          closeQueueEditor();
+
+        }
+
+      }
+    );
 
     /* =========================================
        START
