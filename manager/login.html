@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    IXL Korea Manager Login
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="manager.css"
+  >
+
+  <style>
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #f5f7fa;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    }
+
+    .manager-login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      box-sizing: border-box;
+    }
+
+    .manager-login-card {
+      width: 100%;
+      max-width: 440px;
+      padding: 42px;
+      box-sizing: border-box;
+      background: #ffffff;
+      border: 1px solid #e2e8ef;
+      border-radius: 10px;
+      box-shadow:
+        0 12px 32px
+        rgba(7, 27, 51, 0.08);
+    }
+
+    .manager-login-eyebrow {
+      margin: 0 0 10px;
+      color: #087ee6;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+    }
+
+    .manager-login-card h1 {
+      margin: 0 0 14px;
+      color: #071b33;
+      font-size: 30px;
+      line-height: 1.2;
+    }
+
+    .manager-login-description {
+      margin: 0 0 30px;
+      color: #5d6b79;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .manager-login-button {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      box-sizing: border-box;
+      background: #071b33;
+      color: #ffffff;
+      border: 0;
+      border-radius: 5px;
+      text-align: center;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .manager-login-button:hover {
+      background: #087ee6;
+    }
+
+    .manager-login-status {
+      margin: 20px 0 0;
+      min-height: 22px;
+      color: #667585;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <main class="manager-login-page">
+
+    <section class="manager-login-card">
+
+      <p class="manager-login-eyebrow">
+        IXL KOREA
+      </p>
+
+      <h1>
+        Manager Login
+      </h1>
+
+      <p class="manager-login-description">
+        Sign in with the authorized GitHub account
+        to access the IXL Korea Manager.
+      </p>
+
+      <a
+        id="github-login-button"
+        class="manager-login-button"
+        href="/api/manager-auth"
+      >
+        Sign in with GitHub
+      </a>
+
+      <p
+        id="login-status"
+        class="manager-login-status"
+      ></p>
+
+    </section>
+
+  </main>
+
+
+  <script>
+
+    async function checkExistingSession() {
+
+      const status =
+        document.getElementById(
+          'login-status'
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+            '/api/manager-session',
+            {
+              method: 'GET',
+              cache: 'no-store',
+              credentials: 'same-origin'
+            }
+          );
+
+
+        if (response.ok) {
+
+          const data =
+            await response.json();
+
+
+          if (data.authenticated) {
+
+            status.textContent =
+              'Already signed in. Opening Manager...';
+
+
+            window.location.replace(
+              '/manager/'
+            );
+
+            return;
+
+          }
+
+        }
+
+
+        status.textContent =
+          'Authorized administrators only.';
+
+
+      } catch (error) {
+
+        console.error(
+          'Manager session check failed:',
+          error
+        );
+
+
+        status.textContent =
+          'Authorized administrators only.';
+
+      }
+
+    }
+
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      checkExistingSession
+    );
+
+  </script>
+
+</body>
+
+</html>
