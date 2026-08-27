@@ -271,8 +271,8 @@
           </select>
         </label>
 
-        <label>
-          Scheduled Date
+        <label id="queue-scheduled-field">
+           Scheduled Date
 
           <input
             type="datetime-local"
@@ -280,7 +280,7 @@
           >
         </label>
 
-        <label>
+        <label id="queue-published-field">
           Published Date
 
           <input
@@ -371,7 +371,8 @@
         return '—';
       }
 
-      return value;
+      return String(value)
+        .replace('T', ' ');
 
     }
 
@@ -731,6 +732,98 @@
 
     }
 
+    function updateQueueDateFields() {
+
+      const status =
+        document.getElementById(
+          'queue-edit-status'
+        ).value;
+
+
+      const scheduledField =
+        document.getElementById(
+          'queue-scheduled-field'
+        );
+
+
+      const publishedField =
+        document.getElementById(
+          'queue-published-field'
+        );
+
+
+      const scheduledInput =
+        document.getElementById(
+          'queue-edit-scheduled'
+        );
+
+
+      const publishedInput =
+        document.getElementById(
+          'queue-edit-published'
+        );
+
+
+      /* Draft / Ready */
+
+      if (
+        status === 'Draft' ||
+        status === 'Ready'
+      ) {
+
+        scheduledField.hidden =
+          true;
+
+        publishedField.hidden =
+          true;
+
+        scheduledInput.value =
+          '';
+
+        publishedInput.value =
+          '';
+
+        return;
+
+      }
+
+
+      /* Scheduled */
+
+      if (
+        status === 'Scheduled'
+      ) {
+
+        scheduledField.hidden =
+          false;
+
+        publishedField.hidden =
+          true;
+
+        publishedInput.value =
+          '';
+
+        return;
+
+      }
+
+
+      /* Published */
+
+      if (
+        status === 'Published'
+      ) {
+
+        scheduledField.hidden =
+          false;
+
+        publishedField.hidden =
+          false;
+
+      }
+
+    }
+
 
     function openQueueEditor(fileName) {
 
@@ -772,6 +865,8 @@
         toDateTimeLocal(
           item.publishedDate
         );
+
+      updateQueueDateFields();
 
 
       document.getElementById(
@@ -1059,6 +1154,16 @@
 
       }
     );
+
+    document
+      .getElementById(
+        'queue-edit-status'
+      )
+      .addEventListener(
+        'change',
+        updateQueueDateFields
+      );
+
 
     /* =========================================
        START
