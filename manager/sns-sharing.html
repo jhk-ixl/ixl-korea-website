@@ -1261,7 +1261,11 @@
       }
 
     }
-    function addToDistributionQueue() {
+/* =========================================
+   ADD TO DISTRIBUTION QUEUE
+   ========================================= */
+
+    async function addToDistributionQueue() {
 
       const channel =
         document.querySelector(
@@ -1271,55 +1275,166 @@
 
       const title =
         document
-          .getElementById('share-title')
+          .getElementById(
+            'share-title'
+          )
           .value
           .trim();
 
 
       const postText =
         document
-          .getElementById('share-text')
+          .getElementById(
+            'share-text'
+          )
           .value
           .trim();
 
 
       const link =
         document
-          .getElementById('share-link')
+          .getElementById(
+            'share-link'
+          )
           .value
           .trim();
 
 
-      if (!title || !postText) {
+      const button =
+        document.getElementById(
+          'add-to-queue'
+        );
+
+
+      if (
+        !title ||
+        !postText
+      ) {
 
         alert(
           'Prepare the content first.'
         );
 
         return;
+
       }
 
 
-      const createdDate =
-        new Date()
-          .toISOString()
-          .slice(0, 10);
+      try {
+
+        button.disabled =
+          true;
+
+        button.textContent =
+          'Adding...';
 
 
-      const params =
-        new URLSearchParams({
-          'fields.createdDate': createdDate,
-          'fields.channel': channel,
-          'fields.title': title,
-          'fields.postText': postText,
-          'fields.link': link,
-          'fields.status': 'Draft'
-        });
+        const response =
+          await fetch(
+            '/api/distribution-queue',
+            {
+              method:
+                'POST',
+
+              cache:
+                'no-store',
+
+              headers: {
+                'Accept':
+                  'application/json',
+
+                'Content-Type':
+                  'application/json'
+              },
+
+              body:
+                JSON.stringify({
+                  channel,
+                  title,
+                  postText,
+                  link
+                })
+            }
+          );
 
 
-      window.location.href =
-        '../admin/#/collections/distribution_queue/new?' +
-        params.toString();
+        let result = {};
+
+
+        try {
+
+          result =
+            await response.json();
+
+        } catch {
+
+          result = {};
+
+        }
+
+
+        if (
+          response.status === 401
+        ) {
+
+          window.location.href =
+            'login.html';
+
+          return;
+
+        }
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            result.error ||
+            (
+              'Distribution Queue API HTTP ' +
+              response.status
+            )
+          );
+
+        }
+
+
+        button.textContent =
+          'Added ✓';
+
+
+        setTimeout(
+          () => {
+
+            window.location.href =
+              'distribution-queue.html';
+
+          },
+          500
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          'Failed to add Distribution Queue item:',
+          error
+        );
+
+
+        alert(
+          error.message ||
+          'The item could not be added to the Distribution Queue.'
+        );
+
+
+        button.disabled =
+          false;
+
+        button.textContent =
+          'Add to Distribution Queue';
+
+      }
+
     }
 
     /* =========================================

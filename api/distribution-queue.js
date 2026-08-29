@@ -280,6 +280,268 @@ export default async function handler(req, res) {
 
 
     /* =========================================
+      POST
+      CREATE QUEUE ITEM
+      ========================================= */
+
+    if (
+      req.method === 'POST'
+    ) {
+
+      const body =
+        req.body || {};
+
+
+      const channel =
+        String(
+          body.channel || ''
+        ).trim();
+
+
+      const title =
+        String(
+          body.title || ''
+        ).trim();
+
+
+      const postText =
+        String(
+          body.postText || ''
+        ).trim();
+
+
+      const link =
+        String(
+          body.link || ''
+        ).trim();
+
+
+      /* =========================================
+        VALIDATE REQUIRED FIELDS
+        ========================================= */
+
+      if (
+        !channel ||
+        !title ||
+        !postText
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              'Channel, title and post text are required.'
+          });
+
+      }
+
+
+      /* =========================================
+        CREATE TIMESTAMP
+        ========================================= */
+
+      const now =
+        new Date();
+
+
+      const createdDate =
+        now
+          .toISOString()
+          .slice(0, 10);
+
+
+      const timestamp =
+        now
+          .toISOString()
+          .replace(
+            /[:.]/g,
+            '-'
+          );
+
+
+      /* =========================================
+        SAFE FILE NAME
+        ========================================= */
+
+      const safeChannel =
+        channel
+          .toLowerCase()
+          .replace(
+            /[^a-z0-9]+/g,
+            '-'
+          )
+          .replace(
+            /^-+|-+$/g,
+            ''
+          ) || 'sns';
+
+
+      const fileName =
+        `${createdDate}-${safeChannel}-${timestamp}.json`;
+
+
+      const filePath =
+        `${QUEUE_FOLDER}/${fileName}`;
+
+
+      const fileUrl =
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+        `/contents/${filePath}`;
+
+
+      /* =========================================
+        BUILD QUEUE JSON
+        ========================================= */
+
+      const queueData = {
+
+        createdDate,
+
+        channel,
+
+        title,
+
+        postText,
+
+        link,
+
+        status:
+          'Draft',
+
+        scheduledDate:
+          '',
+
+        publishedDate:
+          ''
+
+      };
+
+
+      const content =
+        Buffer
+          .from(
+            JSON.stringify(
+              queueData,
+              null,
+              2
+            ) + '\n',
+            'utf8'
+          )
+          .toString(
+            'base64'
+          );
+
+
+      /* =========================================
+        WRITE NEW FILE TO GITHUB
+        ========================================= */
+
+      const createResponse =
+        await fetch(
+          fileUrl,
+          {
+            method:
+              'PUT',
+
+            headers: {
+              ...githubHeaders,
+
+              'Content-Type':
+                'application/json'
+            },
+
+            body:
+              JSON.stringify({
+
+                message:
+                  `Add Distribution Queue ${fileName}`,
+
+                content,
+
+                branch:
+                  GITHUB_BRANCH
+
+              })
+          }
+        );
+
+
+      if (
+        !createResponse.ok
+      ) {
+
+        const errorText =
+          await createResponse.text();
+
+
+        console.error(
+          'GitHub queue creation failed:',
+          createResponse.status,
+          errorText
+        );
+
+
+        if (
+          createResponse.status === 403
+        ) {
+
+          return res
+            .status(403)
+            .json({
+              error:
+                'GitHub token does not have permission to create queue items.'
+            });
+
+        }
+
+
+        throw new Error(
+          `GitHub create API HTTP ${createResponse.status}`
+        );
+
+      }
+
+
+      const createResult =
+        await createResponse.json();
+
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+
+      return res
+        .status(201)
+        .json({
+
+          success: true,
+
+          fileName,
+
+          createdDate,
+
+          channel,
+
+          title,
+
+          status:
+            'Draft',
+
+          commit:
+            createResult
+              ?.commit
+              ?.sha || null,
+
+          createdBy:
+            manager.login
+
+        });
+
+    }
+    
+    /* =========================================
        PATCH
        UPDATE QUEUE ITEM
        ========================================= */
