@@ -174,7 +174,36 @@
 
     </section>
 
+    <!-- =========================================
+         LINKEDIN CONNECTION STATUS
+         ========================================= -->
 
+    <section
+      class="linkedin-status-card"
+      id="linkedinStatusCard"
+    >
+
+      <div class="linkedin-status-info">
+
+        <strong id="linkedinStatusTitle">
+          LinkedIn
+        </strong>
+
+        <span id="linkedinStatusText">
+          Checking connection...
+        </span>
+
+      </div>
+
+      <a
+        class="linkedin-reconnect-btn"
+        id="linkedinReconnectBtn"
+        href="/api/linkedin-auth"
+      >
+        Reconnect LinkedIn
+      </a>
+
+    </section>
 
     <!-- =========================================
          QUEUE TABLE
@@ -1165,14 +1194,133 @@
       );
 
 
+          /* =========================================
+       LINKEDIN CONNECTION STATUS
+       ========================================= */
+
+    async function loadLinkedInStatus() {
+
+      const card =
+        document.getElementById(
+          'linkedinStatusCard'
+        );
+
+      const title =
+        document.getElementById(
+          'linkedinStatusTitle'
+        );
+
+      const text =
+        document.getElementById(
+          'linkedinStatusText'
+        );
+
+      const reconnect =
+        document.getElementById(
+          'linkedinReconnectBtn'
+        );
+
+      try {
+
+        const response =
+          await fetch(
+            '/api/linkedin-status',
+            {
+              method: 'GET',
+              cache: 'no-store',
+              credentials: 'same-origin'
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            'LinkedIn status API HTTP ' +
+            response.status
+          );
+        }
+
+        const result =
+          await response.json();
+
+        card.classList.remove(
+          'connected',
+          'warning',
+          'critical',
+          'expired',
+          'disconnected'
+        );
+
+        if (!result.connected) {
+
+          card.classList.add(
+            result.status === 'expired'
+              ? 'expired'
+              : 'disconnected'
+          );
+
+          title.textContent =
+            'LinkedIn';
+
+          text.textContent =
+            result.status === 'expired'
+              ? 'Access token expired'
+              : 'Not connected';
+
+          reconnect.textContent =
+            'Connect LinkedIn';
+
+          return;
+        }
+
+        card.classList.add(
+          result.status
+        );
+
+        title.textContent =
+          'LinkedIn Connected';
+
+        text.textContent =
+          'Token expires in ' +
+          result.daysRemaining +
+          ' days';
+
+        reconnect.textContent =
+          'Reconnect LinkedIn';
+
+      } catch (error) {
+
+        console.error(
+          'Failed to load LinkedIn status:',
+          error
+        );
+
+        card.classList.add(
+          'disconnected'
+        );
+
+        title.textContent =
+          'LinkedIn';
+
+        text.textContent =
+          'Connection status unavailable';
+
+        reconnect.textContent =
+          'Reconnect LinkedIn';
+
+      }
+
+    }
     /* =========================================
        START
        ========================================= */
 
-    document.addEventListener(
-      'DOMContentLoaded',
-      loadDistributionQueue
-    );
+        document.addEventListener(
+          'DOMContentLoaded',
+          () => {
+            loadDistributionQueue();
+            loadLinkedInStatus();
+          }
+        );
 
   </script>
 
