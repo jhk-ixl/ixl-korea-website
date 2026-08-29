@@ -3319,6 +3319,34 @@ body {
 
 .offering-detail-action {
   margin-top: 28px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.offering-detail-action a {
+  display: inline-block;
+  padding: 13px 18px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* First button — View / Explore */
+.offering-detail-action a:first-child {
+  background: transparent;
+  color: #071b33;
+  border: 1px solid #9aa8b6;
+}
+
+/* Second button — Download */
+.offering-detail-action a:nth-child(2) {
+  background: #071b33;
+  color: #ffffff;
+  border: 1px solid #071b33;
 }
 
 .offering-detail-followup {
