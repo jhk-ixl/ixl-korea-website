@@ -248,14 +248,17 @@ export default async function handler(req, res) {
 
           const dateA =
             new Date(
-              a.createdDate || 0
+              a.createdAt ||
+              a.createdDate ||
+              0
             );
 
           const dateB =
             new Date(
-              b.createdDate || 0
+              b.createdAt ||
+              b.createdDate ||
+              0
             );
-
 
           return (
             dateB -
@@ -438,6 +441,7 @@ export default async function handler(req, res) {
 
       const queueData = {
         createdDate,
+        createdAt: now.toISOString(),
         channel,
         title,
         postText,
