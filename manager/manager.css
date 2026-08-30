@@ -1074,6 +1074,8 @@ body {
   font-weight: 700;
 }
 
+.queue-editor-card input[type="text"],
+.queue-editor-card textarea,
 .queue-editor-card select,
 .queue-editor-card input[type="datetime-local"] {
   display: block;
@@ -1086,6 +1088,12 @@ body {
   background: #ffffff;
   color: #071b33;
   font-size: 14px;
+}
+
+.queue-editor-card textarea {
+  min-height: 180px;
+  line-height: 1.5;
+  resize: vertical;
 }
 
 .queue-editor-actions {
