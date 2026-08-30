@@ -722,8 +722,11 @@
         item.url || '';
 
 
+      const mediaSource =
+        asset || url;
+
       const lowerAsset =
-        asset
+        mediaSource
           .toLowerCase()
           .split('?')[0]
           .split('#')[0];
@@ -747,7 +750,7 @@
           'Image';
 
         mediaFile =
-          asset;
+         mediaSource;
 
       } else if (
         /\.pdf$/i.test(
@@ -759,7 +762,7 @@
           'Document';
 
         mediaFile =
-          asset;
+         mediaSource;
 
       } else if (
         /\.(mp4|mov|m4v|webm)$/i.test(
@@ -771,7 +774,7 @@
           'Video';
 
         mediaFile =
-          asset;
+         mediaSource;
 
       }
 
@@ -791,12 +794,9 @@
        */
 
       linkField.value =
-        url ||
-        (
-          mediaType === 'None'
-            ? asset
-            : ''
-        );
+        mediaType === 'None'
+          ? (url || asset)
+          : '';
     }
 
 
