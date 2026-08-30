@@ -113,11 +113,36 @@ module.exports = async function handler(req, res) {
 
     const encryptedToken = encrypt(tokenData.access_token);
 
+    const userInfoResponse = await fetch(
+      "https://api.linkedin.com/v2/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${tokenData.access_token}`,
+        },
+      }
+    );
+
+    const userInfo = await userInfoResponse.json();
+
+    if (!userInfoResponse.ok || !userInfo.sub) {
+      console.error(
+        "LinkedIn user info request failed:",
+        userInfo
+      );
+
+      return res.status(500).send(
+        "LinkedIn member information could not be obtained."
+      );
+    }
+
+    const encryptedMemberId = encrypt(userInfo.sub);
+
     const secureCookieOptions =
       "HttpOnly; Secure; SameSite=Lax; Path=/";
 
     res.setHeader("Set-Cookie", [
-      `linkedin_access_token=${encryptedToken}; ${secureCookieOptions}; Max-Age=${expiresIn}`,
+      `linkedin_access_token=${encryptedToken}; ${secureCookieOptions}; Max-Age=${expiresIn}`,   
+      `linkedin_member_id=${encryptedMemberId}; ${secureCookieOptions}; Max-Age=${expiresIn}`,  
       `linkedin_token_expires_at=${expiresAt}; ${secureCookieOptions}; Max-Age=${expiresIn}`,
       `linkedin_oauth_state=; ${secureCookieOptions}; Max-Age=0`,
     ]);

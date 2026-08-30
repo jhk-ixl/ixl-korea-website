@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
     client_id: clientId,
     redirect_uri: redirectUri,
     state,
-    scope: "w_member_social"
+    scope: "openid profile w_member_social"
   });
 
   const authorizationUrl =

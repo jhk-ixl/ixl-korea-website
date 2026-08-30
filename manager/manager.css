@@ -1103,6 +1103,7 @@ body {
 }
 
 #queue-edit-save,
+#queue-publish-linkedin,
 #queue-edit-cancel,
 .queue-edit-button {
   padding: 9px 14px;
@@ -1113,6 +1114,17 @@ body {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+}
+
+#queue-publish-linkedin {
+  background: #0a66c2;
+  border-color: #0a66c2;
+  color: #ffffff;
+}
+
+#queue-publish-linkedin:hover {
+  background: #004182;
+  border-color: #004182;
 }
 
 #queue-edit-save {

@@ -396,6 +396,13 @@
 
           <button
             type="button"
+            id="queue-publish-linkedin"
+          >
+            Publish to LinkedIn
+          </button>
+
+          <button
+            type="button"
             id="queue-edit-cancel"
           >
             Cancel
@@ -1069,6 +1076,153 @@
 
     }
 
+/* =========================================
+   PUBLISH TO LINKEDIN
+   TEXT-ONLY FIRST TEST
+   ========================================= */
+
+async function publishToLinkedIn() {
+
+  const fileName =
+    document.getElementById(
+      'queue-edit-file'
+    ).value;
+
+  const postText =
+    document.getElementById(
+      'queue-edit-post-text'
+    ).value.trim();
+
+  const message =
+    document.getElementById(
+      'queue-edit-message'
+    );
+
+  const publishButton =
+    document.getElementById(
+      'queue-publish-linkedin'
+    );
+
+
+  if (!fileName) {
+
+    message.textContent =
+      'Queue file could not be identified.';
+
+    return;
+  }
+
+
+  if (!postText) {
+
+    message.textContent =
+      'Post Text is required.';
+
+    return;
+  }
+
+
+  const confirmed =
+    window.confirm(
+      'Publish this post to LinkedIn now?'
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  try {
+
+    publishButton.disabled =
+      true;
+
+    message.textContent =
+      'Publishing to LinkedIn...';
+
+
+    const response =
+      await fetch(
+        '/api/linkedin-publish',
+        {
+          method: 'POST',
+
+          cache: 'no-store',
+
+          headers: {
+            'Accept':
+              'application/json',
+
+            'Content-Type':
+              'application/json'
+          },
+
+          body:
+            JSON.stringify({
+              postText
+            })
+        }
+      );
+
+
+    let result = {};
+
+
+    try {
+
+      result =
+        await response.json();
+
+    } catch {
+
+      result = {};
+
+    }
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        result.error ||
+        (
+          'LinkedIn Publish API HTTP ' +
+          response.status
+        )
+      );
+
+    }
+
+
+    message.textContent =
+      'Published to LinkedIn successfully.';
+
+
+  } catch (error) {
+
+    console.error(
+      'Failed to publish to LinkedIn:',
+      error
+    );
+
+
+    message.textContent =
+      error.message ||
+      'LinkedIn publishing failed.';
+
+
+  } finally {
+
+    publishButton.disabled =
+      false;
+
+  }
+
+}
+
+
+
+
     /* =========================================
    SAVE QUEUE ITEM
    ========================================= */
@@ -1319,6 +1473,19 @@
           return;
 
         }
+
+        if (
+          event.target.id ===
+          'queue-publish-linkedin'
+        ) {
+
+          publishToLinkedIn();
+
+          return;
+
+        }
+
+
 
         if (
           event.target.id ===
