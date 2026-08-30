@@ -315,6 +315,49 @@ export default async function handler(req, res) {
           body.link || ''
         ).trim();
 
+      const mediaType =
+        String(
+          body.mediaType || 'None'
+        ).trim();
+
+
+      const mediaFile =
+        String(
+          body.mediaFile || ''
+        ).trim();
+
+
+    const allowedMediaTypes = [
+      'None',
+      'Image',
+      'Document',
+      'Video'
+    ];
+
+
+    if (
+      !allowedMediaTypes.includes(
+        mediaType
+      )
+    ) {
+
+      return res.status(400).json({
+        error: 'Invalid media type.'
+      });
+
+    }
+
+
+    if (
+      mediaType !== 'None' &&
+      !mediaFile
+    ) {
+
+      return res.status(400).json({
+        error: 'Media file is required.'
+      });
+
+    }        
 
       /* =========================================
         VALIDATE REQUIRED FIELDS
@@ -394,26 +437,23 @@ export default async function handler(req, res) {
         ========================================= */
 
       const queueData = {
-
         createdDate,
-
         channel,
-
         title,
-
         postText,
-
         link,
 
-        status:
-          'Draft',
+        mediaType:
+          mediaType || 'None',
 
-        scheduledDate:
-          '',
+        mediaFile:
+          mediaType === 'None'
+            ? ''
+            : mediaFile,
 
-        publishedDate:
-          ''
-
+        status: 'Draft',
+        scheduledDate: '',
+        publishedDate: ''
       };
 
 

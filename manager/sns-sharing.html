@@ -341,7 +341,35 @@
 
         </div>
 
+        <div class="sns-compose-field">
 
+          <label for="share-media-type">
+            Media Type
+          </label>
+
+          <select id="share-media-type">
+            <option value="None">None</option>
+            <option value="Image">Image</option>
+            <option value="Document">Document / PDF</option>
+            <option value="Video">Video</option>
+          </select>
+
+        </div>
+
+
+        <div class="sns-compose-field">
+
+          <label for="share-media-file">
+            Media File
+          </label>
+
+          <input
+            type="text"
+            id="share-media-file"
+            placeholder="Image, PDF or video file path"
+          >
+
+        </div>
 
         <div class="sns-compose-actions">
 
@@ -412,6 +440,23 @@
           rel="noopener noreferrer"
         ></a>
 
+        <div
+          class="sns-preview-media"
+          id="preview-media"
+          hidden
+        >
+
+          <strong id="preview-media-type">
+          </strong>
+
+          <a
+            href="#"
+            id="preview-media-file"
+            target="_blank"
+            rel="noopener noreferrer"
+          ></a>
+
+        </div>
 
         <div class="sns-preview-actions">
 
@@ -594,7 +639,16 @@
           'share-link'
         );
 
+      const mediaTypeField =
+        document.getElementById(
+          'share-media-type'
+        );
 
+
+      const mediaFileField =
+        document.getElementById(
+          'share-media-file'
+        );
 
       if (
         selectedItems.size === 0
@@ -607,8 +661,13 @@
           '';
 
         linkField.value =
-          '';
 
+          '';
+        mediaTypeField.value =
+          'None';
+
+        mediaFileField.value =
+          '';
 
         titleField.placeholder =
           'Select a Knowledge item first';
@@ -655,12 +714,89 @@
 
 
 
-      linkField.value =
-        item.asset ||
-        item.url ||
+      const asset =
+        item.asset || '';
+
+
+      const url =
+        item.url || '';
+
+
+      const lowerAsset =
+        asset
+          .toLowerCase()
+          .split('?')[0]
+          .split('#')[0];
+
+
+      let mediaType =
+        'None';
+
+
+      let mediaFile =
         '';
 
-    }
+
+      if (
+        /\.(jpg|jpeg|png|webp|gif)$/i.test(
+          lowerAsset
+        )
+      ) {
+
+        mediaType =
+          'Image';
+
+        mediaFile =
+          asset;
+
+      } else if (
+        /\.pdf$/i.test(
+          lowerAsset
+        )
+      ) {
+
+        mediaType =
+          'Document';
+
+        mediaFile =
+          asset;
+
+      } else if (
+        /\.(mp4|mov|m4v|webm)$/i.test(
+          lowerAsset
+        )
+      ) {
+
+        mediaType =
+          'Video';
+
+        mediaFile =
+          asset;
+
+      }
+
+
+      mediaTypeField.value =
+        mediaType;
+
+
+      mediaFileField.value =
+        mediaFile;
+
+
+      /*
+       * URL은 외부 링크가 있으면 그것을 우선 사용합니다.
+       * asset이 일반 문서/페이지 링크인 경우에만
+       * 기존 동작을 유지합니다.
+       */
+
+      linkField.value =
+        url ||
+        (
+          mediaType === 'None'
+            ? asset
+            : ''
+        );
 
 
 
@@ -1055,6 +1191,22 @@
 
 
 
+                const mediaType =
+        document
+          .getElementById(
+            'share-media-type'
+          )
+          .value;
+
+
+      const mediaFile =
+        document
+          .getElementById(
+            'share-media-file'
+          )
+          .value
+          .trim();
+
       const channel =
         getSelectedChannel();
 
@@ -1145,7 +1297,79 @@
 
       }
 
+      const previewMedia =
+        document.getElementById(
+          'preview-media'
+        );
 
+
+      const previewMediaType =
+        document.getElementById(
+          'preview-media-type'
+        );
+
+
+      const previewMediaFile =
+        document.getElementById(
+          'preview-media-file'
+        );
+
+
+      if (
+        mediaType !== 'None' &&
+        mediaFile
+      ) {
+
+        previewMedia.hidden =
+          false;
+
+
+        previewMediaType.textContent =
+          mediaType;
+
+
+        previewMediaFile.textContent =
+          mediaFile;
+
+
+        if (
+          mediaFile.startsWith('http://') ||
+          mediaFile.startsWith('https://')
+        ) {
+
+          previewMediaFile.href =
+            mediaFile;
+
+        } else {
+
+          previewMediaFile.href =
+            '../' +
+            mediaFile.replace(
+              /^\/+/,
+              ''
+            );
+
+        }
+
+      } else {
+
+        previewMedia.hidden =
+          true;
+
+
+        previewMediaType.textContent =
+          '';
+
+
+        previewMediaFile.textContent =
+          '';
+
+
+        previewMediaFile.removeAttribute(
+          'href'
+        );
+
+      }
 
       document
         .getElementById(
@@ -1299,6 +1523,22 @@
           .value
           .trim();
 
+      const mediaType =
+        document
+          .getElementById(
+            'share-media-type'
+          )
+          .value;
+
+
+      const mediaFile =
+        document
+          .getElementById(
+            'share-media-file'
+          )
+          .value
+          .trim();
+
 
       const button =
         document.getElementById(
@@ -1352,7 +1592,9 @@
                   channel,
                   title,
                   postText,
-                  link
+                  link,
+                  mediaType,
+                  mediaFile
                 })
             }
           );

@@ -290,6 +290,73 @@
         >
 
         <label>
+          Channel
+
+          <input
+            type="text"
+            id="queue-edit-channel"
+            readonly
+          >
+        </label>
+
+
+        <label>
+          Title
+
+          <input
+            type="text"
+            id="queue-edit-title"
+            readonly
+          >
+        </label>
+
+
+        <label>
+          Post Text
+
+          <textarea
+            id="queue-edit-post-text"
+            rows="8"
+            readonly
+          ></textarea>
+        </label>
+
+
+        <label>
+          Link
+
+          <a
+            id="queue-edit-link"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          ></a>
+        </label>
+
+
+        <label>
+          Media Type
+
+          <input
+            type="text"
+            id="queue-edit-media-type"
+            readonly
+          >
+        </label>
+
+
+        <label>
+          Media File
+
+          <a
+            id="queue-edit-media-file"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          ></a>
+        </label> 
+
+        <label>
           Status
 
           <select id="queue-edit-status">
@@ -865,6 +932,87 @@
 
       if (!item) {
         return;
+      }
+
+      document.getElementById(
+        'queue-edit-channel'
+      ).value =
+        item.channel || '';
+
+
+      document.getElementById(
+        'queue-edit-title'
+      ).value =
+        item.title || '';
+
+
+      document.getElementById(
+        'queue-edit-post-text'
+      ).value =
+        item.postText || '';
+
+
+      const editLink =
+        document.getElementById(
+          'queue-edit-link'
+        );
+
+
+      if (item.link) {
+
+        editLink.textContent =
+          item.link;
+
+        editLink.href =
+          item.link.startsWith('http')
+            ? item.link
+            : '../' +
+              item.link.replace(/^\/+/, '');
+
+      } else {
+
+        editLink.textContent =
+          'No Link';
+
+        editLink.removeAttribute(
+          'href'
+        );
+
+      }
+
+
+      document.getElementById(
+        'queue-edit-media-type'
+      ).value =
+        item.mediaType || 'None';
+
+
+      const editMediaFile =
+        document.getElementById(
+          'queue-edit-media-file'
+        );
+
+
+      if (item.mediaFile) {
+
+        editMediaFile.textContent =
+          item.mediaFile;
+
+        editMediaFile.href =
+          item.mediaFile.startsWith('http')
+            ? item.mediaFile
+            : '../' +
+              item.mediaFile.replace(/^\/+/, '');
+
+      } else {
+
+        editMediaFile.textContent =
+          'No Media';
+
+        editMediaFile.removeAttribute(
+          'href'
+        );
+
       }
 
 
