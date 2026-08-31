@@ -362,6 +362,11 @@ async function publishDocumentPost(
     getDocumentTitle(mediaFile) ||
     "Document";
 
+  console.log(
+    "LinkedIn document commentary:",
+    postText
+  );  
+
 
   const postResponse =
     await fetch(
