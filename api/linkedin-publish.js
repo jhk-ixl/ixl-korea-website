@@ -64,6 +64,13 @@ function decrypt(value) {
   ]).toString("utf8");
 }
 
+function escapeLinkedInCommentary(text) {
+  return text.replace(
+    /([\\{}@\[\]()<>#*_~])/g,
+    "\\$1"
+  );
+}
+
 
 function getDocumentTitle(mediaFile) {
 
@@ -395,7 +402,7 @@ async function publishDocumentPost(
               owner,
 
             commentary:
-              postText,
+              escapeLinkedInCommentary(postText),
 
             visibility:
               "PUBLIC",
