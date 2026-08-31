@@ -1093,6 +1093,16 @@ async function publishToLinkedIn() {
       'queue-edit-post-text'
     ).value.trim();
 
+  const mediaType =
+    document.getElementById(
+      'queue-edit-media-type'
+    ).value;
+
+  const mediaFile =
+    document.getElementById(
+      'queue-edit-media-file'
+    ).textContent.trim();
+
   const message =
     document.getElementById(
       'queue-edit-message'
@@ -1122,6 +1132,18 @@ async function publishToLinkedIn() {
   }
 
 
+  if (
+    mediaType === 'Document' &&
+    !mediaFile
+  ) {
+
+    message.textContent =
+      'Media File is required for Document publishing.';
+
+    return;
+  }
+
+
   const confirmed =
     window.confirm(
       'Publish this post to LinkedIn now?'
@@ -1139,7 +1161,9 @@ async function publishToLinkedIn() {
       true;
 
     message.textContent =
-      'Publishing to LinkedIn...';
+      mediaType === 'Document'
+        ? 'Uploading document and publishing to LinkedIn...'
+        : 'Publishing to LinkedIn...';
 
 
     const response =
@@ -1160,7 +1184,9 @@ async function publishToLinkedIn() {
 
           body:
             JSON.stringify({
-              postText
+              postText,
+              mediaType,
+              mediaFile
             })
         }
       );
