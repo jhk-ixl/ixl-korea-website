@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="manager.css">
 
   <script src="manager-guard.js"></script>
+
+
+  <script type="module">
+    import { upload } from 'https://esm.sh/@vercel/blob/client';
+    window.vercelBlobUpload = upload;
+  </script>
+
 </head>
 
 <body>
@@ -67,9 +74,13 @@
 
       <div class="library-actions">
 
-        <a href="insights-library.html" class="library-button primary">
+        <button
+          type="button"
+          id="asset-upload-toggle"
+          class="library-button primary"
+        >
           Upload Asset
-        </a>
+        </button>
 
         <a href="knowledge.html" class="library-button">
           Back to Knowledge Hub
@@ -79,6 +90,59 @@
 
     </section>
 
+
+    <section
+      id="asset-upload-panel"
+      class="library-filters"
+      style="display:none;"
+    >
+
+      <div class="library-search">
+
+        <label for="asset-upload-file">
+          File
+        </label>
+
+        <input
+          type="file"
+          id="asset-upload-file"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx"
+        >
+
+      </div>
+
+
+      <div class="library-filter">
+
+        <label for="asset-upload-folder">
+          Folder
+        </label>
+
+        <select id="asset-upload-folder">
+          <option value="companyprofile">companyprofile</option>
+          <option value="insights">insights</option>
+        </select>
+
+      </div>
+
+
+      <div class="library-filter">
+
+        <label>
+          Action
+        </label>
+
+        <button
+          type="button"
+          id="asset-upload-button"
+          class="library-button primary"
+        >
+          Upload
+        </button>
+
+      </div>
+
+    </section>
 
     <section class="library-filters">
 
@@ -543,6 +607,136 @@
     }
   );
 
+    document.getElementById(
+      'asset-upload-toggle'
+    ).addEventListener(
+    'click',
+    () => {
+
+      const panel =
+        document.getElementById(
+          'asset-upload-panel'
+        );
+
+      panel.style.display =
+        panel.style.display === 'none'
+          ? 'flex'
+          : 'none';
+
+    }
+  );
+
+
+  document.getElementById(
+    'asset-upload-button'
+  ).addEventListener(
+    'click',
+    async () => {
+
+      const fileInput =
+        document.getElementById(
+          'asset-upload-file'
+        );
+
+      const folderSelect =
+        document.getElementById(
+          'asset-upload-folder'
+        );
+
+      const button =
+        document.getElementById(
+          'asset-upload-button'
+        );
+
+      const file =
+        fileInput.files[0];
+
+      if (!file) {
+
+        alert(
+          'Please select a file first.'
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        button.disabled = true;
+        button.textContent =
+          'Uploading...';
+
+
+        if (
+          !window.vercelBlobUpload
+        ) {
+
+          throw new Error(
+            'Blob upload module is not loaded.'
+          );
+
+        }
+
+
+        const safeFileName =
+          file.name.replace(
+            /[^a-zA-Z0-9._-]/g,
+            '-'
+          );
+
+        const pathname =
+          `${folderSelect.value}/${safeFileName}`;
+
+
+        await window.vercelBlobUpload(
+          pathname,
+          file,
+          {
+            access: 'public',
+            handleUploadUrl:
+              '/api/insights-upload',
+            multipart: true,
+            clientPayload:
+              JSON.stringify({
+                originalFileName:
+                  file.name
+              })
+          }
+        );
+
+
+        alert(
+          'Upload completed.'
+        );
+
+
+        fileInput.value = '';
+
+
+        await loadAssets();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error.message ||
+          'Upload failed.'
+        );
+
+      } finally {
+
+        button.disabled = false;
+        button.textContent =
+          'Upload';
+
+      }
+
+    }
+  );
 
   loadAssets();
 
