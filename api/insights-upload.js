@@ -3,7 +3,8 @@ import {
 } from '@vercel/blob/client';
 
 import {
-  list
+  list,
+  del
 } from '@vercel/blob';
 
 import {
@@ -22,12 +23,13 @@ export default async function handler(
 
   if (
     req.method !== 'GET' &&
-    req.method !== 'POST'
+    req.method !== 'POST' &&
+    req.method !== 'DELETE'
   ) {
 
     res.setHeader(
       'Allow',
-      'GET, POST'
+      'GET, POST, DELETE'
     );
 
     return res
@@ -122,6 +124,105 @@ export default async function handler(
             error instanceof Error
               ? error.message
               : 'Failed to load assets.'
+        });
+
+    }
+
+  }
+
+  /* =========================================
+     DELETE BLOB ASSET
+     ========================================= */
+
+  if (
+    req.method === 'DELETE'
+  ) {
+
+    const manager =
+      requireManager(
+        req,
+        res
+      );
+
+    if (!manager) {
+      return;
+    }
+
+
+    try {
+
+      const url =
+        String(
+          req.body?.url || ''
+        ).trim();
+
+
+      if (!url) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              'Blob URL is required.'
+          });
+
+      }
+
+
+      if (
+        !url.includes(
+          '.public.blob.vercel-storage.com/'
+        )
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              'Invalid Blob URL.'
+          });
+
+      }
+
+
+      await del(
+        url,
+        {
+          token:
+            process.env
+              .BLOB_READ_WRITE_TOKEN
+        }
+      );
+
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+
+      return res
+        .status(200)
+        .json({
+          success: true
+        });
+
+
+    } catch (error) {
+
+      console.error(
+        'Blob delete error:',
+        error
+      );
+
+
+      return res
+        .status(500)
+        .json({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to delete asset.'
         });
 
     }

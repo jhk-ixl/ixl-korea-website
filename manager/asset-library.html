@@ -190,6 +190,7 @@
             <th>View</th>
             <th>Download</th>
             <th>URL</th>
+            <th>Delete</th>
           </tr>
         </thead>
 
@@ -461,6 +462,20 @@
               : ''
           }
         </td>
+
+        <td>
+          ${
+            viewUrl
+              ? `<button
+                   type="button"
+                   class="library-button"
+                   data-delete-url="${escapeHtml(viewUrl)}"
+                   data-delete-name="${escapeHtml(fileName)}">
+                   Delete
+                 </button>`
+              : ''
+          }
+        </td>
       `;
 
       tbody.appendChild(row);
@@ -585,33 +600,127 @@
   );
 
 
-  document.getElementById(
+   document.getElementById(
     'asset-table-body'
   ).addEventListener(
     'click',
-    event => {
+    async event => {
 
-      const button =
+      const copyButton =
         event.target.closest(
           '[data-copy-url]'
         );
 
-      if (!button) {
+      if (copyButton) {
+
+        copyAssetUrl(
+          copyButton.dataset.copyUrl
+        );
+
+        return;
+
+      }
+
+
+      const deleteButton =
+        event.target.closest(
+          '[data-delete-url]'
+        );
+
+      if (!deleteButton) {
         return;
       }
 
-      copyAssetUrl(
-        button.dataset.copyUrl
-      );
+
+      const url =
+        deleteButton.dataset.deleteUrl;
+
+      const fileName =
+        deleteButton.dataset.deleteName;
+
+
+      const confirmed =
+        confirm(
+          `Delete this asset?\n\n${fileName}`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        deleteButton.disabled = true;
+        deleteButton.textContent =
+          'Deleting...';
+
+
+        const response =
+          await fetch(
+            '/api/insights-upload',
+            {
+              method: 'DELETE',
+              headers: {
+                'Content-Type':
+                  'application/json'
+              },
+              credentials:
+                'same-origin',
+              body:
+                JSON.stringify({
+                  url
+                })
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            'Failed to delete asset.'
+          );
+
+        }
+
+
+        alert(
+          'Asset deleted.'
+        );
+
+
+        await loadAssets();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error.message ||
+          'Failed to delete asset.'
+        );
+
+
+        deleteButton.disabled = false;
+        deleteButton.textContent =
+          'Delete';
+
+      }
 
     }
   );
 
     document.getElementById(
-      'asset-upload-toggle'
-    ).addEventListener(
-    'click',
-    () => {
+        'asset-upload-toggle'
+      ).addEventListener(
+      'click',
+      () => {
 
       const panel =
         document.getElementById(
