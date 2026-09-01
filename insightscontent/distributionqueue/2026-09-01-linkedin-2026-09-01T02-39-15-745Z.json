@@ -1,0 +1,13 @@
+{
+  "createdDate": "2026-09-01",
+  "createdAt": "2026-09-01T02:39:15.745Z",
+  "channel": "LinkedIn",
+  "title": "LinkedIn Image Test",
+  "postText": "IXL Korea LinkedIn image publishing test.",
+  "link": "https://ixl-korea-website.vercel.app",
+  "mediaType": "Image",
+  "mediaFile": "images/book-greenovate.jpg",
+  "status": "Draft",
+  "scheduledDate": "",
+  "publishedDate": ""
+}
