@@ -127,6 +127,31 @@
       "url": "",
       "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/IXL-Korea-Company-7offerings-p2OPP4GkN9Kb65nyWqC4lEoeeM0NtZ.pdf",
       "featured": false
+    },
+    {
+      "type": "video",
+      "topics": [
+        "AI-powered Innovation",
+        "AKAIO 1.0"
+      ],
+      "industries": [],
+      "programs": [
+        "AKAIO"
+      ],
+      "tags": [
+        "AI",
+        "AI-powered Innovation",
+        "AKAIO",
+        "GIMI"
+      ],
+      "access": "Public",
+      "date": "2026-09-01",
+      "dateLabel": "Sept. 1, 2026",
+      "title": "AKAIO 1.0 Product Launch",
+      "summary": "Discover AKAIO 1.0 and how AI-powered innovation can support the innovation journey from insights and foresight to opportunities and business concepts.",
+      "url": "",
+      "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/AKAIO-1.0-Product-Launch-Web-xrrcR1SYghvZwGnzXm72TwZo8O9bc3.mp4",
+      "featured": false
     }
   ]
 }
