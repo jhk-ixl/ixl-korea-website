@@ -3,6 +3,10 @@ import {
 } from '@vercel/blob/client';
 
 import {
+  list
+} from '@vercel/blob';
+
+import {
   requireManager
 } from '../lib/manager-auth-utils.js';
 
@@ -13,16 +17,17 @@ export default async function handler(
 ) {
 
   /* =========================================
-     ONLY POST
+     ALLOW GET / POST
      ========================================= */
 
   if (
+    req.method !== 'GET' &&
     req.method !== 'POST'
   ) {
 
     res.setHeader(
       'Allow',
-      'POST'
+      'GET, POST'
     );
 
     return res
@@ -33,7 +38,6 @@ export default async function handler(
       });
 
   }
-
 
   /* =========================================
      VERIFY BLOB CONFIGURATION
@@ -57,6 +61,72 @@ export default async function handler(
 
   }
 
+ /* =========================================
+     GET BLOB ASSET LIST
+     ========================================= */
+
+  if (
+    req.method === 'GET'
+  ) {
+
+    const manager =
+      requireManager(
+        req,
+        res
+      );
+
+    if (!manager) {
+      return;
+    }
+
+
+    try {
+
+      const result =
+        await list({
+          token:
+            process.env
+              .BLOB_READ_WRITE_TOKEN
+        });
+
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+
+      return res
+        .status(200)
+        .json({
+          blobs:
+            result.blobs || [],
+          cursor:
+            result.cursor || null,
+          hasMore:
+            result.hasMore || false
+        });
+
+    } catch (error) {
+
+      console.error(
+        'Blob list error:',
+        error
+      );
+
+
+      return res
+        .status(500)
+        .json({
+          error:
+            error instanceof Error
+              ? error.message
+              : 'Failed to load assets.'
+        });
+
+    }
+
+  }
 
   /* =========================================
      HANDLE CLIENT UPLOAD

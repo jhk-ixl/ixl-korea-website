@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Asset Library | IXL Korea Manager</title>
+  <link rel="stylesheet" href="manager.css">
+
+  <script src="manager-guard.js"></script>
+</head>
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">View Website ↗</a>
+    </nav>
+
+  </header>
+
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+
+      <span class="section-eyebrow">
+        KNOWLEDGE MANAGEMENT
+      </span>
+
+      <h2>Asset Library</h2>
+
+      <p>
+        <p>
+          Manage website assets stored in Vercel Blob, including PDFs,
+          presentations, images, videos and other downloadable files.
+        </p>
+      </p>
+
+    </section>
+
+
+    <section class="library-toolbar">
+
+      <div class="library-count">
+
+        <strong id="asset-count">0</strong>
+        <span>Assets</span>
+
+      </div>
+
+
+      <div class="library-actions">
+
+        <a href="insights-library.html" class="library-button primary">
+          Upload Asset
+        </a>
+
+        <a href="knowledge.html" class="library-button">
+          Back to Knowledge Hub
+        </a>
+
+      </div>
+
+    </section>
+
+
+    <section class="library-filters">
+
+      <div class="library-search">
+
+        <label for="asset-search">
+          Search
+        </label>
+
+        <input
+          type="search"
+          id="asset-search"
+          placeholder="Search file name or folder..."
+        >
+
+      </div>
+
+
+      <div class="library-filter">
+
+        <label for="asset-folder-filter">
+          Folder
+        </label>
+
+        <select id="asset-folder-filter">
+          <option value="all">All Folders</option>
+        </select>
+
+      </div>
+
+    </section>
+
+
+    <section class="library-table-wrap">
+
+      <table class="library-table">
+
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Folder</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>View</th>
+            <th>Download</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+
+
+        <tbody id="asset-table-body">
+        </tbody>
+
+      </table>
+
+
+      <div id="library-empty" class="library-empty">
+        Loading assets...
+      </div>
+
+    </section>
+
+  </main>
+
+
+ <script>
+
+  let allAssets = [];
+
+
+  function formatFileSize(bytes) {
+
+    const size = Number(bytes || 0);
+
+    if (size < 1024) {
+      return `${size} B`;
+    }
+
+    if (size < 1024 * 1024) {
+      return `${(size / 1024).toFixed(1)} KB`;
+    }
+
+    if (size < 1024 * 1024 * 1024) {
+      return `${(size / 1024 / 1024).toFixed(1)} MB`;
+    }
+
+    return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`;
+
+  }
+
+
+  function getFileName(pathname) {
+
+    const parts =
+      String(pathname || '').split('/');
+
+    return parts[parts.length - 1] || pathname;
+
+  }
+
+
+  function getFolder(pathname) {
+
+    const parts =
+      String(pathname || '').split('/');
+
+    if (parts.length <= 1) {
+      return 'root';
+    }
+
+    return parts.slice(0, -1).join('/');
+
+  }
+
+
+  function getFileType(pathname) {
+
+    const fileName =
+      getFileName(pathname);
+
+    const dot =
+      fileName.lastIndexOf('.');
+
+    if (dot === -1) {
+      return 'FILE';
+    }
+
+    return fileName
+      .slice(dot + 1)
+      .toUpperCase();
+
+  }
+
+
+  function formatUploadedDate(value) {
+
+    if (!value) {
+      return '';
+    }
+
+    const date =
+      new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    return date.toLocaleString();
+
+  }
+
+
+  function escapeHtml(value) {
+
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+  }
+
+
+  function renderFolderFilter() {
+
+    const select =
+      document.getElementById(
+        'asset-folder-filter'
+      );
+
+    const currentValue =
+      select.value;
+
+    const folders =
+      [
+        ...new Set(
+          allAssets.map(
+            asset =>
+              getFolder(asset.pathname)
+          )
+        )
+      ].sort();
+
+    select.innerHTML =
+      '<option value="all">All Folders</option>';
+
+    folders.forEach(folder => {
+
+      const option =
+        document.createElement('option');
+
+      option.value = folder;
+      option.textContent = folder;
+
+      select.appendChild(option);
+
+    });
+
+    if (folders.includes(currentValue)) {
+      select.value = currentValue;
+    }
+
+  }
+
+
+  function renderAssets() {
+
+    const tbody =
+      document.getElementById(
+        'asset-table-body'
+      );
+
+    const empty =
+      document.getElementById(
+        'library-empty'
+      );
+
+    const search =
+      document.getElementById(
+        'asset-search'
+      ).value.trim().toLowerCase();
+
+    const folder =
+      document.getElementById(
+        'asset-folder-filter'
+      ).value;
+
+    const filtered =
+      allAssets.filter(asset => {
+
+        const pathname =
+          String(asset.pathname || '');
+
+        const matchesSearch =
+          !search ||
+          pathname.toLowerCase().includes(search);
+
+        const matchesFolder =
+          folder === 'all' ||
+          getFolder(pathname) === folder;
+
+        return (
+          matchesSearch &&
+          matchesFolder
+        );
+
+      });
+
+
+    tbody.innerHTML = '';
+
+
+    filtered.forEach(asset => {
+
+      const row =
+        document.createElement('tr');
+
+      const pathname =
+        asset.pathname || '';
+
+      const fileName =
+        getFileName(pathname);
+
+      const folderName =
+        getFolder(pathname);
+
+      const viewUrl =
+        asset.url || '';
+
+      const downloadUrl =
+        asset.downloadUrl ||
+        asset.url ||
+        '';
+
+
+      row.innerHTML = `
+        <td>${escapeHtml(fileName)}</td>
+        <td>${escapeHtml(folderName)}</td>
+        <td>${escapeHtml(getFileType(pathname))}</td>
+        <td>${escapeHtml(formatFileSize(asset.size))}</td>
+        <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
+
+        <td>
+          ${
+            viewUrl
+              ? `<a href="${escapeHtml(viewUrl)}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                   View
+                 </a>`
+              : ''
+          }
+        </td>
+
+        <td>
+          ${
+            downloadUrl
+              ? `<a href="${escapeHtml(downloadUrl)}">
+                   Download
+                 </a>`
+              : ''
+          }
+        </td>
+
+        <td>
+          ${
+            viewUrl
+              ? `<button
+                   type="button"
+                   class="library-button"
+                   data-copy-url="${escapeHtml(viewUrl)}">
+                   Copy URL
+                 </button>`
+              : ''
+          }
+        </td>
+      `;
+
+      tbody.appendChild(row);
+
+    });
+
+
+    empty.style.display =
+      filtered.length
+        ? 'none'
+        : 'block';
+
+    empty.textContent =
+      allAssets.length
+        ? 'No matching assets.'
+        : 'No assets found.';
+
+  }
+
+
+  async function copyAssetUrl(url) {
+
+    try {
+
+      await navigator.clipboard.writeText(url);
+
+      alert('URL copied.');
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert('Could not copy URL.');
+
+    }
+
+  }
+
+
+  async function loadAssets() {
+
+    const empty =
+      document.getElementById(
+        'library-empty'
+      );
+
+    empty.style.display = 'block';
+    empty.textContent = 'Loading assets...';
+
+
+    try {
+
+      const response =
+        await fetch(
+          '/api/insights-upload',
+          {
+            method: 'GET',
+            credentials: 'same-origin',
+            cache: 'no-store'
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          'Failed to load assets.'
+        );
+
+      }
+
+
+      allAssets =
+        Array.isArray(data.blobs)
+          ? data.blobs
+          : [];
+
+
+      document.getElementById(
+        'asset-count'
+      ).textContent =
+        allAssets.length;
+
+
+      renderFolderFilter();
+      renderAssets();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      empty.style.display = 'block';
+
+      empty.textContent =
+        error.message ||
+        'Failed to load assets.';
+
+    }
+
+  }
+
+
+  document.getElementById(
+    'asset-search'
+  ).addEventListener(
+    'input',
+    renderAssets
+  );
+
+
+  document.getElementById(
+    'asset-folder-filter'
+  ).addEventListener(
+    'change',
+    renderAssets
+  );
+
+
+  document.getElementById(
+    'asset-table-body'
+  ).addEventListener(
+    'click',
+    event => {
+
+      const button =
+        event.target.closest(
+          '[data-copy-url]'
+        );
+
+      if (!button) {
+        return;
+      }
+
+      copyAssetUrl(
+        button.dataset.copyUrl
+      );
+
+    }
+  );
+
+
+  loadAssets();
+
+</script>
+
+</body>
+</html>
