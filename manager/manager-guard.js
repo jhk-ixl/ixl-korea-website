@@ -116,7 +116,7 @@
     try {
 
       await fetch(
-        '/api/manager-logout',
+        '/api/manager-session',
         {
           method: 'POST',
           credentials: 'same-origin'

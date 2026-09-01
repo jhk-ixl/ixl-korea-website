@@ -4,7 +4,7 @@ import {
   getCookies,
   safeEqual,
   createManagerSession
-} from './_manager-auth-utils.js';
+} from '../lib/manager-auth-utils.js';
 
 
 export default async function handler(req, res) {
