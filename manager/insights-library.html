@@ -741,6 +741,53 @@
         </div>
 
 
+            <!-- =========================================
+             COMMON ASSET UPLOAD
+             ========================================= -->
+
+        <div class="insights-field full">
+
+          <label for="asset-file">
+            Common Asset Upload
+          </label>
+
+          <input
+            type="file"
+            id="asset-file"
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm,.ppt,.pptx"
+          >
+
+          <span class="insights-field-hint">
+            Upload a website PDF, presentation, image or video directly to Vercel Blob.
+          </span>
+
+          <button
+            type="button"
+            id="asset-upload-button"
+            onclick="uploadCommonAsset()"
+          >
+            Upload Asset
+          </button>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="asset-url">
+            Uploaded Asset URL
+          </label>
+
+          <input
+            type="text"
+            id="asset-url"
+            readonly
+            placeholder="Blob URL will appear here after upload"
+          >
+
+        </div>
+
+
         <div class="insights-field">
 
           <label>Featured</label>
@@ -1574,11 +1621,15 @@
        DIRECT TO VERCEL BLOB
        ========================================= */
 
-    async function uploadSelectedFile() {
+    async function uploadSelectedFile(
+      folder = 'insights',
+      fileInputId = 'edit-file',
+      assetInputId = 'edit-asset'
+    ) {
 
       const fileInput =
         document.getElementById(
-          'edit-file'
+          fileInputId
         );
 
 
@@ -1594,7 +1645,7 @@
       if (!file) {
 
         return document.getElementById(
-          'edit-asset'
+          assetInputId
         ).value.trim();
 
       }
@@ -1629,7 +1680,7 @@
 
 
       const pathname =
-        `insights/${safeFileName}`;
+        `${folder}/${safeFileName}`;
 
 
       /* -----------------------------------------
@@ -1665,7 +1716,7 @@
          ----------------------------------------- */
 
       document.getElementById(
-        'edit-asset'
+        assetInputId
       ).value =
         blob.url;
 
@@ -1673,6 +1724,64 @@
       return blob.url;
 
     }
+
+    async function uploadCommonAsset() {
+
+      const button =
+        document.getElementById(
+          'asset-upload-button'
+        );
+
+      const fileInput =
+        document.getElementById(
+          'asset-file'
+        );
+
+      const file =
+        fileInput.files[0];
+
+      if (!file) {
+        alert('Please select a file first.');
+        return;
+      }
+
+      try {
+
+        button.disabled = true;
+        button.textContent = 'Uploading...';
+
+        const blobUrl =
+          await uploadSelectedFile(
+            'companyprofile',
+            'asset-file',
+            'asset-url'
+          );
+
+        document.getElementById(
+          'asset-url'
+        ).value =
+          blobUrl;
+
+        alert('Upload completed.');
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error.message ||
+          'Upload failed.'
+        );
+
+      } finally {
+
+        button.disabled = false;
+        button.textContent = 'Upload Asset';
+
+      }
+
+    }
+
 
     /* =========================================
        SAVE
