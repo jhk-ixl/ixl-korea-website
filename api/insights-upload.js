@@ -1,0 +1,280 @@
+import {
+  handleUpload
+} from '@vercel/blob/client';
+
+import {
+  requireManager
+} from './_manager-auth-utils.js';
+
+
+export default async function handler(
+  req,
+  res
+) {
+
+  /* =========================================
+     ONLY POST
+     ========================================= */
+
+  if (
+    req.method !== 'POST'
+  ) {
+
+    res.setHeader(
+      'Allow',
+      'POST'
+    );
+
+    return res
+      .status(405)
+      .json({
+        error:
+          'Method not allowed.'
+      });
+
+  }
+
+
+  /* =========================================
+     VERIFY BLOB CONFIGURATION
+     ========================================= */
+
+  if (
+    !process.env
+      .BLOB_READ_WRITE_TOKEN
+  ) {
+
+    console.error(
+      'BLOB_READ_WRITE_TOKEN is missing.'
+    );
+
+    return res
+      .status(500)
+      .json({
+        error:
+          'Blob storage is not configured.'
+      });
+
+  }
+
+
+  /* =========================================
+     HANDLE CLIENT UPLOAD
+     ========================================= */
+
+  try {
+
+    const jsonResponse =
+      await handleUpload({
+
+        body:
+          req.body,
+
+        request:
+          req,
+
+        token:
+          process.env
+            .BLOB_READ_WRITE_TOKEN,
+
+
+        /* =====================================
+           BEFORE CLIENT UPLOAD TOKEN
+           ===================================== */
+
+        onBeforeGenerateToken:
+          async (
+            pathname,
+            clientPayload
+          ) => {
+
+            /* ---------------------------------
+               VERIFY MANAGER HERE
+               --------------------------------- */
+
+            const manager =
+              requireManager(
+                req,
+                res
+              );
+
+
+            if (!manager) {
+
+              throw new Error(
+                'Manager authentication required.'
+              );
+
+            }
+
+
+            /* ---------------------------------
+               BASIC PATH VALIDATION
+               --------------------------------- */
+
+            const safePathname =
+              String(
+                pathname || ''
+              )
+                .replace(
+                  /\\/g,
+                  '/'
+                )
+                .replace(
+                  /^\/+/,
+                  ''
+                );
+
+
+            if (!safePathname) {
+
+              throw new Error(
+                'Invalid upload filename.'
+              );
+
+            }
+
+
+            if (
+              safePathname.includes(
+                '..'
+              )
+            ) {
+
+              throw new Error(
+                'Invalid upload path.'
+              );
+
+            }
+
+
+            /* ---------------------------------
+               ONLY INSIGHTS UPLOAD AREA
+               --------------------------------- */
+
+            if (
+              !safePathname.startsWith(
+                'insights/'
+              )
+            ) {
+
+              throw new Error(
+                'Upload path is not allowed.'
+              );
+
+            }
+
+
+            /* ---------------------------------
+               TOKEN SETTINGS
+               --------------------------------- */
+
+            return {
+
+              allowedContentTypes: [
+
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/gif',
+
+                'application/pdf',
+
+                'video/mp4',
+                'video/webm',
+
+                'audio/mpeg',
+                'audio/mp4',
+
+                'application/octet-stream'
+
+              ],
+
+              addRandomSuffix:
+                true,
+
+              tokenPayload:
+                JSON.stringify({
+
+                  manager:
+                    manager.login,
+
+                  clientPayload:
+                    clientPayload || null,
+
+                  createdAt:
+                    new Date()
+                      .toISOString()
+
+                })
+
+            };
+
+          },
+
+
+        /* =====================================
+           AFTER UPLOAD COMPLETED
+           ===================================== */
+
+        onUploadCompleted:
+          async ({
+            blob,
+            tokenPayload
+          }) => {
+
+            console.log(
+              'IXL Korea Insights Blob upload completed:',
+              {
+                pathname:
+                  blob.pathname,
+
+                url:
+                  blob.url,
+
+                tokenPayload
+              }
+            );
+
+          }
+
+      });
+
+
+    /* =========================================
+       SUCCESS
+       ========================================= */
+
+    res.setHeader(
+      'Cache-Control',
+      'no-store, max-age=0'
+    );
+
+
+    return res
+      .status(200)
+      .json(
+        jsonResponse
+      );
+
+
+  } catch (error) {
+
+    console.error(
+      'Insights Blob upload error:',
+      error
+    );
+
+
+    return res
+      .status(400)
+      .json({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Blob upload failed.'
+      });
+
+  }
+
+}

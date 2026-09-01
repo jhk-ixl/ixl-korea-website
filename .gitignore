@@ -37,3 +37,6 @@ insightscontent/akaio-pass*
 
 # 기본 완성된 이후 backup한 것
 기준본 보관/
+
+# 외부에서 설치한것(예 @vercel/blob을 설치했죠)
+node_modules/

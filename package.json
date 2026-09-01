@@ -1,0 +1,24 @@
+{
+  "name": "ixlkorea-website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "header-nav.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhk-ixl/ixl-korea-website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/jhk-ixl/ixl-korea-website/issues"
+  },
+  "homepage": "https://github.com/jhk-ixl/ixl-korea-website#readme",
+  "dependencies": {
+    "@vercel/blob": "^2.8.0"
+  }
+}

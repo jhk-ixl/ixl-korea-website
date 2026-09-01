@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Insights Library | IXL Korea Manager</title>
+
+  <link rel="stylesheet" href="manager.css">
+  <script src="manager-guard.js"></script>
+
+  <script type="module">
+    import { upload } from 'https://esm.sh/@vercel/blob/client';
+
+    window.vercelBlobUpload = upload;
+  </script>
+
+  <style>
+
+    /* =========================================
+       INSIGHTS LIBRARY
+       ========================================= */
+
+    .insights-toolbar {
+      margin-top: 28px;
+      padding: 22px;
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-radius: 10px;
+    }
+
+    .insights-toolbar-top {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .insights-search {
+      flex: 1;
+      height: 44px;
+      padding: 0 14px;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .insights-toolbar-bottom {
+      display: flex;
+      gap: 14px;
+      margin-top: 14px;
+      align-items: end;
+    }
+
+    .insights-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 190px;
+    }
+
+    .insights-control label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #44515f;
+    }
+
+    .insights-control select {
+      height: 42px;
+      padding: 0 10px;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      background: #fff;
+      font: inherit;
+    }
+
+    .insights-btn {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      background: #fff;
+      color: #17324d;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .insights-btn:hover {
+      background: #f5f7f9;
+    }
+
+    .insights-btn.primary {
+      background: #0b4e8a;
+      border-color: #0b4e8a;
+      color: #fff;
+    }
+
+    .insights-btn.primary:hover {
+      background: #093f70;
+    }
+
+    .insights-btn.danger {
+      color: #a12c2c;
+      border-color: #ddbaba;
+    }
+
+    .insights-btn.danger:hover {
+      background: #fff5f5;
+    }
+
+    .insights-result-summary {
+      margin: 18px 0 10px;
+      font-size: 14px;
+      color: #536170;
+    }
+
+    .insights-result-summary strong {
+      color: #17283b;
+    }
+
+    .insights-table-wrap {
+      overflow-x: auto;
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-radius: 10px;
+    }
+
+    .insights-table {
+      width: 100%;
+      min-width: 940px;
+      border-collapse: collapse;
+    }
+
+    .insights-table th,
+    .insights-table td {
+      padding: 14px 15px;
+      border-bottom: 1px solid #e6ebf0;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .insights-table th {
+      background: #f6f8fa;
+      font-size: 13px;
+      color: #435263;
+    }
+
+    .insights-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .insights-table tbody tr:hover {
+      background: #fafbfd;
+    }
+
+    .insights-type {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #eef3f8;
+      color: #284c72;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .insights-title {
+      min-width: 280px;
+      font-weight: 600;
+      color: #17283b;
+    }
+
+    .insights-date {
+      white-space: nowrap;
+    }
+
+    .insights-actions {
+      white-space: nowrap;
+    }
+
+    .insights-small-btn {
+      padding: 7px 10px;
+      margin-right: 6px;
+      border: 1px solid #cfd8e3;
+      border-radius: 5px;
+      background: #fff;
+      color: #173d65;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .insights-small-btn:hover {
+      background: #f2f6fa;
+    }
+
+    .insights-small-btn.delete {
+      color: #a12c2c;
+    }
+
+    .insights-empty {
+      display: none;
+      padding: 36px;
+      text-align: center;
+      color: #667482;
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-radius: 10px;
+    }
+
+
+    /* =========================================
+       EDITOR
+       ========================================= */
+
+    .insights-editor {
+      display: none;
+      margin-top: 28px;
+      padding: 24px;
+      background: #fff;
+      border: 1px solid #dfe5ec;
+      border-radius: 10px;
+    }
+
+    .insights-editor.open {
+      display: block;
+    }
+
+    .insights-editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .insights-editor-header h3 {
+      margin: 0;
+      color: #15283d;
+    }
+
+    .insights-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .insights-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .insights-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .insights-field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #3f4f60;
+    }
+
+    .insights-field input,
+    .insights-field select,
+    .insights-field textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      background: #fff;
+      font: inherit;
+    }
+
+    .insights-field input,
+    .insights-field select {
+      min-height: 42px;
+    }
+
+    .insights-field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .insights-field-hint {
+      font-size: 12px;
+      color: #778391;
+    }
+
+    .insights-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+    }
+
+    .insights-checkbox input {
+      width: auto;
+      min-height: auto;
+    }
+
+    .insights-editor-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .insights-message {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .insights-message.success {
+      display: block;
+      background: #edf7ef;
+      border: 1px solid #bcdcc3;
+      color: #276137;
+    }
+
+    .insights-message.error {
+      display: block;
+      background: #fff1f1;
+      border: 1px solid #e2baba;
+      color: #8b2929;
+    }
+
+    @media (max-width: 760px) {
+
+      .insights-toolbar-top,
+      .insights-toolbar-bottom {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .insights-control {
+        width: 100%;
+      }
+
+      .insights-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .insights-field.full {
+        grid-column: auto;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <header class="manager-header">
+
+    <div class="manager-brand">
+      <h1>IXL KOREA MANAGER</h1>
+      <p>Innovation Knowledge Ecosystem Control Center</p>
+    </div>
+
+    <nav class="manager-nav">
+      <a href="index.html">Dashboard</a>
+      <a href="knowledge.html" class="active">Knowledge</a>
+      <a href="index.html#distribution">Distribution</a>
+      <a href="index.html#community">Community</a>
+      <a href="index.html#education">Education</a>
+      <a href="index.html#business">Business</a>
+      <a href="index.html#analytics">Analytics</a>
+      <a href="index.html#system">System</a>
+
+      <a href="../index.html" class="website-link">
+        View Website ↗
+      </a>
+    </nav>
+
+  </header>
+
+
+  <main class="manager-main">
+
+    <section class="manager-intro">
+
+      <span class="section-eyebrow">
+        KNOWLEDGE MANAGEMENT
+      </span>
+
+      <h2>Insights Library</h2>
+
+      <p>
+        Search, organize, add and edit IXL Korea Insights content.
+      </p>
+
+    </section>
+
+
+    <!-- =========================================
+         TOOLBAR
+         ========================================= -->
+
+    <section class="insights-toolbar">
+
+      <div class="insights-toolbar-top">
+
+        <button
+          type="button"
+          id="add-insight"
+          class="insights-btn primary"
+        >
+          + Add Insight
+        </button>
+
+        <input
+          type="search"
+          id="insights-search"
+          class="insights-search"
+          placeholder="Search title, summary, label, URL, topics, tags..."
+          autocomplete="off"
+        >
+
+        <button
+          type="button"
+          id="clear-insights"
+          class="insights-btn"
+        >
+          Clear
+        </button>
+
+      </div>
+
+
+      <div class="insights-toolbar-bottom">
+
+        <div class="insights-control">
+
+          <label for="insights-sort">
+            Sort by
+          </label>
+
+          <select id="insights-sort">
+
+            <option value="date-desc">
+              Date: Newest
+            </option>
+
+            <option value="date-asc">
+              Date: Oldest
+            </option>
+
+            <option value="title-asc">
+              Title: A → Z
+            </option>
+
+            <option value="title-desc">
+              Title: Z → A
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="insights-control">
+
+          <label for="insights-type">
+            Type
+          </label>
+
+          <select id="insights-type">
+
+            <option value="">
+              All Types
+            </option>
+
+            <option value="news">
+              News
+            </option>
+
+            <option value="article">
+              Article
+            </option>
+
+            <option value="video">
+              Video
+            </option>
+
+            <option value="external">
+              External Link
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================================
+         EDITOR
+         ========================================= -->
+
+    <section
+      id="insights-editor"
+      class="insights-editor"
+    >
+
+      <div class="insights-editor-header">
+
+        <h3 id="editor-title">
+          Add Insight
+        </h3>
+
+      </div>
+
+
+      <div class="insights-form-grid">
+
+        <div class="insights-field">
+
+          <label for="edit-type">
+            Type *
+          </label>
+
+          <select id="edit-type">
+            <option value="news">News</option>
+            <option value="article">Article</option>
+            <option value="video">Video</option>
+            <option value="external">External Link</option>
+          </select>
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label for="edit-access">
+            Access Level *
+          </label>
+
+          <select id="edit-access">
+            <option value="Public">Public</option>
+            <option value="Members">Members</option>
+            <option value="Professionals">Professionals</option>
+            <option value="Clients">Clients</option>
+            <option value="Internal">Internal</option>
+          </select>
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label for="edit-date">
+            Date *
+          </label>
+
+          <input
+            type="date"
+            id="edit-date"
+          >
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label for="edit-date-label">
+            Display Label *
+          </label>
+
+          <input
+            type="text"
+            id="edit-date-label"
+            placeholder="Example: AUG 2026"
+          >
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-title">
+            Title *
+          </label>
+
+          <input
+            type="text"
+            id="edit-title"
+          >
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-summary">
+            Summary *
+          </label>
+
+          <textarea id="edit-summary"></textarea>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-topics">
+            Topics
+          </label>
+
+          <input
+            type="text"
+            id="edit-topics"
+            placeholder="Innovation Management, Foresight"
+          >
+
+          <span class="insights-field-hint">
+            Separate multiple values with commas.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-industries">
+            Industries
+          </label>
+
+          <input
+            type="text"
+            id="edit-industries"
+            placeholder="Automotive, Healthcare"
+          >
+
+          <span class="insights-field-hint">
+            Separate multiple values with commas.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-programs">
+            Programs
+          </label>
+
+          <input
+            type="text"
+            id="edit-programs"
+            placeholder="Innovation Olympics, AKAIO"
+          >
+
+          <span class="insights-field-hint">
+            Separate multiple values with commas.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-tags">
+            Tags
+          </label>
+
+          <input
+            type="text"
+            id="edit-tags"
+            placeholder="ISO 56001, AI, Growth"
+          >
+
+          <span class="insights-field-hint">
+            Separate multiple values with commas.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-url">
+            External / Existing URL
+          </label>
+
+          <input
+            type="text"
+            id="edit-url"
+            placeholder="https://... or /path/file"
+          >
+
+        </div>
+
+
+        <div class="insights-field full">
+
+        <label for="edit-file">
+            Upload PDF / Image / Video / File
+        </label>
+
+        <input
+            type="file"
+            id="edit-file"
+            accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm"
+        >
+
+        <span class="insights-field-hint">
+            <span class="insights-field-hint">
+                PDF, JPG, PNG, GIF, MP4 or WebM. Large files are uploaded directly to secure storage.
+            </span>
+        </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
+        <label for="edit-asset">
+            Asset Path
+        </label>
+
+        <input
+            type="text"
+            id="edit-asset"
+            placeholder="/insightscontent/uploads/file.pdf"
+        >
+
+        <span class="insights-field-hint">
+            Filled automatically after upload. An existing asset path can also be entered manually.
+        </span>
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label>Featured</label>
+
+          <div class="insights-checkbox">
+
+            <input
+              type="checkbox"
+              id="edit-featured"
+            >
+
+            <span>
+              Feature this Insight
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="insights-editor-actions">
+
+        <button
+          type="button"
+          id="save-insight"
+          class="insights-btn primary"
+        >
+          Save
+        </button>
+
+        <button
+          type="button"
+          id="cancel-insight"
+          class="insights-btn"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+
+      <div
+        id="insights-message"
+        class="insights-message"
+      ></div>
+
+    </section>
+
+
+    <!-- =========================================
+         RESULTS
+         ========================================= -->
+
+    <div class="insights-result-summary">
+
+      Showing
+
+      <strong id="visible-count">
+        0
+      </strong>
+
+      of
+
+      <strong id="total-count">
+        0
+      </strong>
+
+      items
+
+    </div>
+
+
+    <section
+      id="insights-table-wrap"
+      class="insights-table-wrap"
+    >
+
+      <table class="insights-table">
+
+        <thead>
+
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Title</th>
+            <th>Display Label</th>
+            <th>Access</th>
+            <th>Actions</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="insights-table-body">
+        </tbody>
+
+      </table>
+
+    </section>
+
+
+    <div
+      id="insights-empty"
+      class="insights-empty"
+    >
+      No Insights content matches the current search or filter.
+    </div>
+
+  </main>
+
+
+  <script>
+
+    /* =========================================
+       CONFIG
+       ========================================= */
+
+    const API_URL =
+      '/api/insights-library';
+
+
+    let insightsItems = [];
+
+    let editingIndex = null;
+
+
+    /* =========================================
+       HELPERS
+       ========================================= */
+
+    function escapeHtml(value) {
+
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    }
+
+
+    function normalize(value) {
+
+      return String(value ?? '')
+        .toLowerCase()
+        .trim();
+
+    }
+
+
+    function arrayToInput(value) {
+
+      return Array.isArray(value)
+        ? value.join(', ')
+        : '';
+
+    }
+
+
+    function inputToArray(value) {
+
+      return String(value || '')
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean);
+
+    }
+
+
+    function getSearchText(item) {
+
+      return normalize([
+
+        item.date,
+        item.dateLabel,
+        item.type,
+        item.title,
+        item.summary,
+        item.url,
+        item.asset,
+        item.access,
+
+        ...(item.topics || []),
+        ...(item.industries || []),
+        ...(item.programs || []),
+        ...(item.tags || [])
+
+      ].join(' '));
+
+    }
+
+
+    /* =========================================
+       LOAD
+       ========================================= */
+
+    async function loadInsights() {
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+              cache: 'no-store'
+            }
+          );
+
+
+        if (!response.ok) {
+
+          const result =
+            await response.json()
+              .catch(() => ({}));
+
+          throw new Error(
+            result.error ||
+            'Could not load Insights.'
+          );
+
+        }
+
+
+        const data =
+          await response.json();
+
+
+        insightsItems =
+          data.map(
+            (item, index) => ({
+              ...item,
+
+              /*
+               * Preserve the real source-array index.
+               * Sorting/filtering must never replace it.
+               */
+              _sourceIndex:
+                index
+            })
+          );
+
+
+        renderInsights();
+
+      } catch (error) {
+
+        console.error(error);
+
+        document.getElementById(
+          'insights-table-wrap'
+        ).style.display =
+          'none';
+
+
+        const empty =
+          document.getElementById(
+            'insights-empty'
+          );
+
+
+        empty.textContent =
+          error.message;
+
+        empty.style.display =
+          'block';
+
+      }
+
+    }
+
+
+    /* =========================================
+       FILTER / SORT
+       ========================================= */
+
+    function getVisibleItems() {
+
+      const search =
+        normalize(
+          document.getElementById(
+            'insights-search'
+          ).value
+        );
+
+
+      const type =
+        document.getElementById(
+          'insights-type'
+        ).value;
+
+
+      const sort =
+        document.getElementById(
+          'insights-sort'
+        ).value;
+
+
+      let results =
+        [...insightsItems];
+
+
+      if (search) {
+
+        results =
+          results.filter(
+            item =>
+              getSearchText(item)
+                .includes(search)
+          );
+
+      }
+
+
+      if (type) {
+
+        results =
+          results.filter(
+            item =>
+              item.type === type
+          );
+
+      }
+
+
+      results.sort(
+        (a, b) => {
+
+          if (sort === 'date-desc') {
+
+            return String(
+              b.date || ''
+            ).localeCompare(
+              String(a.date || '')
+            );
+
+          }
+
+
+          if (sort === 'date-asc') {
+
+            return String(
+              a.date || ''
+            ).localeCompare(
+              String(b.date || '')
+            );
+
+          }
+
+
+          if (sort === 'title-asc') {
+
+            return String(
+              a.title || ''
+            ).localeCompare(
+              String(b.title || ''),
+              'en',
+              {
+                sensitivity: 'base'
+              }
+            );
+
+          }
+
+
+          if (sort === 'title-desc') {
+
+            return String(
+              b.title || ''
+            ).localeCompare(
+              String(a.title || ''),
+              'en',
+              {
+                sensitivity: 'base'
+              }
+            );
+
+          }
+
+
+          return 0;
+
+        }
+      );
+
+
+      return results;
+
+    }
+
+
+    /* =========================================
+       RENDER
+       ========================================= */
+
+    function renderInsights() {
+
+      const results =
+        getVisibleItems();
+
+
+      const body =
+        document.getElementById(
+          'insights-table-body'
+        );
+
+
+      const table =
+        document.getElementById(
+          'insights-table-wrap'
+        );
+
+
+      const empty =
+        document.getElementById(
+          'insights-empty'
+        );
+
+
+      document.getElementById(
+        'visible-count'
+      ).textContent =
+        results.length;
+
+
+      document.getElementById(
+        'total-count'
+      ).textContent =
+        insightsItems.length;
+
+
+      if (!results.length) {
+
+        body.innerHTML = '';
+
+        table.style.display =
+          'none';
+
+        empty.style.display =
+          'block';
+
+        return;
+
+      }
+
+
+      body.innerHTML =
+        results.map(
+          item => `
+
+            <tr>
+
+              <td class="insights-date">
+                ${escapeHtml(item.date || '—')}
+              </td>
+
+              <td>
+                <span class="insights-type">
+                  ${escapeHtml(item.type || '—')}
+                </span>
+              </td>
+
+              <td class="insights-title">
+                ${escapeHtml(item.title || 'Untitled')}
+              </td>
+
+              <td>
+                ${escapeHtml(item.dateLabel || '—')}
+              </td>
+
+              <td>
+                ${escapeHtml(item.access || 'Public')}
+              </td>
+
+              <td class="insights-actions">
+
+                <button
+                  type="button"
+                  class="insights-small-btn edit-insight"
+                  data-index="${item._sourceIndex}"
+                >
+                  Edit
+                </button>
+
+                <button
+                  type="button"
+                  class="insights-small-btn delete delete-insight"
+                  data-index="${item._sourceIndex}"
+                >
+                  Delete
+                </button>
+
+              </td>
+
+            </tr>
+
+          `
+        ).join('');
+
+
+      table.style.display =
+        'block';
+
+      empty.style.display =
+        'none';
+
+    }
+
+
+    /* =========================================
+       EDITOR
+       ========================================= */
+
+    function resetEditor() {
+
+      editingIndex = null;
+
+      document.getElementById(
+        'editor-title'
+      ).textContent =
+        'Add Insight';
+
+
+      document.getElementById(
+        'edit-type'
+      ).value =
+        'news';
+
+
+      document.getElementById(
+        'edit-access'
+      ).value =
+        'Public';
+
+
+      document.getElementById(
+        'edit-date'
+      ).value =
+        new Date()
+          .toISOString()
+          .slice(0, 10);
+
+
+      document.getElementById(
+        'edit-date-label'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-title'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-summary'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-topics'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-industries'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-programs'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-tags'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-url'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-asset'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-featured'
+      ).checked =
+        false;
+
+      document.getElementById(
+        'edit-file'
+        ).value = '';
+
+      clearMessage();
+
+    }
+
+
+    function openAddEditor() {
+
+      resetEditor();
+
+
+      const editor =
+        document.getElementById(
+          'insights-editor'
+        );
+
+
+      editor.classList.add(
+        'open'
+      );
+
+
+      editor.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+
+    }
+
+
+    function openEditEditor(index) {
+
+      const item =
+        insightsItems.find(
+          entry =>
+            entry._sourceIndex === index
+        );
+
+
+      if (!item) {
+        return;
+      }
+
+
+      editingIndex =
+        index;
+
+
+      document.getElementById(
+        'editor-title'
+      ).textContent =
+        'Edit Insight';
+
+
+      document.getElementById(
+        'edit-type'
+      ).value =
+        item.type || 'news';
+
+
+      document.getElementById(
+        'edit-access'
+      ).value =
+        item.access || 'Public';
+
+
+      document.getElementById(
+        'edit-date'
+      ).value =
+        item.date || '';
+
+
+      document.getElementById(
+        'edit-date-label'
+      ).value =
+        item.dateLabel || '';
+
+
+      document.getElementById(
+        'edit-title'
+      ).value =
+        item.title || '';
+
+
+      document.getElementById(
+        'edit-summary'
+      ).value =
+        item.summary || '';
+
+
+      document.getElementById(
+        'edit-topics'
+      ).value =
+        arrayToInput(
+          item.topics
+        );
+
+
+      document.getElementById(
+        'edit-industries'
+      ).value =
+        arrayToInput(
+          item.industries
+        );
+
+
+      document.getElementById(
+        'edit-programs'
+      ).value =
+        arrayToInput(
+          item.programs
+        );
+
+
+      document.getElementById(
+        'edit-tags'
+      ).value =
+        arrayToInput(
+          item.tags
+        );
+
+
+      document.getElementById(
+        'edit-url'
+      ).value =
+        item.url || '';
+
+
+      document.getElementById(
+        'edit-asset'
+      ).value =
+        item.asset || '';
+
+      document.getElementById(
+        'edit-file'
+        ).value = '';
+
+
+      document.getElementById(
+        'edit-featured'
+      ).checked =
+        item.featured === true;
+
+
+      clearMessage();
+
+
+      const editor =
+        document.getElementById(
+          'insights-editor'
+        );
+
+
+      editor.classList.add(
+        'open'
+      );
+
+
+      editor.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+
+    }
+
+
+    function closeEditor() {
+
+      document.getElementById(
+        'insights-editor'
+      ).classList.remove(
+        'open'
+      );
+
+
+      resetEditor();
+
+    }
+
+
+    /* =========================================
+       MESSAGE
+       ========================================= */
+
+    function clearMessage() {
+
+      const message =
+        document.getElementById(
+          'insights-message'
+        );
+
+
+      message.className =
+        'insights-message';
+
+      message.textContent =
+        '';
+
+    }
+
+
+    function showMessage(
+      text,
+      type
+    ) {
+
+      const message =
+        document.getElementById(
+          'insights-message'
+        );
+
+
+      message.className =
+        `insights-message ${type}`;
+
+      message.textContent =
+        text;
+
+    }
+
+
+
+    /* =========================================
+       UPLOAD ASSET
+       DIRECT TO VERCEL BLOB
+       ========================================= */
+
+    async function uploadSelectedFile() {
+
+      const fileInput =
+        document.getElementById(
+          'edit-file'
+        );
+
+
+      const file =
+        fileInput.files[0];
+
+
+      /* -----------------------------------------
+         NO NEW FILE SELECTED
+         KEEP EXISTING ASSET
+         ----------------------------------------- */
+
+      if (!file) {
+
+        return document.getElementById(
+          'edit-asset'
+        ).value.trim();
+
+      }
+
+
+      /* -----------------------------------------
+         CHECK BLOB CLIENT
+         ----------------------------------------- */
+
+      if (
+        typeof window.vercelBlobUpload !==
+        'function'
+      ) {
+
+        throw new Error(
+          'Upload service is not ready. Please refresh the page and try again.'
+        );
+
+      }
+
+
+      /* -----------------------------------------
+         SAFE FILE NAME
+         ----------------------------------------- */
+
+      const safeFileName =
+        file.name
+          .replace(
+            /[^a-zA-Z0-9._-]/g,
+            '-'
+          );
+
+
+      const pathname =
+        `insights/${safeFileName}`;
+
+
+      /* -----------------------------------------
+         DIRECT CLIENT UPLOAD
+         Browser → Vercel Blob
+         ----------------------------------------- */
+
+      const blob =
+        await window.vercelBlobUpload(
+          pathname,
+          file,
+          {
+            access:
+              'public',
+
+            handleUploadUrl:
+              '/api/insights-upload',
+
+            multipart:
+              true,
+
+            clientPayload:
+              JSON.stringify({
+                originalFileName:
+                  file.name
+              })
+          }
+        );
+
+
+      /* -----------------------------------------
+         SAVE RETURNED BLOB URL
+         ----------------------------------------- */
+
+      document.getElementById(
+        'edit-asset'
+      ).value =
+        blob.url;
+
+
+      return blob.url;
+
+    }
+
+    /* =========================================
+       SAVE
+       ========================================= */
+
+    async function saveInsight() {
+
+      clearMessage();
+
+      let assetPath;
+
+
+      try {
+
+        assetPath =
+          await uploadSelectedFile();
+
+      } catch (error) {
+
+        showMessage(
+          error.message,
+          'error'
+        );
+
+        return;
+
+      }
+
+      const payload = {
+
+        type:
+          document.getElementById(
+            'edit-type'
+          ).value,
+
+        access:
+          document.getElementById(
+            'edit-access'
+          ).value,
+
+        date:
+          document.getElementById(
+            'edit-date'
+          ).value,
+
+        dateLabel:
+          document.getElementById(
+            'edit-date-label'
+          ).value.trim(),
+
+        title:
+          document.getElementById(
+            'edit-title'
+          ).value.trim(),
+
+        summary:
+          document.getElementById(
+            'edit-summary'
+          ).value.trim(),
+
+        topics:
+          inputToArray(
+            document.getElementById(
+              'edit-topics'
+            ).value
+          ),
+
+        industries:
+          inputToArray(
+            document.getElementById(
+              'edit-industries'
+            ).value
+          ),
+
+        programs:
+          inputToArray(
+            document.getElementById(
+              'edit-programs'
+            ).value
+          ),
+
+        tags:
+          inputToArray(
+            document.getElementById(
+              'edit-tags'
+            ).value
+          ),
+
+        url:
+          document.getElementById(
+            'edit-url'
+          ).value.trim(),
+
+        asset:
+            assetPath,
+
+        featured:
+          document.getElementById(
+            'edit-featured'
+          ).checked
+
+      };
+
+
+      if (
+        !payload.date ||
+        !payload.dateLabel ||
+        !payload.title ||
+        !payload.summary
+      ) {
+
+        showMessage(
+          'Date, Display Label, Title and Summary are required.',
+          'error'
+        );
+
+        return;
+
+      }
+
+
+      const isEdit =
+        editingIndex !== null;
+
+
+      if (isEdit) {
+
+        payload.index =
+          editingIndex;
+
+      }
+
+
+      const saveButton =
+        document.getElementById(
+          'save-insight'
+        );
+
+
+      saveButton.disabled =
+        true;
+
+      saveButton.textContent =
+        'Saving...';
+
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+              method:
+                isEdit
+                  ? 'PATCH'
+                  : 'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json'
+              },
+
+              body:
+                JSON.stringify(
+                  payload
+                )
+            }
+          );
+
+
+        const result =
+          await response.json()
+            .catch(() => ({}));
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            result.error ||
+            'Insight could not be saved.'
+          );
+
+        }
+
+
+        showMessage(
+          isEdit
+            ? 'Insight updated successfully.'
+            : 'Insight added successfully.',
+          'success'
+        );
+
+
+        await loadInsights();
+
+
+        setTimeout(
+          () => {
+            closeEditor();
+          },
+          700
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          error.message,
+          'error'
+        );
+
+      } finally {
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          'Save';
+
+      }
+
+    }
+
+
+    /* =========================================
+       DELETE
+       ========================================= */
+
+    async function deleteInsight(index) {
+
+      const item =
+        insightsItems.find(
+          entry =>
+            entry._sourceIndex === index
+        );
+
+
+      if (!item) {
+        return;
+      }
+
+
+      const confirmed =
+        window.confirm(
+          `Delete this Insight?\n\n${item.title}\n\nThis action updates the production Insights data.`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+              method:
+                'DELETE',
+
+              headers: {
+                'Content-Type':
+                  'application/json'
+              },
+
+              body:
+                JSON.stringify({
+                  index
+                })
+            }
+          );
+
+
+        const result =
+          await response.json()
+            .catch(() => ({}));
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            result.error ||
+            'Insight could not be deleted.'
+          );
+
+        }
+
+
+        if (
+          editingIndex === index
+        ) {
+
+          closeEditor();
+
+        }
+
+
+        await loadInsights();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        window.alert(
+          error.message
+        );
+
+      }
+
+    }
+
+
+    /* =========================================
+       EVENTS
+       ========================================= */
+
+    document
+      .getElementById(
+        'add-insight'
+      )
+      .addEventListener(
+        'click',
+        openAddEditor
+      );
+
+
+    document
+      .getElementById(
+        'save-insight'
+      )
+      .addEventListener(
+        'click',
+        saveInsight
+      );
+
+
+    document
+      .getElementById(
+        'cancel-insight'
+      )
+      .addEventListener(
+        'click',
+        closeEditor
+      );
+
+
+    document
+      .getElementById(
+        'insights-search'
+      )
+      .addEventListener(
+        'input',
+        renderInsights
+      );
+
+
+    document
+      .getElementById(
+        'insights-sort'
+      )
+      .addEventListener(
+        'change',
+        renderInsights
+      );
+
+
+    document
+      .getElementById(
+        'insights-type'
+      )
+      .addEventListener(
+        'change',
+        renderInsights
+      );
+
+
+    document
+      .getElementById(
+        'clear-insights'
+      )
+      .addEventListener(
+        'click',
+        () => {
+
+          document.getElementById(
+            'insights-search'
+          ).value =
+            '';
+
+          document.getElementById(
+            'insights-sort'
+          ).value =
+            'date-desc';
+
+          document.getElementById(
+            'insights-type'
+          ).value =
+            '';
+
+          renderInsights();
+
+        }
+      );
+
+
+    document
+      .getElementById(
+        'insights-table-body'
+      )
+      .addEventListener(
+        'click',
+        event => {
+
+          const editButton =
+            event.target.closest(
+              '.edit-insight'
+            );
+
+
+          if (editButton) {
+
+            openEditEditor(
+              Number(
+                editButton.dataset.index
+              )
+            );
+
+            return;
+
+          }
+
+
+          const deleteButton =
+            event.target.closest(
+              '.delete-insight'
+            );
+
+
+          if (deleteButton) {
+
+            deleteInsight(
+              Number(
+                deleteButton.dataset.index
+              )
+            );
+
+          }
+
+        }
+      );
+
+
+    /* =========================================
+       START
+       ========================================= */
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      loadInsights
+    );
+
+  </script>
+
+</body>
+</html>
