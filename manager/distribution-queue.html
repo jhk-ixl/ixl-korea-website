@@ -1232,8 +1232,111 @@ async function publishToLinkedIn() {
     }
 
 
+        /*
+    * LinkedIn publishing succeeded.
+    * Update Queue status automatically.
+    */
+
+    const now =
+      new Date();
+
+
+    const pad =
+      value =>
+        String(value).padStart(2, '0');
+
+
+    const publishedDate =
+      now.getFullYear() +
+      '-' +
+      pad(now.getMonth() + 1) +
+      '-' +
+      pad(now.getDate()) +
+      'T' +
+      pad(now.getHours()) +
+      ':' +
+      pad(now.getMinutes());
+
+
+    const queueResponse =
+      await fetch(
+        DISTRIBUTION_QUEUE_API,
+        {
+          method:
+            'PATCH',
+
+          cache:
+            'no-store',
+
+          headers: {
+            'Accept':
+              'application/json',
+
+            'Content-Type':
+              'application/json'
+          },
+
+          body:
+            JSON.stringify({
+              fileName,
+              status:
+                'Published',
+              scheduledDate:
+                '',
+              publishedDate
+            })
+        }
+      );
+
+
+    let queueResult = {};
+
+
+    try {
+
+      queueResult =
+        await queueResponse.json();
+
+    } catch {
+
+      queueResult = {};
+
+    }
+
+
+    if (!queueResponse.ok) {
+
+      throw new Error(
+        queueResult.error ||
+        (
+          'LinkedIn post was published, but Queue update failed (HTTP ' +
+          queueResponse.status +
+          ').'
+        )
+      );
+    }
+
+
+    document.getElementById(
+      'queue-edit-status'
+    ).value =
+      'Published';
+
+
+    document.getElementById(
+      'queue-edit-published'
+    ).value =
+      publishedDate;
+
+
+    updateQueueDateFields();
+
+
     message.textContent =
-      'Published to LinkedIn successfully.';
+      'Published to LinkedIn and Queue updated successfully.';
+
+
+    await loadDistributionQueue();
 
 
   } catch (error) {
