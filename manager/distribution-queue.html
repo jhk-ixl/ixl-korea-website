@@ -1078,7 +1078,7 @@
 
 /* =========================================
    PUBLISH TO LINKEDIN
-   TEXT-ONLY FIRST TEST
+   TEXT / LINK / DOCUMENT / IMAGE / VIDEO
    ========================================= */
 
 async function publishToLinkedIn() {
@@ -1102,6 +1102,17 @@ async function publishToLinkedIn() {
     document.getElementById(
       'queue-edit-media-file'
     ).textContent.trim();
+
+  const linkElement =
+    document.getElementById(
+      'queue-edit-link'
+    );
+
+  const link =
+    linkElement.hasAttribute('href')
+      ? linkElement.href
+      : '';
+
 
   const message =
     document.getElementById(
@@ -1185,6 +1196,7 @@ async function publishToLinkedIn() {
           body:
             JSON.stringify({
               postText,
+              link,
               mediaType,
               mediaFile
             })
