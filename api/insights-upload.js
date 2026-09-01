@@ -153,14 +153,19 @@ export default async function handler(
                --------------------------------- */
 
             if (
-              !safePathname.startsWith(
-                'insights/'
-              )
-            ) {
+                !(
+                    safePathname.startsWith(
+                    'insights/'
+                    ) ||
+                    safePathname.startsWith(
+                    'companyprofile/'
+                    )
+                )
+                ) {
 
-              throw new Error(
-                'Upload path is not allowed.'
-              );
+                throw new Error(
+                    'Upload path is not allowed.'
+                );
 
             }
 
@@ -179,6 +184,9 @@ export default async function handler(
                 'image/gif',
 
                 'application/pdf',
+
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
 
                 'video/mp4',
                 'video/webm',
