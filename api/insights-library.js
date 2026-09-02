@@ -2,24 +2,32 @@ import {
   requireManager
 } from '../lib/manager-auth-utils.js';
 
-
 export default async function handler(req, res) {
 
   /* =========================================
      CONFIG
      ========================================= */
 
-  const GITHUB_OWNER =
-    'jhk-ixl';
+  const GITHUB_OWNER = 'jhk-ixl';
+  const GITHUB_REPO = 'ixl-korea-website';
+  const GITHUB_BRANCH = 'master';
 
-  const GITHUB_REPO =
-    'ixl-korea-website';
+  const DATA_FILES = {
+    insights: {
+      path: 'insightscontent/insights-data.json',
+      arrayKey: 'items'
+    },
 
-  const GITHUB_BRANCH =
-    'master';
+    assets: {
+      path: 'insightscontent/asset-registry.json',
+      arrayKey: 'assets'
+    },
 
-  const INSIGHTS_FILE =
-    'insightscontent/insights-data.json';
+    usage: {
+      path: 'insightscontent/asset-usage.json',
+      arrayKey: 'usages'
+    }
+  };
 
 
   /* =========================================
@@ -27,11 +35,7 @@ export default async function handler(req, res) {
      ========================================= */
 
   const manager =
-    requireManager(
-      req,
-      res
-    );
-
+    requireManager(req, res);
 
   if (!manager) {
     return;
@@ -45,7 +49,6 @@ export default async function handler(req, res) {
   const githubToken =
     process.env.GITHUB_TOKEN;
 
-
   if (!githubToken) {
 
     console.error(
@@ -58,7 +61,6 @@ export default async function handler(req, res) {
         error:
           'GitHub authentication is not configured.'
       });
-
   }
 
 
@@ -68,10 +70,10 @@ export default async function handler(req, res) {
 
   const githubHeaders = {
 
-    'Accept':
+    Accept:
       'application/vnd.github+json',
 
-    'Authorization':
+    Authorization:
       `Bearer ${githubToken}`,
 
     'X-GitHub-Api-Version':
@@ -79,20 +81,47 @@ export default async function handler(req, res) {
 
     'User-Agent':
       'IXL-Korea-Manager'
-
   };
+
+
+  /* =========================================
+     RESOURCE SELECT
+     default = insights
+     ========================================= */
+
+  const resource =
+    String(
+      req.query?.resource || 'insights'
+    )
+      .trim()
+      .toLowerCase();
+
+
+  const resourceConfig =
+    DATA_FILES[resource];
+
+
+  if (!resourceConfig) {
+
+    return res
+      .status(400)
+      .json({
+        error:
+          'Invalid resource. Use insights, assets or usage.'
+      });
+  }
 
 
   const fileUrl =
     `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
-    `/contents/${INSIGHTS_FILE}`;
+    `/contents/${resourceConfig.path}`;
 
 
   /* =========================================
-     LOAD CURRENT INSIGHTS FILE
+     LOAD DATA FILE
      ========================================= */
 
-  async function loadInsightsFile() {
+  async function loadDataFile() {
 
     const response =
       await fetch(
@@ -110,13 +139,12 @@ export default async function handler(req, res) {
 
       const error =
         new Error(
-          'Insights data file was not found.'
+          `${resourceConfig.path} was not found.`
         );
 
       error.statusCode = 404;
 
       throw error;
-
     }
 
 
@@ -127,7 +155,8 @@ export default async function handler(req, res) {
 
 
       console.error(
-        'GitHub Insights file request failed:',
+        'GitHub data file request failed:',
+        resource,
         response.status,
         errorText
       );
@@ -136,7 +165,6 @@ export default async function handler(req, res) {
       throw new Error(
         `GitHub file API HTTP ${response.status}`
       );
-
     }
 
 
@@ -150,9 +178,8 @@ export default async function handler(req, res) {
     ) {
 
       throw new Error(
-        'Unexpected GitHub Insights file response.'
+        `Unexpected GitHub ${resource} file response.`
       );
-
     }
 
 
@@ -180,37 +207,37 @@ export default async function handler(req, res) {
     } catch (error) {
 
       console.error(
-        'Insights JSON parsing failed:',
+        `${resource} JSON parsing failed:`,
         error
       );
 
 
       const parseError =
         new Error(
-          'Insights data contains invalid JSON.'
+          `${resource} data contains invalid JSON.`
         );
 
       parseError.statusCode = 500;
 
       throw parseError;
-
     }
 
 
     if (
       !data ||
-      !Array.isArray(data.items)
+      !Array.isArray(
+        data[resourceConfig.arrayKey]
+      )
     ) {
 
       const formatError =
         new Error(
-          'Unexpected Insights data format.'
+          `Unexpected ${resource} data format.`
         );
 
       formatError.statusCode = 500;
 
       throw formatError;
-
     }
 
 
@@ -220,15 +247,14 @@ export default async function handler(req, res) {
 
       data
     };
-
   }
 
 
   /* =========================================
-     WRITE INSIGHTS FILE
+     WRITE DATA FILE
      ========================================= */
 
-  async function writeInsightsFile(
+  async function writeDataFile(
     data,
     sha,
     message
@@ -265,16 +291,12 @@ export default async function handler(req, res) {
 
           body:
             JSON.stringify({
-
               message,
-
               content,
-
               sha,
 
               branch:
                 GITHUB_BRANCH
-
             })
         }
       );
@@ -287,7 +309,8 @@ export default async function handler(req, res) {
 
 
       console.error(
-        'GitHub Insights update failed:',
+        'GitHub data update failed:',
+        resource,
         response.status,
         errorText
       );
@@ -299,13 +322,12 @@ export default async function handler(req, res) {
 
         const permissionError =
           new Error(
-            'GitHub token does not have permission to update Insights.'
+            `GitHub token does not have permission to update ${resource}.`
           );
 
         permissionError.statusCode = 403;
 
         throw permissionError;
-
       }
 
 
@@ -315,30 +337,27 @@ export default async function handler(req, res) {
 
         const conflictError =
           new Error(
-            'Insights data changed before this save completed. Reload and try again.'
+            `${resource} data changed before this save completed. Reload and try again.`
           );
 
         conflictError.statusCode = 409;
 
         throw conflictError;
-
       }
 
 
       throw new Error(
         `GitHub update API HTTP ${response.status}`
       );
-
     }
 
 
     return await response.json();
-
   }
 
 
   /* =========================================
-     NORMALIZE STRING ARRAY
+     COMMON HELPERS
      ========================================= */
 
   function normalizeStringArray(value) {
@@ -356,63 +375,159 @@ export default async function handler(req, res) {
           ).trim()
       )
       .filter(Boolean);
+  }
 
+
+  function cleanString(value) {
+
+    return String(
+      value ?? ''
+    ).trim();
+  }
+
+
+  function slugifyKey(value) {
+
+    return cleanString(value)
+      .replace(
+        /\\/g,
+        '/'
+      )
+      .split('/')
+      .pop()
+      .replace(
+        /\.[^.]+$/,
+        ''
+      )
+      .normalize(
+        'NFKD'
+      )
+      .toLowerCase()
+      .replace(
+        /[^a-z0-9가-힣]+/g,
+        '-'
+      )
+      .replace(
+        /^-+|-+$/g,
+        ''
+      );
+  }
+
+
+  function makeUniqueKey(
+    baseKey,
+    assets
+  ) {
+
+    if (
+      !assets.some(
+        item =>
+          item.key === baseKey
+      )
+    ) {
+      return baseKey;
+    }
+
+
+    let no = 2;
+
+
+    while (
+      assets.some(
+        item =>
+          item.key ===
+          `${baseKey}-${no}`
+      )
+    ) {
+      no += 1;
+    }
+
+
+    return `${baseKey}-${no}`;
+  }
+
+
+  function getIndex(body) {
+
+    const index =
+      Number(
+        body.index
+      );
+
+
+    if (
+      !Number.isInteger(index) ||
+      index < 0
+    ) {
+
+      const error =
+        new Error(
+          `A valid ${resource} index is required.`
+        );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+
+    return index;
   }
 
 
   /* =========================================
-     VALIDATE / NORMALIZE INSIGHT
+     NORMALIZE INSIGHT
      ========================================= */
 
   function normalizeInsight(body) {
 
     const type =
-      String(
-        body.type || ''
-      ).trim()
-        .toLowerCase();
+      cleanString(
+        body.type
+      ).toLowerCase();
 
 
     const date =
-      String(
-        body.date || ''
-      ).trim();
+      cleanString(
+        body.date
+      );
 
 
     const dateLabel =
-      String(
-        body.dateLabel || ''
-      ).trim();
+      cleanString(
+        body.dateLabel
+      );
 
 
     const title =
-      String(
-        body.title || ''
-      ).trim();
+      cleanString(
+        body.title
+      );
 
 
     const summary =
-      String(
-        body.summary || ''
-      ).trim();
+      cleanString(
+        body.summary
+      );
 
 
     const url =
-      String(
-        body.url || ''
-      ).trim();
+      cleanString(
+        body.url
+      );
 
 
     const asset =
-      String(
-        body.asset || ''
-      ).trim();
+      cleanString(
+        body.asset
+      );
 
 
     const access =
-      String(
-        body.access || 'Public'
-      ).trim();
+      cleanString(
+        body.access ||
+        'Public'
+      );
 
 
     const featured =
@@ -450,7 +565,6 @@ export default async function handler(req, res) {
       error.statusCode = 400;
 
       throw error;
-
     }
 
 
@@ -469,7 +583,6 @@ export default async function handler(req, res) {
       error.statusCode = 400;
 
       throw error;
-
     }
 
 
@@ -487,7 +600,6 @@ export default async function handler(req, res) {
       error.statusCode = 400;
 
       throw error;
-
     }
 
 
@@ -505,7 +617,6 @@ export default async function handler(req, res) {
       error.statusCode = 400;
 
       throw error;
-
     }
 
 
@@ -548,20 +659,262 @@ export default async function handler(req, res) {
       asset,
 
       featured
-
     };
-
   }
 
+
+  /* =========================================
+     NORMALIZE ASSET
+     ========================================= */
+
+  function normalizeAsset(body) {
+
+    const fileName =
+      cleanString(
+        body.fileName ||
+        body.filename
+      );
+
+
+    const pathname =
+      cleanString(
+        body.pathname
+      );
+
+
+    const name =
+      cleanString(
+        body.name ||
+        fileName ||
+        pathname
+      );
+
+
+    const requestedKey =
+      cleanString(
+        body.key
+      );
+
+
+    const key =
+      slugifyKey(
+        requestedKey ||
+        fileName ||
+        pathname ||
+        name
+      );
+
+
+    if (!key) {
+
+      const error =
+        new Error(
+          'Asset key could not be created. Provide a key or file name.'
+        );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+
+    return {
+
+      key,
+
+      name,
+
+      fileName,
+
+      folder:
+        cleanString(
+          body.folder
+        ),
+
+      pathname,
+
+      url:
+        cleanString(
+          body.url
+        ),
+
+      downloadUrl:
+        cleanString(
+          body.downloadUrl
+        ),
+
+      type:
+        cleanString(
+          body.type
+        ).toLowerCase(),
+
+      size:
+        Number.isFinite(
+          Number(
+            body.size
+          )
+        )
+          ? Number(
+              body.size
+            )
+          : null,
+
+      uploadedAt:
+        cleanString(
+          body.uploadedAt ||
+          body.updatedAt
+        ),
+
+      updatedAt:
+        new Date()
+          .toISOString()
+    };
+  }
+
+
+  /* =========================================
+     NORMALIZE USAGE
+     ========================================= */
+
+  function normalizeUsage(body) {
+
+    const usageKey =
+      slugifyKey(
+        body.usageKey ||
+        body.id ||
+        body.label
+      );
+
+
+    const page =
+      cleanString(
+        body.page
+      );
+
+
+    const label =
+      cleanString(
+        body.label
+      );
+
+
+    const assetKey =
+      slugifyKey(
+        body.assetKey
+      );
+
+
+    if (!usageKey) {
+
+      const error =
+        new Error(
+          'Usage key is required.'
+        );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+
+    if (!assetKey) {
+
+      const error =
+        new Error(
+          'Asset key is required for usage.'
+        );
+
+      error.statusCode = 400;
+
+      throw error;
+    }
+
+
+    return {
+
+      usageKey,
+
+      page,
+
+      label,
+
+      assetKey,
+
+      updatedAt:
+        new Date()
+          .toISOString()
+    };
+  }
+
+
+  function normalizeByResource(body) {
+
+    if (
+      resource === 'insights'
+    ) {
+
+      return normalizeInsight(
+        body
+      );
+    }
+
+
+    if (
+      resource === 'assets'
+    ) {
+
+      return normalizeAsset(
+        body
+      );
+    }
+
+
+    return normalizeUsage(
+      body
+    );
+  }
+
+
+  function getDisplayName(
+    item,
+    index
+  ) {
+
+    if (
+      resource === 'insights'
+    ) {
+
+      return (
+        item.title ||
+        `Item ${index}`
+      );
+    }
+
+
+    if (
+      resource === 'assets'
+    ) {
+
+      return (
+        item.key ||
+        item.name ||
+        `Asset ${index}`
+      );
+    }
+
+
+    return (
+      item.usageKey ||
+      item.label ||
+      `Usage ${index}`
+    );
+  }
 
 
   try {
 
-
-
     /* =========================================
        GET
-       LOAD INSIGHTS
        ========================================= */
 
     if (
@@ -569,7 +922,7 @@ export default async function handler(req, res) {
     ) {
 
       const current =
-        await loadInsightsFile();
+        await loadDataFile();
 
 
       res.setHeader(
@@ -581,15 +934,16 @@ export default async function handler(req, res) {
       return res
         .status(200)
         .json(
-          current.data.items
+          current.data[
+            resourceConfig.arrayKey
+          ]
         );
-
     }
 
 
     /* =========================================
        POST
-       ADD INSIGHT
+       ADD
        ========================================= */
 
     if (
@@ -600,32 +954,155 @@ export default async function handler(req, res) {
         req.body || {};
 
 
-      const insight =
-        normalizeInsight(
+      const current =
+        await loadDataFile();
+
+
+      const list =
+        current.data[
+          resourceConfig.arrayKey
+        ];
+
+
+      let item =
+        normalizeByResource(
           body
         );
 
 
-      const current =
-        await loadInsightsFile();
+      /* Asset duplicate key */
+
+      if (
+        resource === 'assets'
+      ) {
+
+        const existingIndex =
+          list.findIndex(
+            existing =>
+              existing.key ===
+              item.key
+          );
 
 
-      /*
-       * Add to the end of the source array.
-       * Search/sort in Manager does not modify
-       * the stored JSON order.
-       */
+        if (
+          existingIndex >= 0
+        ) {
 
-      current.data.items.push(
-        insight
+          /*
+           * Add as new:
+           * key
+           * key-2
+           * key-3 ...
+           */
+
+          if (
+            body.onDuplicate ===
+            'add'
+          ) {
+
+            item = {
+              ...item,
+
+              key:
+                makeUniqueKey(
+                  item.key,
+                  list
+                )
+            };
+
+          } else {
+
+            /*
+             * Manager can show this existingItem
+             * and provide View / Update / Add.
+             */
+
+            return res
+              .status(409)
+              .json({
+
+                error:
+                  'Asset key already exists.',
+
+                duplicate:
+                  true,
+
+                existingIndex,
+
+                existingItem:
+                  list[
+                    existingIndex
+                  ],
+
+                requestedItem:
+                  item
+              });
+          }
+        }
+      }
+
+
+      /* Usage duplicate */
+
+      if (
+        resource === 'usage'
+      ) {
+
+        const duplicateIndex =
+          list.findIndex(
+            existing =>
+              existing.usageKey ===
+              item.usageKey
+          );
+
+
+        if (
+          duplicateIndex >= 0
+        ) {
+
+          return res
+            .status(409)
+            .json({
+
+              error:
+                'Usage key already exists.',
+
+              duplicate:
+                true,
+
+              existingIndex:
+                duplicateIndex,
+
+              existingItem:
+                list[
+                  duplicateIndex
+                ],
+
+              requestedItem:
+                item
+            });
+        }
+      }
+
+
+      list.push(
+        item
       );
 
 
       const result =
-        await writeInsightsFile(
+        await writeDataFile(
+
           current.data,
+
           current.sha,
-          `Add Insight: ${insight.title}`
+
+          `Add ${resource}: ${
+            getDisplayName(
+              item,
+              list.length - 1
+            )
+          }`
         );
 
 
@@ -639,13 +1116,15 @@ export default async function handler(req, res) {
         .status(201)
         .json({
 
-          success: true,
+          success:
+            true,
 
-          item:
-            insight,
+          resource,
+
+          item,
 
           index:
-            current.data.items.length - 1,
+            list.length - 1,
 
           commit:
             result
@@ -654,15 +1133,13 @@ export default async function handler(req, res) {
 
           createdBy:
             manager.login
-
         });
-
     }
 
 
     /* =========================================
        PATCH
-       UPDATE INSIGHT
+       UPDATE
        ========================================= */
 
     if (
@@ -674,167 +1151,145 @@ export default async function handler(req, res) {
 
 
       const index =
-        Number(
-          body.index
-        );
-
-
-      if (
-        !Number.isInteger(
-          index
-        ) ||
-        index < 0
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              'A valid Insight index is required.'
-          });
-
-      }
-
-
-      const insight =
-        normalizeInsight(
+        getIndex(
           body
         );
 
 
       const current =
-        await loadInsightsFile();
+        await loadDataFile();
+
+
+      const list =
+        current.data[
+          resourceConfig.arrayKey
+        ];
 
 
       if (
-        index >=
-        current.data.items.length
+        index >= list.length
       ) {
 
         return res
           .status(404)
           .json({
             error:
-              'Insight item was not found.'
+              `${resource} item was not found.`
           });
-
       }
 
 
-      current.data.items[index] =
-        insight;
-
-
-      const result =
-        await writeInsightsFile(
-          current.data,
-          current.sha,
-          `Update Insight: ${insight.title}`
+      const item =
+        normalizeByResource(
+          body
         );
 
 
-      res.setHeader(
-        'Cache-Control',
-        'no-store, max-age=0'
-      );
-
-
-      return res
-        .status(200)
-        .json({
-
-          success: true,
-
-          item:
-            insight,
-
-          index,
-
-          commit:
-            result
-              ?.commit
-              ?.sha || null,
-
-          updatedBy:
-            manager.login
-
-        });
-
-    }
-
-
-    /* =========================================
-       DELETE
-       DELETE INSIGHT
-       ========================================= */
-
-    if (
-      req.method === 'DELETE'
-    ) {
-
-      const body =
-        req.body || {};
-
-
-      const index =
-        Number(
-          body.index
-        );
-
+      /*
+       * When Asset key is changed during Update,
+       * another Asset cannot already use that key.
+       */
 
       if (
-        !Number.isInteger(
-          index
-        ) ||
-        index < 0
+        resource === 'assets'
       ) {
 
-        return res
-          .status(400)
-          .json({
-            error:
-              'A valid Insight index is required.'
-          });
+        const duplicateIndex =
+          list.findIndex(
+            (existing, i) =>
+              i !== index &&
+              existing.key ===
+              item.key
+          );
 
+
+        if (
+          duplicateIndex >= 0
+        ) {
+
+          return res
+            .status(409)
+            .json({
+
+              error:
+                'Asset key already exists.',
+
+              duplicate:
+                true,
+
+              existingIndex:
+                duplicateIndex,
+
+              existingItem:
+                list[
+                  duplicateIndex
+                ],
+
+              requestedItem:
+                item
+            });
+        }
       }
 
 
-      const current =
-        await loadInsightsFile();
-
-
       if (
-        index >=
-        current.data.items.length
+        resource === 'usage'
       ) {
 
-        return res
-          .status(404)
-          .json({
-            error:
-              'Insight item was not found.'
-          });
+        const duplicateIndex =
+          list.findIndex(
+            (existing, i) =>
+              i !== index &&
+              existing.usageKey ===
+              item.usageKey
+          );
 
+
+        if (
+          duplicateIndex >= 0
+        ) {
+
+          return res
+            .status(409)
+            .json({
+
+              error:
+                'Usage key already exists.',
+
+              duplicate:
+                true,
+
+              existingIndex:
+                duplicateIndex,
+
+              existingItem:
+                list[
+                  duplicateIndex
+                ],
+
+              requestedItem:
+                item
+            });
+        }
       }
 
 
-      const deletedItem =
-        current.data.items[index];
-
-
-      current.data.items.splice(
-        index,
-        1
-      );
+      list[index] =
+        item;
 
 
       const result =
-        await writeInsightsFile(
+        await writeDataFile(
+
           current.data,
+
           current.sha,
-          `Delete Insight: ${
-            deletedItem.title ||
-            `Item ${index}`
+
+          `Update ${resource}: ${
+            getDisplayName(
+              item,
+              index
+            )
           }`
         );
 
@@ -849,7 +1304,108 @@ export default async function handler(req, res) {
         .status(200)
         .json({
 
-          success: true,
+          success:
+            true,
+
+          resource,
+
+          item,
+
+          index,
+
+          commit:
+            result
+              ?.commit
+              ?.sha || null,
+
+          updatedBy:
+            manager.login
+        });
+    }
+
+
+    /* =========================================
+       DELETE
+       Registry/Data record only
+       ========================================= */
+
+    if (
+      req.method === 'DELETE'
+    ) {
+
+      const body =
+        req.body || {};
+
+
+      const index =
+        getIndex(
+          body
+        );
+
+
+      const current =
+        await loadDataFile();
+
+
+      const list =
+        current.data[
+          resourceConfig.arrayKey
+        ];
+
+
+      if (
+        index >= list.length
+      ) {
+
+        return res
+          .status(404)
+          .json({
+            error:
+              `${resource} item was not found.`
+          });
+      }
+
+
+      const deletedItem =
+        list[index];
+
+
+      list.splice(
+        index,
+        1
+      );
+
+
+      const result =
+        await writeDataFile(
+
+          current.data,
+
+          current.sha,
+
+          `Delete ${resource}: ${
+            getDisplayName(
+              deletedItem,
+              index
+            )
+          }`
+        );
+
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+
+      return res
+        .status(200)
+        .json({
+
+          success:
+            true,
+
+          resource,
 
           deletedItem,
 
@@ -862,9 +1418,7 @@ export default async function handler(req, res) {
 
           deletedBy:
             manager.login
-
         });
-
     }
 
 
@@ -889,7 +1443,7 @@ export default async function handler(req, res) {
   } catch (error) {
 
     console.error(
-      'Insights Library API Error:',
+      'Insights / Asset Data API Error:',
       error
     );
 
@@ -907,9 +1461,7 @@ export default async function handler(req, res) {
       .json({
         error:
           error.message ||
-          'Insights Library operation failed.'
+          'Data operation failed.'
       });
-
   }
-
 }
