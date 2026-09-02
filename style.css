@@ -3110,12 +3110,14 @@ body {
 
 /* Assessment and university buttons on light backgrounds */
 .offering-detail-card .assessment-profile-btn.view,
+.iso-certification-intro-row .assessment-profile-btn.view,
 .university-actions-independent .university-action-independent.view {
   color: #071b33;
   border-color: #9aa8b6;
 }
 
 .offering-detail-card .assessment-profile-btn.download,
+.iso-certification-intro-row .assessment-profile-btn.download,
 .university-actions-independent .university-action-independent.download {
   background: #071b33;
   color: #ffffff;
@@ -3365,6 +3367,19 @@ body {
   color: #56616c;
   font-size: 16px;
   line-height: 1.7;
+}
+
+/* ---------- ISO 56001 INTRO ---------- */
+.iso-certification-intro-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 30px;
+  align-items: end;
+}
+
+.iso-certification-intro-row .offering-detail-lead {
+  min-width: 0;
+  margin-bottom: 0;
 }
 
 /* ---------- UNIVERSITY ADDITIONS ---------- */
@@ -3960,7 +3975,8 @@ body {
   }
 
   .company-profile-wrapper,
-  .university-intro-independent {
+  .university-intro-independent,
+  .iso-certification-intro-row {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: flex-start;
