@@ -341,9 +341,37 @@
       const registryIndex = getRegistryIndex(asset);
       const assetKey = registryItem?.key || createAssetKey(fileName);
 
+      const duplicateBlobAssets = allAssets.filter(otherAsset => {
+        if (otherAsset === asset) return false;
+        const otherRegistryItem = getRegistryItem(otherAsset);
+        const otherKey =
+          otherRegistryItem?.key ||
+          createAssetKey(getFileName(otherAsset.pathname));
+        return otherKey === assetKey;
+      });
+
+      const hasBlobKeyDuplicate =
+        !registryItem &&
+        duplicateBlobAssets.length > 0;
+
       const registryButton = registryItem
         ? `<button type="button" class="library-button" data-edit-registry="${registryIndex}">Edit</button>`
-        : `<button type="button" class="library-button primary" data-register-path="${escapeHtml(pathname)}">Register</button>`;
+        : hasBlobKeyDuplicate
+          ? `<button
+               type="button"
+               class="library-button"
+               data-duplicate-key="${escapeHtml(assetKey)}"
+               data-duplicate-path="${escapeHtml(pathname)}"
+             >
+               ⚠ Duplicate Key
+             </button>`
+          : `<button
+               type="button"
+               class="library-button primary"
+               data-register-path="${escapeHtml(pathname)}"
+             >
+               Register
+             </button>`;
 
       row.innerHTML = `
         <td>${escapeHtml(fileName)}</td>
@@ -660,6 +688,55 @@
         copyAssetUrl(copyButton.dataset.copyUrl);
         return;
       }
+
+      const duplicateButton = event.target.closest('[data-duplicate-key]');
+
+      if (duplicateButton) {
+        const key = duplicateButton.dataset.duplicateKey;
+
+        const matches = allAssets.filter(asset => {
+          const registryItem = getRegistryItem(asset);
+          const candidateKey =
+            registryItem?.key ||
+            createAssetKey(getFileName(asset.pathname));
+
+          return candidateKey === key;
+        });
+
+        const summary = matches
+          .map((asset, index) =>
+            `${index + 1}. ${getFileName(asset.pathname)}\n` +
+            `   Folder: ${getFolder(asset.pathname)}\n` +
+            `   Size: ${formatFileSize(asset.size)}`
+          )
+          .join('\n\n');
+
+        const choice = prompt(
+          `Duplicate Key detected: ${key}\n\n` +
+          `${summary}\n\n` +
+          `Enter a file number to View it.\n` +
+          `Leave blank or Cancel to close.`
+        );
+
+        if (!choice) {
+          return;
+        }
+
+        const selectedIndex = Number(choice) - 1;
+        const selected = matches[selectedIndex];
+
+        if (!selected) {
+          alert('Invalid file number.');
+          return;
+        }
+
+        if (selected.url) {
+          window.open(selected.url, '_blank', 'noopener');
+        }
+
+        return;
+      }
+
 
       const registerButton = event.target.closest('[data-register-path]');
 
