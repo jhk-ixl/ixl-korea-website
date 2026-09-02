@@ -63,6 +63,13 @@
       "label": "IXL Korea Logo",
       "assetKey": "ixl-korea-logo",
       "updatedAt": "2026-09-02T09:41:18.586Z"
+    },
+    {
+      "usageKey": "home-hero-image",
+      "page": "Website / Home / Hero",
+      "label": "Home Hero Image",
+      "assetKey": "hero-innovation",
+      "updatedAt": "2026-09-02T09:48:09.487Z"
     }
   ]
 }
