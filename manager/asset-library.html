@@ -44,13 +44,13 @@
 
   <main class="manager-main">
 
+    <section id="asset-library-section">
+
     <section class="manager-intro">
 
       <span class="section-eyebrow">
         KNOWLEDGE MANAGEMENT
       </span>
-
-      <h2>Asset Library</h2>
 
       <p>
         Manage website assets stored in Vercel Blob, including PDFs,
@@ -58,6 +58,39 @@
       </p>
 
     </section>
+
+
+    <div
+      id="asset-library-sticky-header"
+      class="manager-intro"
+      style="
+        position:sticky;
+        top:0;
+        z-index:1200;
+        background:#fff;
+        padding-top:10px;
+        padding-bottom:8px;
+      "
+    >
+      <h2 style="margin-top:0;margin-bottom:8px;">
+        Asset Library
+      </h2>
+
+      <div
+        id="asset-table-top-scroll"
+        style="
+          overflow-x:auto;
+          overflow-y:hidden;
+          margin:0;
+        "
+        aria-label="Asset table horizontal scroll"
+      >
+        <div
+          id="asset-table-top-scroll-inner"
+          style="height:1px;"
+        ></div>
+      </div>
+    </div>
 
 
     <section class="library-toolbar">
@@ -175,22 +208,6 @@
     </section>
 
 
-    <div
-      id="asset-table-top-scroll"
-      style="
-        position:sticky;
-        top:0;
-        z-index:1200;
-        overflow-x:auto;
-        overflow-y:hidden;
-        margin-bottom:8px;
-        background:#fff;
-      "
-      aria-label="Asset table horizontal scroll"
-    >
-      <div id="asset-table-top-scroll-inner" style="height:1px;"></div>
-    </div>
-
     <section class="library-table-wrap" id="asset-table-scroll-wrap">
 
       <table class="library-table" id="asset-library-table">
@@ -221,6 +238,8 @@
       <div id="library-empty" class="library-empty">
         Loading assets...
       </div>
+
+    </section>
 
     </section>
 
