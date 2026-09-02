@@ -161,6 +161,13 @@
       "label": "Innovation Singapore Cover",
       "assetKey": "book-innovation-singapore",
       "updatedAt": "2026-09-02T10:07:05.180Z"
+    },
+    {
+      "usageKey": "book-innovation-premium-cover",
+      "page": "Website / Insights / Book",
+      "label": "Innovation Premium Cover",
+      "assetKey": "book-innovation-premium",
+      "updatedAt": "2026-09-02T10:07:59.429Z"
     }
   ]
 }
