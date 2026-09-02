@@ -312,6 +312,19 @@
       "size": 2837875,
       "uploadedAt": "2026-09-02T08:13:12.000Z",
       "updatedAt": "2026-09-02T08:13:24.732Z"
+    },
+    {
+      "key": "gimi-ver4-0",
+      "name": "GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+      "fileName": "GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+      "folder": "insights",
+      "pathname": "insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4?download=1",
+      "type": "mp4",
+      "size": 16518989,
+      "uploadedAt": "2026-09-02T08:16:19.000Z",
+      "updatedAt": "2026-09-02T08:16:30.801Z"
     }
   ]
 }
