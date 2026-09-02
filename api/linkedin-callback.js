@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+import crypto from "crypto";
 
 const REDIRECT_URI =
   "https://ixl-korea-website.vercel.app/api/linkedin-callback";
@@ -45,7 +45,7 @@ function encrypt(value) {
   return Buffer.concat([iv, tag, encrypted]).toString("base64url");
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const { code, state, error, error_description } = req.query;
 

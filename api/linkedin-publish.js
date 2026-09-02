@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+import crypto from "crypto";
 
 const LINKEDIN_VERSION = "202608";
 
@@ -1293,7 +1293,7 @@ async function publishVideoPost(
 
 
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
 
   try {
 
