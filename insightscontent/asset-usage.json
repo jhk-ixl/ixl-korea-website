@@ -140,6 +140,13 @@
       "label": "Connectivate Cover",
       "assetKey": "book-connectivate",
       "updatedAt": "2026-09-02T10:03:58.793Z"
+    },
+    {
+      "usageKey": "book-greenovate-cover",
+      "page": "Website / Insights / Book",
+      "label": "Greenovate Cover",
+      "assetKey": "book-greenovate",
+      "updatedAt": "2026-09-02T10:04:35.122Z"
     }
   ]
 }
