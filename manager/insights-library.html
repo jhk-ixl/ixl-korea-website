@@ -724,6 +724,23 @@
 
         <div class="insights-field full">
 
+          <label for="edit-asset-key">
+            Asset Key
+          </label>
+
+          <select id="edit-asset-key">
+            <option value="">— No Asset Key —</option>
+          </select>
+
+          <span class="insights-field-hint">
+            Select a registered Asset Key. The current Blob URL will be resolved from Asset Registry.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field full">
+
         <label for="edit-asset">
             Asset Path
         </label>
@@ -912,6 +929,8 @@
 
     let insightsItems = [];
 
+    let assetRegistry = [];
+
     let editingIndex = null;
 
 
@@ -970,6 +989,7 @@
         item.summary,
         item.url,
         item.asset,
+        item.assetKey,
         item.access,
 
         ...(item.topics || []),
@@ -986,9 +1006,142 @@
        LOAD
        ========================================= */
 
+    async function loadAssetRegistry() {
+
+      const response =
+        await fetch(
+          `${API_URL}?resource=assets`,
+          {
+            cache: 'no-store'
+          }
+        );
+
+      const data =
+        await response.json()
+          .catch(() => []);
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          'Could not load Asset Registry.'
+        );
+      }
+
+      assetRegistry =
+        Array.isArray(data)
+          ? data
+          : [];
+
+      populateAssetKeySelect();
+
+    }
+
+
+    function populateAssetKeySelect(
+      selectedKey = ''
+    ) {
+
+      const select =
+        document.getElementById(
+          'edit-asset-key'
+        );
+
+      if (!select) {
+        return;
+      }
+
+      select.innerHTML =
+        '<option value="">— No Asset Key —</option>';
+
+      assetRegistry
+        .slice()
+        .sort(
+          (a, b) =>
+            String(a.key || '')
+              .localeCompare(
+                String(b.key || '')
+              )
+        )
+        .forEach(
+          asset => {
+
+            const option =
+              document.createElement(
+                'option'
+              );
+
+            option.value =
+              asset.key || '';
+
+            option.textContent =
+              `${asset.key || ''} — ${asset.fileName || asset.name || asset.pathname || ''}`;
+
+            select.appendChild(
+              option
+            );
+
+          }
+        );
+
+      if (
+        selectedKey &&
+        assetRegistry.some(
+          item =>
+            item.key === selectedKey
+        )
+      ) {
+
+        select.value =
+          selectedKey;
+
+      }
+
+    }
+
+
+    function getAssetByKey(key) {
+
+      return assetRegistry.find(
+        item =>
+          item.key === key
+      ) || null;
+
+    }
+
+
+    function syncAssetPathFromKey() {
+
+      const key =
+        document.getElementById(
+          'edit-asset-key'
+        ).value;
+
+      if (!key) {
+        return;
+      }
+
+      const asset =
+        getAssetByKey(key);
+
+      if (!asset) {
+        return;
+      }
+
+      document.getElementById(
+        'edit-asset'
+      ).value =
+        asset.url ||
+        asset.pathname ||
+        '';
+
+    }
+
+
     async function loadInsights() {
 
       try {
+
+        await loadAssetRegistry();
 
         const response =
           await fetch(
@@ -1380,6 +1533,13 @@
         '';
 
 
+      populateAssetKeySelect('');
+
+      document.getElementById(
+        'edit-asset-key'
+      ).value =
+        '';
+
       document.getElementById(
         'edit-asset'
       ).value =
@@ -1521,6 +1681,15 @@
       ).value =
         item.url || '';
 
+
+      populateAssetKeySelect(
+        item.assetKey || ''
+      );
+
+      document.getElementById(
+        'edit-asset-key'
+      ).value =
+        item.assetKey || '';
 
       document.getElementById(
         'edit-asset'
@@ -1793,6 +1962,38 @@
 
       let assetPath;
 
+      const assetKey =
+        document.getElementById(
+          'edit-asset-key'
+        ).value.trim();
+
+      if (assetKey) {
+
+        const registeredAsset =
+          getAssetByKey(
+            assetKey
+          );
+
+        if (!registeredAsset) {
+
+          showMessage(
+            'The selected Asset Key was not found in Asset Registry.',
+            'error'
+          );
+
+          return;
+
+        }
+
+        document.getElementById(
+          'edit-asset'
+        ).value =
+          registeredAsset.url ||
+          registeredAsset.pathname ||
+          '';
+
+      }
+
 
       try {
 
@@ -1877,6 +2078,9 @@
 
         asset:
             assetPath,
+
+        assetKey:
+            assetKey,
 
         featured:
           document.getElementById(
@@ -2236,6 +2440,16 @@
           }
 
         }
+      );
+
+
+    document
+      .getElementById(
+        'edit-asset-key'
+      )
+      .addEventListener(
+        'change',
+        syncAssetPathFromKey
       );
 
 
