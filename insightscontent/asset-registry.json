@@ -1,4 +1,18 @@
 {
   "version": 1,
-  "assets": []
+  "assets": [
+    {
+      "key": "ixl-korea-company-7offerings",
+      "name": "IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+      "fileName": "IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+      "folder": "companyprofile",
+      "pathname": "companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf?download=1",
+      "type": "pdf",
+      "size": 555156,
+      "uploadedAt": "2026-09-01T10:21:09.000Z",
+      "updatedAt": "2026-09-02T02:06:23.354Z"
+    }
+  ]
 }
