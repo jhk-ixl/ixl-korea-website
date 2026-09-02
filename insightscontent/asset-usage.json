@@ -168,6 +168,13 @@
       "label": "Innovation Premium Cover",
       "assetKey": "book-innovation-premium",
       "updatedAt": "2026-09-02T10:07:59.429Z"
+    },
+    {
+      "usageKey": "book-entrepreneurs-cover",
+      "page": "Website / Insights / Book",
+      "label": "Entrepreneurs Cover",
+      "assetKey": "book-entreprenuers",
+      "updatedAt": "2026-09-02T10:08:46.554Z"
     }
   ]
 }
