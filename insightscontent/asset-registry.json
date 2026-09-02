@@ -325,6 +325,19 @@
       "size": 16518989,
       "uploadedAt": "2026-09-02T08:16:19.000Z",
       "updatedAt": "2026-09-02T08:16:30.801Z"
+    },
+    {
+      "key": "gimi-leaflet-alumni",
+      "name": "GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf",
+      "fileName": "GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf",
+      "folder": "insights",
+      "pathname": "insights/GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf?download=1",
+      "type": "pdf",
+      "size": 7274288,
+      "uploadedAt": "2026-09-02T08:16:59.000Z",
+      "updatedAt": "2026-09-02T08:17:12.320Z"
     }
   ]
 }
