@@ -208,6 +208,126 @@
 
     </section>
 
+
+    <section style="margin-top:34px;">
+      <div style="display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap;">
+        <div>
+          <span class="section-eyebrow">ASSET USAGE</span>
+          <h3 style="margin:6px 0 6px;">Usage Mapping</h3>
+          <p style="margin:0;color:#5f6f82;">
+            Connect a website page or function to a registered Asset Key without changing code data manually.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          id="usage-add-button"
+          class="library-button primary"
+        >
+          Add Usage
+        </button>
+      </div>
+
+      <div class="library-table-wrap" style="margin-top:18px;">
+        <table class="library-table">
+          <thead>
+            <tr>
+              <th>Usage Key</th>
+              <th>Page / Function</th>
+              <th>Label</th>
+              <th>Asset Key</th>
+              <th>Asset</th>
+              <th>Edit</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody id="usage-table-body"></tbody>
+        </table>
+
+        <div id="usage-empty" class="library-empty">
+          Loading usage mappings...
+        </div>
+      </div>
+    </section>
+
+    <div
+      id="usage-modal"
+      style="
+        display:none;
+        position:fixed;
+        inset:0;
+        z-index:5100;
+        background:rgba(7,27,51,0.45);
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+      "
+    >
+      <div
+        style="
+          width:min(680px,100%);
+          background:#fff;
+          border-radius:12px;
+          box-shadow:0 20px 60px rgba(7,27,51,0.25);
+          padding:24px;
+        "
+      >
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+          <div>
+            <span class="section-eyebrow">ASSET USAGE</span>
+            <h3 id="usage-modal-title" style="margin:6px 0 0;">Add Usage</h3>
+          </div>
+          <button type="button" id="usage-modal-cancel" class="library-button">Cancel</button>
+        </div>
+
+        <input type="hidden" id="usage-edit-index" value="">
+
+        <div style="display:grid;gap:16px;margin-top:22px;">
+          <div>
+            <label for="usage-key-input" style="display:block;margin-bottom:6px;font-weight:700;">Usage Key</label>
+            <input
+              id="usage-key-input"
+              type="text"
+              placeholder="e.g. offerings-profile-pdf"
+              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
+            >
+          </div>
+
+          <div>
+            <label for="usage-page-input" style="display:block;margin-bottom:6px;font-weight:700;">Page / Function</label>
+            <input
+              id="usage-page-input"
+              type="text"
+              placeholder="e.g. Website / Offerings or Insights / LinkedIn"
+              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
+            >
+          </div>
+
+          <div>
+            <label for="usage-label-input" style="display:block;margin-bottom:6px;font-weight:700;">Label</label>
+            <input
+              id="usage-label-input"
+              type="text"
+              placeholder="e.g. IXL Korea 7 Offerings PDF"
+              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
+            >
+          </div>
+
+          <div>
+            <label for="usage-asset-key-select" style="display:block;margin-bottom:6px;font-weight:700;">Asset Key</label>
+            <select
+              id="usage-asset-key-select"
+              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;background:#fff;"
+            ></select>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+            <button type="button" id="usage-save-button" class="library-button primary">Save Usage</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   
     <div
       id="duplicate-modal"
@@ -267,6 +387,7 @@
 
   let allAssets = [];
   let registryAssets = [];
+  let usageMappings = [];
 
   function formatFileSize(bytes) {
     const size = Number(bytes || 0);
@@ -491,6 +612,268 @@
     registryAssets = Array.isArray(data) ? data : [];
   }
 
+
+  async function loadUsageMappings() {
+    const response = await fetch(
+      '/api/insights-library?resource=usage',
+      {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store'
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to load Asset Usage.');
+    }
+
+    usageMappings = Array.isArray(data) ? data : [];
+  }
+
+
+  function findRegistryByKey(key) {
+    return registryAssets.find(
+      item => item.key === key
+    ) || null;
+  }
+
+
+  function renderUsageMappings() {
+    const tbody = document.getElementById('usage-table-body');
+    const empty = document.getElementById('usage-empty');
+
+    tbody.innerHTML = '';
+
+    usageMappings.forEach((usage, index) => {
+      const asset = findRegistryByKey(usage.assetKey);
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td><code>${escapeHtml(usage.usageKey || '')}</code></td>
+        <td>${escapeHtml(usage.page || '')}</td>
+        <td>${escapeHtml(usage.label || '')}</td>
+        <td><code>${escapeHtml(usage.assetKey || '')}</code></td>
+        <td>
+          ${
+            asset?.url
+              ? `<a href="${escapeHtml(asset.url)}" target="_blank" rel="noopener noreferrer">View</a>`
+              : '<span style="color:#b42318;font-weight:700;">Missing Asset</span>'
+          }
+        </td>
+        <td>
+          <button type="button" class="library-button" data-edit-usage="${index}">
+            Edit
+          </button>
+        </td>
+        <td>
+          <button type="button" class="library-button" data-delete-usage="${index}">
+            Delete
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(row);
+    });
+
+    empty.style.display = usageMappings.length ? 'none' : 'block';
+    empty.textContent = usageMappings.length
+      ? ''
+      : 'No usage mappings yet.';
+  }
+
+
+  function populateUsageAssetSelect(selectedKey = '') {
+    const select = document.getElementById('usage-asset-key-select');
+    select.innerHTML = '';
+
+    if (!registryAssets.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'No registered assets available';
+      select.appendChild(option);
+      return;
+    }
+
+    registryAssets
+      .slice()
+      .sort((a, b) => String(a.key).localeCompare(String(b.key)))
+      .forEach(asset => {
+        const option = document.createElement('option');
+        option.value = asset.key;
+        option.textContent = `${asset.key} — ${asset.fileName || asset.name || asset.pathname || ''}`;
+        select.appendChild(option);
+      });
+
+    if (
+      selectedKey &&
+      registryAssets.some(item => item.key === selectedKey)
+    ) {
+      select.value = selectedKey;
+    }
+  }
+
+
+  function openUsageModal(index = null) {
+    const modal = document.getElementById('usage-modal');
+    const title = document.getElementById('usage-modal-title');
+    const editIndex = document.getElementById('usage-edit-index');
+    const usageKeyInput = document.getElementById('usage-key-input');
+    const pageInput = document.getElementById('usage-page-input');
+    const labelInput = document.getElementById('usage-label-input');
+
+    if (index === null) {
+      title.textContent = 'Add Usage';
+      editIndex.value = '';
+      usageKeyInput.value = '';
+      pageInput.value = '';
+      labelInput.value = '';
+      populateUsageAssetSelect('');
+    } else {
+      const usage = usageMappings[index];
+
+      if (!usage) {
+        alert('Usage mapping was not found.');
+        return;
+      }
+
+      title.textContent = 'Edit Usage';
+      editIndex.value = String(index);
+      usageKeyInput.value = usage.usageKey || '';
+      pageInput.value = usage.page || '';
+      labelInput.value = usage.label || '';
+      populateUsageAssetSelect(usage.assetKey || '');
+    }
+
+    modal.style.display = 'flex';
+  }
+
+
+  function closeUsageModal() {
+    document.getElementById('usage-modal').style.display = 'none';
+  }
+
+
+  async function saveUsageMapping() {
+    const button = document.getElementById('usage-save-button');
+    const editIndexValue = document.getElementById('usage-edit-index').value;
+    const usageKey = createAssetKey(
+      document.getElementById('usage-key-input').value
+    );
+    const page = document.getElementById('usage-page-input').value.trim();
+    const label = document.getElementById('usage-label-input').value.trim();
+    const assetKey = document.getElementById('usage-asset-key-select').value;
+
+    if (!usageKey) {
+      alert('Usage Key is required.');
+      return;
+    }
+
+    if (!page) {
+      alert('Page / Function is required.');
+      return;
+    }
+
+    if (!assetKey) {
+      alert('Please select a registered Asset Key.');
+      return;
+    }
+
+    const isEdit = editIndexValue !== '';
+    const payload = {
+      usageKey,
+      page,
+      label,
+      assetKey
+    };
+
+    if (isEdit) {
+      payload.index = Number(editIndexValue);
+    }
+
+    try {
+      button.disabled = true;
+      button.textContent = 'Saving...';
+
+      const response = await fetch(
+        '/api/insights-library?resource=usage',
+        {
+          method: isEdit ? 'PATCH' : 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify(payload)
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409 && data.duplicate) {
+          throw new Error(`Usage Key "${usageKey}" already exists.`);
+        }
+
+        throw new Error(data.error || 'Failed to save Asset Usage.');
+      }
+
+      closeUsageModal();
+      await loadUsageMappings();
+      renderUsageMappings();
+
+      alert(isEdit ? 'Usage mapping updated.' : 'Usage mapping added.');
+
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to save Asset Usage.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Save Usage';
+    }
+  }
+
+
+  async function deleteUsageMapping(index) {
+    const usage = usageMappings[index];
+
+    if (!usage) {
+      alert('Usage mapping was not found.');
+      return;
+    }
+
+    const confirmed = confirm(
+      `Delete this usage mapping?\n\n` +
+      `${usage.usageKey}\n` +
+      `${usage.page || ''}\n` +
+      `Asset Key: ${usage.assetKey || ''}`
+    );
+
+    if (!confirmed) return;
+
+    const response = await fetch(
+      '/api/insights-library?resource=usage',
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ index })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to delete Asset Usage.');
+    }
+
+    await loadUsageMappings();
+    renderUsageMappings();
+  }
+
+
   async function loadAssets() {
     const empty = document.getElementById('library-empty');
     empty.style.display = 'block';
@@ -506,7 +889,8 @@
             cache: 'no-store'
           }
         ),
-        loadRegistry()
+        loadRegistry(),
+        loadUsageMappings()
       ]);
 
       const data = await blobResponse.json();
@@ -521,6 +905,7 @@
 
       renderFolderFilter();
       renderAssets();
+      renderUsageMappings();
 
     } catch (error) {
       console.error(error);
@@ -960,6 +1345,58 @@
           error.message ||
           'Failed to register asset.'
         );
+      }
+    }
+  );
+
+
+
+  document.getElementById('usage-add-button').addEventListener(
+    'click',
+    () => openUsageModal(null)
+  );
+
+  document.getElementById('usage-modal-cancel').addEventListener(
+    'click',
+    closeUsageModal
+  );
+
+  document.getElementById('usage-modal').addEventListener(
+    'click',
+    event => {
+      if (event.target.id === 'usage-modal') {
+        closeUsageModal();
+      }
+    }
+  );
+
+  document.getElementById('usage-save-button').addEventListener(
+    'click',
+    saveUsageMapping
+  );
+
+  document.getElementById('usage-table-body').addEventListener(
+    'click',
+    async event => {
+      const editButton = event.target.closest('[data-edit-usage]');
+
+      if (editButton) {
+        openUsageModal(Number(editButton.dataset.editUsage));
+        return;
+      }
+
+      const deleteButton = event.target.closest('[data-delete-usage]');
+
+      if (!deleteButton) return;
+
+      try {
+        deleteButton.disabled = true;
+        await deleteUsageMapping(Number(deleteButton.dataset.deleteUsage));
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to delete Asset Usage.');
+      } finally {
+        deleteButton.disabled = false;
       }
     }
   );
