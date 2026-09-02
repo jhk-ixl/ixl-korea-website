@@ -133,6 +133,13 @@
       "label": "Healthovate Cover",
       "assetKey": "book-healthovate",
       "updatedAt": "2026-09-02T10:02:54.409Z"
+    },
+    {
+      "usageKey": "book-connectivate-cover",
+      "page": "Website / Insights / Book",
+      "label": "Connectivate Cover",
+      "assetKey": "book-connectivate",
+      "updatedAt": "2026-09-02T10:03:58.793Z"
     }
   ]
 }
