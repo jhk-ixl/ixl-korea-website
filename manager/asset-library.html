@@ -818,11 +818,20 @@
         throw new Error(data.error || 'Failed to save Asset Usage.');
       }
 
+      if (isEdit) {
+          usageMappings[data.index] = data.item;
+      } else {
+          usageMappings.push(data.item);
+      }
+
       closeUsageModal();
-      await loadUsageMappings();
       renderUsageMappings();
 
-      alert(isEdit ? 'Usage mapping updated.' : 'Usage mapping added.');
+      alert(
+          isEdit
+              ? 'Usage mapping updated.'
+              : 'Usage mapping added.'
+      );
 
     } catch (error) {
       console.error(error);
