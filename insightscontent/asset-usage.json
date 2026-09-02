@@ -35,6 +35,13 @@
       "label": "AKAIO Profile",
       "assetKey": "akaio-profile",
       "updatedAt": "2026-09-02T06:34:38.728Z"
+    },
+    {
+      "usageKey": "universities-innovation-olympics-pdf",
+      "page": "Website / Universities / Innovation Olympics",
+      "label": "Universities Innovation Olympics Profile",
+      "assetKey": "universities-innovation-olympics",
+      "updatedAt": "2026-09-02T06:35:37.404Z"
     }
   ]
 }
