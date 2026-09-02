@@ -14,6 +14,13 @@
       "label": "IXL Korea Company Profile",
       "assetKey": "ixl-korea-company-profile",
       "updatedAt": "2026-09-02T06:26:14.988Z"
+    },
+    {
+      "usageKey": "oia-profile-pdf",
+      "page": "Website / Offerings / OIA",
+      "label": "OIA Profile",
+      "assetKey": "oia-profile",
+      "updatedAt": "2026-09-02T06:27:34.721Z"
     }
   ]
 }
