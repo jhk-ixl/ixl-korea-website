@@ -289,6 +289,11 @@
           id="queue-edit-file"
         >
 
+        <input
+          type="hidden"
+          id="queue-edit-asset-key"
+        >
+
         <label>
           Channel
 
@@ -1028,6 +1033,11 @@
       ).value =
         fileName;
 
+      document.getElementById(
+        'queue-edit-asset-key'
+      ).value =
+        item.assetKey || '';
+
 
       document.getElementById(
         'queue-edit-status'
@@ -1102,6 +1112,11 @@ async function publishToLinkedIn() {
     document.getElementById(
       'queue-edit-media-file'
     ).textContent.trim();
+
+  const assetKey =
+    document.getElementById(
+      'queue-edit-asset-key'
+    ).value.trim();
 
   const linkElement =
     document.getElementById(
@@ -1198,7 +1213,8 @@ async function publishToLinkedIn() {
               postText,
               link,
               mediaType,
-              mediaFile
+              mediaFile,
+              assetKey
             })
         }
       );

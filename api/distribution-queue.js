@@ -330,6 +330,12 @@ export default async function handler(req, res) {
         ).trim();
 
 
+      const assetKey =
+        String(
+          body.assetKey || ''
+        ).trim();
+
+
     const allowedMediaTypes = [
       'None',
       'Image',
@@ -454,6 +460,11 @@ export default async function handler(req, res) {
           mediaType === 'None'
             ? ''
             : mediaFile,
+
+        assetKey:
+          mediaType === 'None'
+            ? ''
+            : assetKey,
 
         status: 'Draft',
         scheduledDate: '',

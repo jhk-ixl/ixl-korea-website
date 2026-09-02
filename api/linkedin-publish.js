@@ -98,6 +98,91 @@ function getProductionMediaUrl(mediaFile) {
 }
 
 
+async function resolveMediaFile(assetKey, mediaFile) {
+
+  const cleanAssetKey =
+    String(assetKey || "").trim();
+
+  const fallbackMediaFile =
+    String(mediaFile || "").trim();
+
+  if (!cleanAssetKey) {
+    return fallbackMediaFile;
+  }
+
+  try {
+
+    const registryResponse =
+      await fetch(
+        "https://ixl-korea-website.vercel.app/insightscontent/asset-registry.json",
+        {
+          cache: "no-store"
+        }
+      );
+
+    if (!registryResponse.ok) {
+      throw new Error(
+        `Asset Registry HTTP ${registryResponse.status}`
+      );
+    }
+
+    const registryData =
+      await registryResponse.json();
+
+    const assets =
+      Array.isArray(registryData)
+        ? registryData
+        : (
+            Array.isArray(registryData?.assets)
+              ? registryData.assets
+              : []
+          );
+
+    const asset =
+      assets.find(
+        (entry) =>
+          String(entry?.key || "").trim() ===
+          cleanAssetKey
+      );
+
+    if (!asset) {
+      throw new Error(
+        `Asset Key was not found: ${cleanAssetKey}`
+      );
+    }
+
+    const resolved =
+      String(
+        asset.url ||
+        asset.pathname ||
+        ""
+      ).trim();
+
+    if (!resolved) {
+      throw new Error(
+        `Asset URL is missing for key: ${cleanAssetKey}`
+      );
+    }
+
+    return resolved;
+
+  } catch (error) {
+
+    console.error(
+      "Asset Key resolution failed:",
+      cleanAssetKey,
+      error
+    );
+
+    if (fallbackMediaFile) {
+      return fallbackMediaFile;
+    }
+
+    throw error;
+  }
+}
+
+
 function buildPostText(postText, link) {
 
   const cleanText =
@@ -1277,6 +1362,18 @@ module.exports = async function handler(req, res) {
         : "";
 
 
+    const assetKey =
+      typeof req.body?.assetKey === "string"
+        ? req.body.assetKey.trim()
+        : "";
+
+    const resolvedMediaFile =
+      await resolveMediaFile(
+        assetKey,
+        mediaFile
+      );
+
+
     if (!postText) {
 
       return res.status(400).json({
@@ -1303,7 +1400,7 @@ if (
   "document"
 ) {
 
-  if (!mediaFile) {
+  if (!resolvedMediaFile) {
 
     return res.status(400).json({
       error:
@@ -1317,7 +1414,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      mediaFile
+      resolvedMediaFile
     );
 
 
@@ -1326,7 +1423,7 @@ if (
   "image"
 ) {
 
-  if (!mediaFile) {
+  if (!resolvedMediaFile) {
 
     return res.status(400).json({
       error:
@@ -1340,7 +1437,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      mediaFile
+      resolvedMediaFile
     );
 
 
@@ -1349,7 +1446,7 @@ if (
   "video"
 ) {
 
-  if (!mediaFile) {
+  if (!resolvedMediaFile) {
 
     return res.status(400).json({
       error:
@@ -1363,7 +1460,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      mediaFile
+      resolvedMediaFile
     );
 
 

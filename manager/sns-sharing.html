@@ -498,6 +498,8 @@
 
     let allKnowledgeItems = [];
 
+    let selectedAssetKey = '';
+
     const selectedItems =
       new Set();
 
@@ -669,6 +671,9 @@
         mediaFileField.value =
           '';
 
+        selectedAssetKey =
+          '';
+
         titleField.placeholder =
           'Select a Knowledge item first';
 
@@ -716,6 +721,11 @@
 
       const asset =
         item.asset || '';
+
+      selectedAssetKey =
+        String(
+          item.assetKey || ''
+        ).trim();
 
 
       const url =
@@ -1594,7 +1604,9 @@
                   postText,
                   link,
                   mediaType,
-                  mediaFile
+                  mediaFile,
+                  assetKey:
+                    selectedAssetKey
                 })
             }
           );
