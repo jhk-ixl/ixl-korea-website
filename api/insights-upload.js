@@ -320,19 +320,22 @@ export default async function handler(
 
 
             /* ---------------------------------
-               ONLY INSIGHTS UPLOAD AREA
+               ALLOWED ASSET UPLOAD AREAS
                --------------------------------- */
 
             if (
                 !(
                     safePathname.startsWith(
-                    'insights/'
+                        'insights/'
                     ) ||
                     safePathname.startsWith(
-                    'companyprofile/'
+                        'companyprofile/'
+                    ) ||
+                    safePathname.startsWith(
+                        'images/'
                     )
                 )
-                ) {
+            ) {
 
                 throw new Error(
                     'Upload path is not allowed.'
