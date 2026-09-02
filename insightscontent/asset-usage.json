@@ -7,6 +7,13 @@
       "label": "IXL Korea 7 Offerings PDF",
       "assetKey": "ixl-korea-company-7offerings",
       "updatedAt": "2026-09-02T05:38:13.304Z"
+    },
+    {
+      "usageKey": "about-company-profile-pdf",
+      "page": "Website / About / Company Profile",
+      "label": "IXL Korea Company Profile",
+      "assetKey": "ixl-korea-company-profile",
+      "updatedAt": "2026-09-02T06:26:14.988Z"
     }
   ]
 }
