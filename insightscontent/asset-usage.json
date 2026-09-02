@@ -84,6 +84,13 @@
       "label": "Global Leadership Team",
       "assetKey": "ixl-center-global-leadership-team",
       "updatedAt": "2026-09-02T09:50:09.324Z"
+    },
+    {
+      "usageKey": "about-country-directors-part-1",
+      "page": "Website / About / Country Directors",
+      "label": "Country Directors Part 1",
+      "assetKey": "ixl-center-country-managing-directors-and-partners-part-1",
+      "updatedAt": "2026-09-02T09:50:54.043Z"
     }
   ]
 }
