@@ -175,6 +175,13 @@
       "label": "Entrepreneurs Cover",
       "assetKey": "book-entreprenuers",
       "updatedAt": "2026-09-02T10:08:46.554Z"
+    },
+    {
+      "usageKey": "book-technovate-cover",
+      "page": "Website / Insights / Book",
+      "label": "Technovate Cover",
+      "assetKey": "akaio-profile",
+      "updatedAt": "2026-09-02T10:09:16.090Z"
     }
   ]
 }
