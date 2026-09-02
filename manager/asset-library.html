@@ -208,6 +208,58 @@
 
     </section>
 
+  
+    <div
+      id="duplicate-modal"
+      style="
+        display:none;
+        position:fixed;
+        inset:0;
+        z-index:5000;
+        background:rgba(7,27,51,0.45);
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+      "
+    >
+      <div
+        style="
+          width:min(760px, 100%);
+          max-height:85vh;
+          overflow:auto;
+          background:#fff;
+          border-radius:12px;
+          box-shadow:0 20px 60px rgba(7,27,51,0.25);
+          padding:24px;
+        "
+      >
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+          <div>
+            <span class="section-eyebrow">DUPLICATE ASSET KEY</span>
+            <h3 style="margin:6px 0 0;">Choose the correct file</h3>
+            <p id="duplicate-modal-key" style="margin:8px 0 0;color:#5f6f82;"></p>
+          </div>
+
+          <button
+            type="button"
+            id="duplicate-modal-close"
+            class="library-button"
+          >
+            Cancel
+          </button>
+        </div>
+
+        <div
+          id="duplicate-modal-list"
+          style="
+            display:grid;
+            gap:14px;
+            margin-top:22px;
+          "
+        ></div>
+      </div>
+    </div>
+
   </main>
 
 
@@ -674,6 +726,245 @@
     await loadAssets();
   }
 
+
+  function closeDuplicateModal() {
+    const modal =
+      document.getElementById(
+        'duplicate-modal'
+      );
+
+    modal.style.display = 'none';
+
+    document.getElementById(
+      'duplicate-modal-list'
+    ).innerHTML = '';
+  }
+
+
+  function showDuplicateModal(key) {
+
+    const modal =
+      document.getElementById(
+        'duplicate-modal'
+      );
+
+    const keyLabel =
+      document.getElementById(
+        'duplicate-modal-key'
+      );
+
+    const list =
+      document.getElementById(
+        'duplicate-modal-list'
+      );
+
+    const matches =
+      allAssets.filter(asset => {
+
+        const registryItem =
+          getRegistryItem(asset);
+
+        const candidateKey =
+          registryItem?.key ||
+          createAssetKey(
+            getFileName(
+              asset.pathname
+            )
+          );
+
+        return candidateKey === key;
+      });
+
+
+    keyLabel.textContent =
+      `Key: ${key}`;
+
+    list.innerHTML = '';
+
+
+    matches.forEach(asset => {
+
+      const card =
+        document.createElement('div');
+
+      card.style.cssText =
+        'border:1px solid #dbe3ec;' +
+        'border-radius:10px;' +
+        'padding:16px;' +
+        'display:grid;' +
+        'grid-template-columns:minmax(0,1fr) auto;' +
+        'gap:16px;' +
+        'align-items:center;';
+
+
+      const fileName =
+        getFileName(
+          asset.pathname
+        );
+
+
+      card.innerHTML = `
+        <div style="min-width:0;">
+          <strong style="display:block;word-break:break-word;">
+            ${escapeHtml(fileName)}
+          </strong>
+
+          <div
+            style="
+              margin-top:8px;
+              display:flex;
+              flex-wrap:wrap;
+              gap:8px 16px;
+              color:#5f6f82;
+              font-size:14px;
+            "
+          >
+            <span>
+              Folder:
+              <strong>${escapeHtml(getFolder(asset.pathname))}</strong>
+            </span>
+
+            <span>
+              Size:
+              <strong>${escapeHtml(formatFileSize(asset.size))}</strong>
+            </span>
+
+            <span>
+              Type:
+              <strong>${escapeHtml(getFileType(asset.pathname))}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+          ${
+            asset.url
+              ? `<a
+                   href="${escapeHtml(asset.url)}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="library-button"
+                 >
+                   View
+                 </a>`
+              : ''
+          }
+
+          <button
+            type="button"
+            class="library-button primary"
+            data-use-duplicate-path="${escapeHtml(asset.pathname || '')}"
+          >
+            Use This
+          </button>
+        </div>
+      `;
+
+
+      list.appendChild(
+        card
+      );
+    });
+
+
+    modal.style.display =
+      'flex';
+  }
+
+
+  document.getElementById(
+    'duplicate-modal-close'
+  ).addEventListener(
+    'click',
+    closeDuplicateModal
+  );
+
+
+  document.getElementById(
+    'duplicate-modal'
+  ).addEventListener(
+    'click',
+    event => {
+
+      if (
+        event.target.id ===
+        'duplicate-modal'
+      ) {
+        closeDuplicateModal();
+      }
+    }
+  );
+
+
+  document.getElementById(
+    'duplicate-modal-list'
+  ).addEventListener(
+    'click',
+    async event => {
+
+      const useButton =
+        event.target.closest(
+          '[data-use-duplicate-path]'
+        );
+
+      if (!useButton) {
+        return;
+      }
+
+
+      const asset =
+        allAssets.find(
+          item =>
+            item.pathname ===
+            useButton.dataset.useDuplicatePath
+        );
+
+
+      if (!asset) {
+
+        alert(
+          'Asset was not found.'
+        );
+
+        return;
+      }
+
+
+      const confirmed =
+        confirm(
+          `Use this file for the Asset Registry?\n\n` +
+          `${getFileName(asset.pathname)}\n` +
+          `Folder: ${getFolder(asset.pathname)}`
+        );
+
+
+      if (!confirmed) {
+        return;
+      }
+
+
+      closeDuplicateModal();
+
+
+      try {
+
+        await registerAsset(
+          asset
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          error.message ||
+          'Failed to register asset.'
+        );
+      }
+    }
+  );
+
+
   document.getElementById('asset-search').addEventListener('input', renderAssets);
 
   document.getElementById('asset-folder-filter').addEventListener('change', renderAssets);
@@ -692,48 +983,9 @@
       const duplicateButton = event.target.closest('[data-duplicate-key]');
 
       if (duplicateButton) {
-        const key = duplicateButton.dataset.duplicateKey;
-
-        const matches = allAssets.filter(asset => {
-          const registryItem = getRegistryItem(asset);
-          const candidateKey =
-            registryItem?.key ||
-            createAssetKey(getFileName(asset.pathname));
-
-          return candidateKey === key;
-        });
-
-        const summary = matches
-          .map((asset, index) =>
-            `${index + 1}. ${getFileName(asset.pathname)}\n` +
-            `   Folder: ${getFolder(asset.pathname)}\n` +
-            `   Size: ${formatFileSize(asset.size)}`
-          )
-          .join('\n\n');
-
-        const choice = prompt(
-          `Duplicate Key detected: ${key}\n\n` +
-          `${summary}\n\n` +
-          `Enter a file number to View it.\n` +
-          `Leave blank or Cancel to close.`
+        showDuplicateModal(
+          duplicateButton.dataset.duplicateKey
         );
-
-        if (!choice) {
-          return;
-        }
-
-        const selectedIndex = Number(choice) - 1;
-        const selected = matches[selectedIndex];
-
-        if (!selected) {
-          alert('Invalid file number.');
-          return;
-        }
-
-        if (selected.url) {
-          window.open(selected.url, '_blank', 'noopener');
-        }
-
         return;
       }
 
