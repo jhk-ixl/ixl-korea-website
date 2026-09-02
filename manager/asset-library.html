@@ -53,10 +53,8 @@
       <h2>Asset Library</h2>
 
       <p>
-        <p>
-          Manage website assets stored in Vercel Blob, including PDFs,
-          presentations, images, videos and other downloadable files.
-        </p>
+        Manage website assets stored in Vercel Blob, including PDFs,
+        presentations, images, videos and other downloadable files.
       </p>
 
     </section>
@@ -121,6 +119,7 @@
         <select id="asset-upload-folder">
           <option value="companyprofile">companyprofile</option>
           <option value="insights">insights</option>
+          <option value="images">images</option>
         </select>
 
       </div>
@@ -155,7 +154,7 @@
         <input
           type="search"
           id="asset-search"
-          placeholder="Search file name or folder..."
+          placeholder="Search file name, key or folder..."
         >
 
       </div>
@@ -183,11 +182,13 @@
         <thead>
           <tr>
             <th>File</th>
+            <th>Key</th>
             <th>Folder</th>
             <th>Type</th>
             <th>Size</th>
             <th>Uploaded</th>
             <th>View</th>
+            <th>Registry</th>
             <th>Download</th>
             <th>URL</th>
             <th>Delete</th>
@@ -213,581 +214,589 @@
  <script>
 
   let allAssets = [];
-
+  let registryAssets = [];
 
   function formatFileSize(bytes) {
-
     const size = Number(bytes || 0);
-
-    if (size < 1024) {
-      return `${size} B`;
-    }
-
-    if (size < 1024 * 1024) {
-      return `${(size / 1024).toFixed(1)} KB`;
-    }
-
-    if (size < 1024 * 1024 * 1024) {
-      return `${(size / 1024 / 1024).toFixed(1)} MB`;
-    }
-
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
     return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`;
-
   }
-
 
   function getFileName(pathname) {
-
-    const parts =
-      String(pathname || '').split('/');
-
+    const parts = String(pathname || '').split('/');
     return parts[parts.length - 1] || pathname;
-
   }
-
 
   function getFolder(pathname) {
-
-    const parts =
-      String(pathname || '').split('/');
-
-    if (parts.length <= 1) {
-      return 'root';
-    }
-
+    const parts = String(pathname || '').split('/');
+    if (parts.length <= 1) return 'root';
     return parts.slice(0, -1).join('/');
-
   }
-
 
   function getFileType(pathname) {
-
-    const fileName =
-      getFileName(pathname);
-
-    const dot =
-      fileName.lastIndexOf('.');
-
-    if (dot === -1) {
-      return 'FILE';
-    }
-
-    return fileName
-      .slice(dot + 1)
-      .toUpperCase();
-
+    const fileName = getFileName(pathname);
+    const dot = fileName.lastIndexOf('.');
+    if (dot === -1) return 'FILE';
+    return fileName.slice(dot + 1).toUpperCase();
   }
-
 
   function formatUploadedDate(value) {
-
-    if (!value) {
-      return '';
-    }
-
-    const date =
-      new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return '';
-    }
-
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleString();
-
   }
 
-
   function escapeHtml(value) {
-
     return String(value ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
-
   }
 
+  function createAssetKey(value) {
+    return String(value || '')
+      .split('/')
+      .pop()
+      .replace(/\.[^.]+$/, '')
+      .normalize('NFKD')
+      .toLowerCase()
+      .replace(/[^a-z0-9가-힣]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function getRegistryIndex(asset) {
+    const url = String(asset.url || '');
+    const pathname = String(asset.pathname || '');
+    return registryAssets.findIndex(item =>
+      (item.url && item.url === url) ||
+      (item.pathname && item.pathname === pathname)
+    );
+  }
+
+  function getRegistryItem(asset) {
+    const index = getRegistryIndex(asset);
+    return index >= 0 ? registryAssets[index] : null;
+  }
 
   function renderFolderFilter() {
+    const select = document.getElementById('asset-folder-filter');
+    const currentValue = select.value;
+    const folders = [
+      ...new Set(allAssets.map(asset => getFolder(asset.pathname)))
+    ].sort();
 
-    const select =
-      document.getElementById(
-        'asset-folder-filter'
-      );
-
-    const currentValue =
-      select.value;
-
-    const folders =
-      [
-        ...new Set(
-          allAssets.map(
-            asset =>
-              getFolder(asset.pathname)
-          )
-        )
-      ].sort();
-
-    select.innerHTML =
-      '<option value="all">All Folders</option>';
+    select.innerHTML = '<option value="all">All Folders</option>';
 
     folders.forEach(folder => {
-
-      const option =
-        document.createElement('option');
-
+      const option = document.createElement('option');
       option.value = folder;
       option.textContent = folder;
-
       select.appendChild(option);
-
     });
 
     if (folders.includes(currentValue)) {
       select.value = currentValue;
     }
-
   }
 
-
   function renderAssets() {
+    const tbody = document.getElementById('asset-table-body');
+    const empty = document.getElementById('library-empty');
+    const search = document.getElementById('asset-search').value.trim().toLowerCase();
+    const folder = document.getElementById('asset-folder-filter').value;
 
-    const tbody =
-      document.getElementById(
-        'asset-table-body'
-      );
+    const filtered = allAssets.filter(asset => {
+      const pathname = String(asset.pathname || '');
+      const registryItem = getRegistryItem(asset);
+      const key = registryItem?.key || createAssetKey(getFileName(pathname));
 
-    const empty =
-      document.getElementById(
-        'library-empty'
-      );
+      const matchesSearch =
+        !search ||
+        pathname.toLowerCase().includes(search) ||
+        key.toLowerCase().includes(search);
 
-    const search =
-      document.getElementById(
-        'asset-search'
-      ).value.trim().toLowerCase();
+      const matchesFolder =
+        folder === 'all' ||
+        getFolder(pathname) === folder;
 
-    const folder =
-      document.getElementById(
-        'asset-folder-filter'
-      ).value;
-
-    const filtered =
-      allAssets.filter(asset => {
-
-        const pathname =
-          String(asset.pathname || '');
-
-        const matchesSearch =
-          !search ||
-          pathname.toLowerCase().includes(search);
-
-        const matchesFolder =
-          folder === 'all' ||
-          getFolder(pathname) === folder;
-
-        return (
-          matchesSearch &&
-          matchesFolder
-        );
-
-      });
-
+      return matchesSearch && matchesFolder;
+    });
 
     tbody.innerHTML = '';
 
-
     filtered.forEach(asset => {
+      const row = document.createElement('tr');
+      const pathname = asset.pathname || '';
+      const fileName = getFileName(pathname);
+      const folderName = getFolder(pathname);
+      const viewUrl = asset.url || '';
+      const downloadUrl = asset.downloadUrl || asset.url || '';
+      const registryItem = getRegistryItem(asset);
+      const registryIndex = getRegistryIndex(asset);
+      const assetKey = registryItem?.key || createAssetKey(fileName);
 
-      const row =
-        document.createElement('tr');
-
-      const pathname =
-        asset.pathname || '';
-
-      const fileName =
-        getFileName(pathname);
-
-      const folderName =
-        getFolder(pathname);
-
-      const viewUrl =
-        asset.url || '';
-
-      const downloadUrl =
-        asset.downloadUrl ||
-        asset.url ||
-        '';
-
+      const registryButton = registryItem
+        ? `<button type="button" class="library-button" data-edit-registry="${registryIndex}">Edit</button>`
+        : `<button type="button" class="library-button primary" data-register-path="${escapeHtml(pathname)}">Register</button>`;
 
       row.innerHTML = `
         <td>${escapeHtml(fileName)}</td>
+        <td><code>${escapeHtml(assetKey)}</code></td>
         <td>${escapeHtml(folderName)}</td>
         <td>${escapeHtml(getFileType(pathname))}</td>
         <td>${escapeHtml(formatFileSize(asset.size))}</td>
         <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
-
         <td>
-          ${
-            viewUrl
-              ? `<a href="${escapeHtml(viewUrl)}"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                   View
-                 </a>`
-              : ''
-          }
+          ${viewUrl
+            ? `<a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer">View</a>`
+            : ''}
         </td>
-
+        <td>${registryButton}</td>
         <td>
-          ${
-            downloadUrl
-              ? `<a href="${escapeHtml(downloadUrl)}">
-                   Download
-                 </a>`
-              : ''
-          }
+          ${downloadUrl
+            ? `<a href="${escapeHtml(downloadUrl)}">Download</a>`
+            : ''}
         </td>
-
         <td>
-          ${
-            viewUrl
-              ? `<button
-                   type="button"
-                   class="library-button"
-                   data-copy-url="${escapeHtml(viewUrl)}">
-                   Copy URL
-                 </button>`
-              : ''
-          }
+          ${viewUrl
+            ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>`
+            : ''}
         </td>
-
         <td>
-          ${
-            viewUrl
-              ? `<button
-                   type="button"
-                   class="library-button"
-                   data-delete-url="${escapeHtml(viewUrl)}"
-                   data-delete-name="${escapeHtml(fileName)}">
-                   Delete
-                 </button>`
-              : ''
-          }
+          ${viewUrl
+            ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
+            : ''}
         </td>
       `;
 
       tbody.appendChild(row);
-
     });
 
-
-    empty.style.display =
-      filtered.length
-        ? 'none'
-        : 'block';
-
-    empty.textContent =
-      allAssets.length
-        ? 'No matching assets.'
-        : 'No assets found.';
-
+    empty.style.display = filtered.length ? 'none' : 'block';
+    empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
   }
-
 
   async function copyAssetUrl(url) {
-
     try {
-
       await navigator.clipboard.writeText(url);
-
       alert('URL copied.');
-
     } catch (error) {
-
       console.error(error);
-
       alert('Could not copy URL.');
-
     }
-
   }
 
+  async function loadRegistry() {
+    const response = await fetch(
+      '/api/insights-library?resource=assets',
+      {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store'
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to load Asset Registry.');
+    }
+
+    registryAssets = Array.isArray(data) ? data : [];
+  }
 
   async function loadAssets() {
-
-    const empty =
-      document.getElementById(
-        'library-empty'
-      );
-
+    const empty = document.getElementById('library-empty');
     empty.style.display = 'block';
     empty.textContent = 'Loading assets...';
 
-
     try {
-
-      const response =
-        await fetch(
+      const [blobResponse] = await Promise.all([
+        fetch(
           '/api/insights-upload',
           {
             method: 'GET',
             credentials: 'same-origin',
             cache: 'no-store'
           }
-        );
+        ),
+        loadRegistry()
+      ]);
 
+      const data = await blobResponse.json();
 
-      const data =
-        await response.json();
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          data.error ||
-          'Failed to load assets.'
-        );
-
+      if (!blobResponse.ok) {
+        throw new Error(data.error || 'Failed to load assets.');
       }
 
+      allAssets = Array.isArray(data.blobs) ? data.blobs : [];
 
-      allAssets =
-        Array.isArray(data.blobs)
-          ? data.blobs
-          : [];
-
-
-      document.getElementById(
-        'asset-count'
-      ).textContent =
-        allAssets.length;
-
+      document.getElementById('asset-count').textContent = allAssets.length;
 
       renderFolderFilter();
       renderAssets();
 
-
     } catch (error) {
-
       console.error(error);
-
       empty.style.display = 'block';
-
-      empty.textContent =
-        error.message ||
-        'Failed to load assets.';
-
+      empty.textContent = error.message || 'Failed to load assets.';
     }
-
   }
 
+  async function registerAsset(asset) {
+    const fileName = getFileName(asset.pathname);
+    const defaultKey = createAssetKey(fileName);
 
-  document.getElementById(
-    'asset-search'
-  ).addEventListener(
-    'input',
-    renderAssets
-  );
+    const enteredKey = prompt(
+      'Asset Key',
+      defaultKey
+    );
 
+    if (enteredKey === null) return;
 
-  document.getElementById(
-    'asset-folder-filter'
-  ).addEventListener(
-    'change',
-    renderAssets
-  );
+    const key = createAssetKey(enteredKey);
 
+    if (!key) {
+      alert('A valid Asset Key is required.');
+      return;
+    }
 
-   document.getElementById(
-    'asset-table-body'
-  ).addEventListener(
+    const payload = {
+      key,
+      name: fileName,
+      fileName,
+      folder: getFolder(asset.pathname),
+      pathname: asset.pathname || '',
+      url: asset.url || '',
+      downloadUrl: asset.downloadUrl || asset.url || '',
+      type: getFileType(asset.pathname).toLowerCase(),
+      size: Number(asset.size || 0),
+      uploadedAt: asset.uploadedAt || ''
+    };
+
+    let response = await fetch(
+      '/api/insights-library?resource=assets',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      }
+    );
+
+    let data = await response.json();
+
+    if (response.status === 409 && data.duplicate) {
+      const existing = data.existingItem || {};
+
+      if (
+        existing.url &&
+        confirm(
+          `Key "${key}" already exists.\n\n` +
+          `Existing file:\n${existing.fileName || existing.pathname || existing.name || ''}\n\n` +
+          `Open the existing file before choosing Update or Add?`
+        )
+      ) {
+        window.open(existing.url, '_blank', 'noopener');
+      }
+
+      const action = prompt(
+        'Duplicate Key\n\n' +
+        'Type UPDATE to use this Key for the new file.\n' +
+        'Type ADD to keep the existing file and create a numbered Key.\n' +
+        'Leave blank or Cancel to stop.',
+        'UPDATE'
+      );
+
+      if (!action) return;
+
+      const normalizedAction = action.trim().toUpperCase();
+
+      if (normalizedAction === 'ADD') {
+        response = await fetch(
+          '/api/insights-library?resource=assets',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              ...payload,
+              onDuplicate: 'add'
+            })
+          }
+        );
+
+        data = await response.json();
+
+      } else if (normalizedAction === 'UPDATE') {
+        response = await fetch(
+          '/api/insights-library?resource=assets',
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({
+              ...payload,
+              index: data.existingIndex
+            })
+          }
+        );
+
+        data = await response.json();
+
+      } else {
+        return;
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to register asset.');
+    }
+
+    alert(`Asset registered.\n\nKey: ${data.item?.key || key}`);
+    await loadAssets();
+  }
+
+  async function editRegistry(index) {
+    const item = registryAssets[index];
+
+    if (!item) {
+      alert('Registry item was not found.');
+      return;
+    }
+
+    if (
+      item.url &&
+      confirm(
+        `Current Key: ${item.key}\n\n` +
+        `Current File:\n${item.fileName || item.pathname || item.name || ''}\n\n` +
+        `Open the current file before editing the Key?`
+      )
+    ) {
+      window.open(item.url, '_blank', 'noopener');
+    }
+
+    const enteredKey = prompt(
+      'Edit Asset Key',
+      item.key || ''
+    );
+
+    if (enteredKey === null) return;
+
+    const key = createAssetKey(enteredKey);
+
+    if (!key) {
+      alert('A valid Asset Key is required.');
+      return;
+    }
+
+    const response = await fetch(
+      '/api/insights-library?resource=assets',
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          ...item,
+          key,
+          index
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (response.status === 409 && data.duplicate) {
+      const existing = data.existingItem || {};
+
+      if (
+        existing.url &&
+        confirm(
+          `Key "${key}" is already used by another asset.\n\n` +
+          `${existing.fileName || existing.pathname || existing.name || ''}\n\n` +
+          `View that file?`
+        )
+      ) {
+        window.open(existing.url, '_blank', 'noopener');
+      }
+
+      alert('That Key cannot be used because it already exists.');
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to update Asset Registry.');
+    }
+
+    alert(`Asset Key updated.\n\n${data.item?.key || key}`);
+    await loadAssets();
+  }
+
+  document.getElementById('asset-search').addEventListener('input', renderAssets);
+
+  document.getElementById('asset-folder-filter').addEventListener('change', renderAssets);
+
+  document.getElementById('asset-table-body').addEventListener(
     'click',
     async event => {
 
-      const copyButton =
-        event.target.closest(
-          '[data-copy-url]'
-        );
+      const copyButton = event.target.closest('[data-copy-url]');
 
       if (copyButton) {
-
-        copyAssetUrl(
-          copyButton.dataset.copyUrl
-        );
-
-        return;
-
-      }
-
-
-      const deleteButton =
-        event.target.closest(
-          '[data-delete-url]'
-        );
-
-      if (!deleteButton) {
+        copyAssetUrl(copyButton.dataset.copyUrl);
         return;
       }
 
+      const registerButton = event.target.closest('[data-register-path]');
 
-      const url =
-        deleteButton.dataset.deleteUrl;
-
-      const fileName =
-        deleteButton.dataset.deleteName;
-
-
-      const confirmed =
-        confirm(
-          `Delete this asset?\n\n${fileName}`
+      if (registerButton) {
+        const asset = allAssets.find(
+          item =>
+            item.pathname === registerButton.dataset.registerPath
         );
 
-      if (!confirmed) {
-        return;
-      }
-
-
-      try {
-
-        deleteButton.disabled = true;
-        deleteButton.textContent =
-          'Deleting...';
-
-
-        const response =
-          await fetch(
-            '/api/insights-upload',
-            {
-              method: 'DELETE',
-              headers: {
-                'Content-Type':
-                  'application/json'
-              },
-              credentials:
-                'same-origin',
-              body:
-                JSON.stringify({
-                  url
-                })
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            'Failed to delete asset.'
-          );
-
+        if (!asset) {
+          alert('Asset was not found.');
+          return;
         }
 
+        try {
+          registerButton.disabled = true;
+          await registerAsset(asset);
+        } catch (error) {
+          console.error(error);
+          alert(error.message || 'Failed to register asset.');
+        } finally {
+          registerButton.disabled = false;
+        }
 
-        alert(
-          'Asset deleted.'
-        );
-
-
-        await loadAssets();
-
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          error.message ||
-          'Failed to delete asset.'
-        );
-
-
-        deleteButton.disabled = false;
-        deleteButton.textContent =
-          'Delete';
-
+        return;
       }
 
+      const editButton = event.target.closest('[data-edit-registry]');
+
+      if (editButton) {
+        try {
+          editButton.disabled = true;
+          await editRegistry(
+            Number(editButton.dataset.editRegistry)
+          );
+        } catch (error) {
+          console.error(error);
+          alert(error.message || 'Failed to update Asset Registry.');
+        } finally {
+          editButton.disabled = false;
+        }
+
+        return;
+      }
+
+      const deleteButton = event.target.closest('[data-delete-url]');
+
+      if (!deleteButton) return;
+
+      const url = deleteButton.dataset.deleteUrl;
+      const fileName = deleteButton.dataset.deleteName;
+
+      const registryIndex = registryAssets.findIndex(
+        item =>
+          item.url === url
+      );
+
+      if (registryIndex >= 0) {
+        alert(
+          'This file is registered in Asset Registry.\n\n' +
+          'Update or remove the Registry reference before deleting the Blob file.'
+        );
+        return;
+      }
+
+      const confirmed = confirm(
+        `Delete this asset?\n\n${fileName}`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        deleteButton.disabled = true;
+        deleteButton.textContent = 'Deleting...';
+
+        const response = await fetch(
+          '/api/insights-upload',
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ url })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to delete asset.');
+        }
+
+        alert('Asset deleted.');
+        await loadAssets();
+
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Failed to delete asset.');
+        deleteButton.disabled = false;
+        deleteButton.textContent = 'Delete';
+      }
     }
   );
 
-    document.getElementById(
-        'asset-upload-toggle'
-      ).addEventListener(
-      'click',
-      () => {
-
-      const panel =
-        document.getElementById(
-          'asset-upload-panel'
-        );
+  document.getElementById('asset-upload-toggle').addEventListener(
+    'click',
+    () => {
+      const panel = document.getElementById('asset-upload-panel');
 
       panel.style.display =
         panel.style.display === 'none'
           ? 'flex'
           : 'none';
-
     }
   );
 
-
-  document.getElementById(
-    'asset-upload-button'
-  ).addEventListener(
+  document.getElementById('asset-upload-button').addEventListener(
     'click',
     async () => {
 
-      const fileInput =
-        document.getElementById(
-          'asset-upload-file'
-        );
-
-      const folderSelect =
-        document.getElementById(
-          'asset-upload-folder'
-        );
-
-      const button =
-        document.getElementById(
-          'asset-upload-button'
-        );
-
-      const file =
-        fileInput.files[0];
+      const fileInput = document.getElementById('asset-upload-file');
+      const folderSelect = document.getElementById('asset-upload-folder');
+      const button = document.getElementById('asset-upload-button');
+      const file = fileInput.files[0];
 
       if (!file) {
-
-        alert(
-          'Please select a file first.'
-        );
-
+        alert('Please select a file first.');
         return;
-
       }
 
-
       try {
-
         button.disabled = true;
-        button.textContent =
-          'Uploading...';
+        button.textContent = 'Uploading...';
 
-
-        if (
-          !window.vercelBlobUpload
-        ) {
-
-          throw new Error(
-            'Blob upload module is not loaded.'
-          );
-
+        if (!window.vercelBlobUpload) {
+          throw new Error('Blob upload module is not loaded.');
         }
-
 
         const safeFileName =
           file.name.replace(
@@ -798,52 +807,51 @@
         const pathname =
           `${folderSelect.value}/${safeFileName}`;
 
-
-        await window.vercelBlobUpload(
-          pathname,
-          file,
-          {
-            access: 'public',
-            handleUploadUrl:
-              '/api/insights-upload',
-            multipart: true,
-            clientPayload:
-              JSON.stringify({
-                originalFileName:
-                  file.name
-              })
-          }
-        );
-
-
-        alert(
-          'Upload completed.'
-        );
-
-
-        fileInput.value = '';
-
+        const uploaded =
+          await window.vercelBlobUpload(
+            pathname,
+            file,
+            {
+              access: 'public',
+              handleUploadUrl: '/api/insights-upload',
+              multipart: true,
+              clientPayload:
+                JSON.stringify({
+                  originalFileName: file.name
+                })
+            }
+          );
 
         await loadAssets();
 
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          error.message ||
-          'Upload failed.'
+        const registerNow = confirm(
+          'Upload completed.\n\n' +
+          'Register this file in Asset Registry now?'
         );
 
+        if (registerNow) {
+          const uploadedAsset =
+            allAssets.find(item => item.url === uploaded.url) ||
+            allAssets.find(item => item.pathname === uploaded.pathname);
+
+          if (uploadedAsset) {
+            await registerAsset(uploadedAsset);
+          } else {
+            alert(
+              'Upload succeeded, but the uploaded asset could not be found in the refreshed Blob list. You can register it from the table.'
+            );
+          }
+        }
+
+        fileInput.value = '';
+
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'Upload failed.');
       } finally {
-
         button.disabled = false;
-        button.textContent =
-          'Upload';
-
+        button.textContent = 'Upload';
       }
-
     }
   );
 
