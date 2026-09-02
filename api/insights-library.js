@@ -523,6 +523,12 @@ export default async function handler(req, res) {
       );
 
 
+    const assetKey =
+      slugifyKey(
+        body.assetKey
+      );
+
+
     const access =
       cleanString(
         body.access ||
@@ -657,6 +663,8 @@ export default async function handler(req, res) {
       url,
 
       asset,
+
+      assetKey,
 
       featured
     };
