@@ -299,6 +299,19 @@
       "size": 198664,
       "uploadedAt": "2026-09-02T07:32:50.000Z",
       "updatedAt": "2026-09-02T07:32:56.933Z"
+    },
+    {
+      "key": "audit-pitch-deck-clients",
+      "name": "Audit-Pitch-deck_clients-KZqpMCnIVYbcVqQ2rnsCjBuWEYqIPj.pdf",
+      "fileName": "Audit-Pitch-deck_clients-KZqpMCnIVYbcVqQ2rnsCjBuWEYqIPj.pdf",
+      "folder": "companyprofile",
+      "pathname": "companyprofile/Audit-Pitch-deck_clients-KZqpMCnIVYbcVqQ2rnsCjBuWEYqIPj.pdf",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/Audit-Pitch-deck_clients-KZqpMCnIVYbcVqQ2rnsCjBuWEYqIPj.pdf",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/Audit-Pitch-deck_clients-KZqpMCnIVYbcVqQ2rnsCjBuWEYqIPj.pdf?download=1",
+      "type": "pdf",
+      "size": 2837875,
+      "uploadedAt": "2026-09-02T08:13:12.000Z",
+      "updatedAt": "2026-09-02T08:13:24.732Z"
     }
   ]
 }
