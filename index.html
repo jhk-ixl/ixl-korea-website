@@ -1620,7 +1620,19 @@ document.addEventListener('click', function (e) {
         return /^https?:\/\//i.test(url || '');
     }
 
+let assetRegistry = [];
+
     function itemUrl(item) {
+        if (item.assetKey) {
+            const asset = assetRegistry.find(function (entry) {
+                return entry.key === item.assetKey;
+            });
+
+            if (asset) {
+                return asset.url || asset.pathname || item.asset || item.url || '#';
+            }
+        }
+
         return item.asset || item.url || '#';
     }
 
@@ -1719,16 +1731,34 @@ document.addEventListener('click', function (e) {
 
     async function loadInsights() {
         try {
-            const response = await fetch('insightscontent/insights-data.json', {
-                cache: 'no-store'
-            });
+            const [insightsResponse, assetsResponse] = await Promise.all([
+                fetch('insightscontent/insights-data.json', {
+                    cache: 'no-store'
+                }),
+                fetch('insightscontent/asset-registry.json', {
+                    cache: 'no-store'
+                })
+            ]);
 
-            if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
+            if (!insightsResponse.ok) {
+                throw new Error('Insights HTTP ' + insightsResponse.status);
             }
 
-            const data = await response.json();
-            insightsContent = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : []);
+            const insightsData = await insightsResponse.json();
+            insightsContent = Array.isArray(insightsData)
+                ? insightsData
+                : (Array.isArray(insightsData.items) ? insightsData.items : []);
+
+            if (assetsResponse.ok) {
+                const assetsData = await assetsResponse.json();
+                assetRegistry = Array.isArray(assetsData)
+                    ? assetsData
+                    : (Array.isArray(assetsData.assets) ? assetsData.assets : []);
+            } else {
+                console.warn('Asset Registry could not be loaded. Using fallback asset URLs.');
+                assetRegistry = [];
+            }
+
             renderAllInsights();
         } catch (error) {
             console.error('Failed to load Insights data:', error);
