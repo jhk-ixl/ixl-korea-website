@@ -24,7 +24,7 @@
     #asset-library-table thead th {
       position: -webkit-sticky;
       position: sticky;
-      top: 0;
+      top: 18px;
       z-index: 50;
       background: #f7f9fc;
       box-shadow: 0 1px 0 #e2e8f0;
@@ -89,20 +89,6 @@
         Asset Library
       </h2>
 
-      <div
-        id="asset-table-top-scroll"
-        style="
-          overflow-x:auto;
-          overflow-y:hidden;
-          margin:0;
-        "
-        aria-label="Asset table horizontal scroll"
-      >
-        <div
-          id="asset-table-top-scroll-inner"
-          style="height:1px;"
-        ></div>
-      </div>
     </div>
 
 
@@ -230,6 +216,25 @@
         position:relative;
       "
     >
+
+      <div
+        id="asset-table-top-scroll"
+        style="
+          position:sticky;
+          top:0;
+          z-index:70;
+          overflow-x:auto;
+          overflow-y:hidden;
+          background:#fff;
+          height:18px;
+        "
+        aria-label="Asset table horizontal scroll"
+      >
+        <div
+          id="asset-table-top-scroll-inner"
+          style="height:1px;"
+        ></div>
+      </div>
 
       <table class="library-table" id="asset-library-table">
 
