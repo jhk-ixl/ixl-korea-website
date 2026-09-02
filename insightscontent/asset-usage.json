@@ -28,6 +28,13 @@
       "label": "IPA Profile",
       "assetKey": "ipa-profile",
       "updatedAt": "2026-09-02T06:33:04.695Z"
+    },
+    {
+      "usageKey": "akaio-profile-pdf",
+      "page": "Website / AKAIO",
+      "label": "AKAIO Profile",
+      "assetKey": "akaio-profile",
+      "updatedAt": "2026-09-02T06:34:38.728Z"
     }
   ]
 }
