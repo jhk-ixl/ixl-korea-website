@@ -91,6 +91,13 @@
       "label": "Country Directors Part 1",
       "assetKey": "ixl-center-country-managing-directors-and-partners-part-1",
       "updatedAt": "2026-09-02T09:50:54.043Z"
+    },
+    {
+      "usageKey": "about-country-directors-part-2",
+      "page": "Website / About / Country Directors",
+      "label": "Country Directors Part 2",
+      "assetKey": "ixl-center-country-managing-directors-and-partners-part-2",
+      "updatedAt": "2026-09-02T09:51:32.876Z"
     }
   ]
 }
