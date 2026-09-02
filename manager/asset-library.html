@@ -175,9 +175,17 @@
     </section>
 
 
-    <section class="library-table-wrap">
+    <div
+      id="asset-table-top-scroll"
+      style="overflow-x:auto;overflow-y:hidden;margin-bottom:8px;"
+      aria-label="Asset table horizontal scroll"
+    >
+      <div id="asset-table-top-scroll-inner" style="height:1px;"></div>
+    </div>
 
-      <table class="library-table">
+    <section class="library-table-wrap" id="asset-table-scroll-wrap">
+
+      <table class="library-table" id="asset-library-table">
 
         <thead>
           <tr>
@@ -478,6 +486,41 @@
     }
   }
 
+  function syncAssetTableScrollbars() {
+    const topScroll = document.getElementById('asset-table-top-scroll');
+    const topInner = document.getElementById('asset-table-top-scroll-inner');
+    const tableWrap = document.getElementById('asset-table-scroll-wrap');
+    const table = document.getElementById('asset-library-table');
+
+    if (!topScroll || !topInner || !tableWrap || !table) return;
+
+    topInner.style.width = `${table.scrollWidth}px`;
+
+    if (!topScroll.dataset.syncBound) {
+      let fromTop = false;
+      let fromBottom = false;
+
+      topScroll.addEventListener('scroll', () => {
+        if (fromBottom) return;
+        fromTop = true;
+        tableWrap.scrollLeft = topScroll.scrollLeft;
+        fromTop = false;
+      });
+
+      tableWrap.addEventListener('scroll', () => {
+        if (fromTop) return;
+        fromBottom = true;
+        topScroll.scrollLeft = tableWrap.scrollLeft;
+        fromBottom = false;
+      });
+
+      topScroll.dataset.syncBound = 'true';
+    }
+
+    topScroll.scrollLeft = tableWrap.scrollLeft;
+  }
+
+
   function renderAssets() {
     const tbody = document.getElementById('asset-table-body');
     const empty = document.getElementById('library-empty');
@@ -583,6 +626,8 @@
 
     empty.style.display = filtered.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
+
+    requestAnimationFrame(syncAssetTableScrollbars);
   }
 
   async function copyAssetUrl(url) {
@@ -1528,15 +1573,45 @@
       const url = deleteButton.dataset.deleteUrl;
       const fileName = deleteButton.dataset.deleteName;
 
-      const registryIndex = registryAssets.findIndex(
-        item =>
-          item.url === url
-      );
+      const assetRow =
+        allAssets.find(
+          item =>
+            item.url === url
+        );
+
+      const registryIndex =
+        assetRow
+          ? getRegistryIndex(assetRow)
+          : registryAssets.findIndex(
+              item =>
+                item.url === url
+            );
 
       if (registryIndex >= 0) {
+        const registryItem =
+          registryAssets[registryIndex];
+
+        const affectedUsages =
+          usageMappings.filter(
+            usage =>
+              usage.assetKey === registryItem?.key
+          );
+
+        const usageMessage =
+          affectedUsages.length
+            ? `\n\nThis Asset Key is also used by ${affectedUsages.length} Usage mapping(s):\n` +
+              affectedUsages
+                .map(
+                  usage =>
+                    `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`
+                )
+                .join('\n')
+            : `\n\nAsset Key: ${registryItem?.key || ''}\nNo Usage mappings are currently connected to this Asset Key.`;
+
         alert(
           'This file is registered in Asset Registry.\n\n' +
-          'Update or remove the Registry reference before deleting the Blob file.'
+          'Update or remove the Registry reference before deleting the Blob file.' +
+          usageMessage
         );
         return;
       }
@@ -1671,6 +1746,8 @@
       }
     }
   );
+
+  window.addEventListener('resize', syncAssetTableScrollbars);
 
   loadAssets();
 
