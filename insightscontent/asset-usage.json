@@ -126,6 +126,13 @@
       "label": "Changkyu Choi Photo",
       "assetKey": "changkyu-choi",
       "updatedAt": "2026-09-02T09:57:09.329Z"
+    },
+    {
+      "usageKey": "book-healthovate-cover",
+      "page": "Website / Insights / Book",
+      "label": "Healthovate Cover",
+      "assetKey": "book-healthovate",
+      "updatedAt": "2026-09-02T10:02:54.409Z"
     }
   ]
 }
