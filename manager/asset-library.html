@@ -61,16 +61,12 @@
 
 
     <div
-      id="asset-library-sticky-placeholder"
-      style="height:0;"
-      aria-hidden="true"
-    ></div>
-
-    <div
       id="asset-library-sticky-header"
       style="
-        position:relative;
-        z-index:1200;
+        position:-webkit-sticky;
+        position:sticky;
+        top:0;
+        z-index:3000;
         background:#fff;
         padding:10px 0 8px;
       "
@@ -514,70 +510,6 @@
     if (folders.includes(currentValue)) {
       select.value = currentValue;
     }
-  }
-
-
-  function updateAssetLibraryFixedHeader() {
-    const header =
-      document.getElementById('asset-library-sticky-header');
-
-    const placeholder =
-      document.getElementById('asset-library-sticky-placeholder');
-
-    const section =
-      document.getElementById('asset-library-section');
-
-    if (!header || !placeholder || !section) return;
-
-    const placeholderRect =
-      placeholder.getBoundingClientRect();
-
-    const sectionRect =
-      section.getBoundingClientRect();
-
-    const headerHeight =
-      header.offsetHeight;
-
-    const shouldFix =
-      placeholderRect.top <= 0 &&
-      sectionRect.bottom > headerHeight;
-
-    if (shouldFix) {
-      if (placeholder.style.height !== `${headerHeight}px`) {
-        placeholder.style.height = `${headerHeight}px`;
-      }
-
-      const sectionStyle =
-        getComputedStyle(section);
-
-      const paddingLeft =
-        parseFloat(sectionStyle.paddingLeft) || 0;
-
-      const paddingRight =
-        parseFloat(sectionStyle.paddingRight) || 0;
-
-      header.style.position = 'fixed';
-      header.style.top = '0';
-      header.style.left =
-        `${sectionRect.left + paddingLeft}px`;
-      header.style.width =
-        `${sectionRect.width - paddingLeft - paddingRight}px`;
-      header.style.zIndex = '3000';
-      header.style.boxSizing = 'border-box';
-      header.style.background = '#fff';
-    } else {
-      placeholder.style.height = '0';
-
-      header.style.position = 'relative';
-      header.style.top = '';
-      header.style.left = '';
-      header.style.width = '';
-      header.style.zIndex = '1200';
-    }
-
-    requestAnimationFrame(
-      syncAssetTableScrollbars
-    );
   }
 
 
@@ -1843,21 +1775,11 @@
   );
 
   window.addEventListener(
-    'scroll',
-    updateAssetLibraryFixedHeader,
-    { passive: true }
-  );
-
-  window.addEventListener(
     'resize',
-    updateAssetLibraryFixedHeader
+    syncAssetTableScrollbars
   );
 
   loadAssets();
-
-  requestAnimationFrame(
-    updateAssetLibraryFixedHeader
-  );
 
 </script>
 
