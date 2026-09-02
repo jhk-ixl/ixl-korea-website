@@ -1,4 +1,12 @@
 {
   "version": 1,
-  "usages": []
+  "usages": [
+    {
+      "usageKey": "home-offerings-profile-pdf",
+      "page": "Website / Home / Offerings",
+      "label": "IXL Korea 7 Offerings PDF",
+      "assetKey": "ixl-korea-company-7offerings",
+      "updatedAt": "2026-09-02T05:38:13.304Z"
+    }
+  ]
 }
