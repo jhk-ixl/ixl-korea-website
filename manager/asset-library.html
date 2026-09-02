@@ -501,6 +501,8 @@
       return matchesSearch && matchesFolder;
     });
 
+    document.getElementById('asset-count').textContent = filtered.length;
+
     tbody.innerHTML = '';
 
     filtered.forEach(asset => {
