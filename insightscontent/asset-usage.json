@@ -154,6 +154,13 @@
       "label": "Game Changers Cover",
       "assetKey": "book-gamechangers",
       "updatedAt": "2026-09-02T10:05:08.305Z"
+    },
+    {
+      "usageKey": "book-innovation-singapore-cover",
+      "page": "Website / Insights / Book",
+      "label": "Innovation Singapore Cover",
+      "assetKey": "akaio-profile",
+      "updatedAt": "2026-09-02T10:05:42.554Z"
     }
   ]
 }
