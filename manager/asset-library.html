@@ -63,10 +63,8 @@
     <div
       id="asset-library-sticky-header"
       style="
-        position:-webkit-sticky;
-        position:sticky;
-        top:0;
-        z-index:3000;
+        position:relative;
+        z-index:1200;
         background:#fff;
         padding:10px 0 8px;
       "
@@ -206,6 +204,42 @@
 
     </section>
 
+
+    <div
+      id="asset-floating-table-header"
+      style="
+        display:none;
+        position:fixed;
+        top:0;
+        z-index:4000;
+        overflow:hidden;
+        background:#fff;
+        box-sizing:border-box;
+      "
+      aria-hidden="true"
+    >
+      <table
+        class="library-table"
+        id="asset-floating-table"
+        style="margin:0;"
+      >
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Key</th>
+            <th>Folder</th>
+            <th>Type</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>View</th>
+            <th>Registry</th>
+            <th>Download</th>
+            <th>URL</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
 
     <section class="library-table-wrap" id="asset-table-scroll-wrap">
 
@@ -513,6 +547,65 @@
   }
 
 
+  function syncFloatingAssetHeaderColumns() {
+    const sourceTable = document.getElementById('asset-library-table');
+    const floatingTable = document.getElementById('asset-floating-table');
+
+    if (!sourceTable || !floatingTable) return;
+
+    const sourceHeaders = sourceTable.querySelectorAll('thead th');
+    const floatingHeaders = floatingTable.querySelectorAll('thead th');
+
+    sourceHeaders.forEach((th, index) => {
+      const floatingTh = floatingHeaders[index];
+      if (!floatingTh) return;
+
+      const width = th.getBoundingClientRect().width;
+      floatingTh.style.width = `${width}px`;
+      floatingTh.style.minWidth = `${width}px`;
+      floatingTh.style.maxWidth = `${width}px`;
+    });
+
+    floatingTable.style.width = `${sourceTable.scrollWidth}px`;
+  }
+
+
+  function updateFloatingAssetHeader() {
+    const tableWrap = document.getElementById('asset-table-scroll-wrap');
+    const sourceTable = document.getElementById('asset-library-table');
+    const floatingWrap = document.getElementById('asset-floating-table-header');
+    const floatingTable = document.getElementById('asset-floating-table');
+
+    if (!tableWrap || !sourceTable || !floatingWrap || !floatingTable) return;
+
+    const tableRect = sourceTable.getBoundingClientRect();
+    const wrapRect = tableWrap.getBoundingClientRect();
+    const sourceHead = sourceTable.querySelector('thead');
+    const headerHeight = sourceHead
+      ? sourceHead.getBoundingClientRect().height
+      : 0;
+
+    const shouldShow =
+      tableRect.top < 0 &&
+      tableRect.bottom > headerHeight;
+
+    if (!shouldShow) {
+      floatingWrap.style.display = 'none';
+      return;
+    }
+
+    syncFloatingAssetHeaderColumns();
+
+    floatingWrap.style.display = 'block';
+    floatingWrap.style.left = `${wrapRect.left}px`;
+    floatingWrap.style.width = `${wrapRect.width}px`;
+    floatingWrap.style.height = `${headerHeight}px`;
+
+    floatingTable.style.transform =
+      `translateX(${-tableWrap.scrollLeft}px)`;
+  }
+
+
   function syncAssetTableScrollbars() {
     const topScroll = document.getElementById('asset-table-top-scroll');
     const topInner = document.getElementById('asset-table-top-scroll-inner');
@@ -529,16 +622,22 @@
 
       topScroll.addEventListener('scroll', () => {
         if (fromBottom) return;
+
         fromTop = true;
         tableWrap.scrollLeft = topScroll.scrollLeft;
         fromTop = false;
+
+        updateFloatingAssetHeader();
       });
 
       tableWrap.addEventListener('scroll', () => {
-        if (fromTop) return;
-        fromBottom = true;
-        topScroll.scrollLeft = tableWrap.scrollLeft;
-        fromBottom = false;
+        if (!fromTop) {
+          fromBottom = true;
+          topScroll.scrollLeft = tableWrap.scrollLeft;
+          fromBottom = false;
+        }
+
+        updateFloatingAssetHeader();
       });
 
       topScroll.dataset.syncBound = 'true';
@@ -546,7 +645,6 @@
 
     topScroll.scrollLeft = tableWrap.scrollLeft;
   }
-
 
   function renderAssets() {
     const tbody = document.getElementById('asset-table-body');
@@ -654,7 +752,10 @@
     empty.style.display = filtered.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
 
-    requestAnimationFrame(syncAssetTableScrollbars);
+    requestAnimationFrame(() => {
+      syncAssetTableScrollbars();
+      updateFloatingAssetHeader();
+    });
   }
 
   async function copyAssetUrl(url) {
@@ -1775,8 +1876,17 @@
   );
 
   window.addEventListener(
+    'scroll',
+    updateFloatingAssetHeader,
+    { passive: true }
+  );
+
+  window.addEventListener(
     'resize',
-    syncAssetTableScrollbars
+    () => {
+      syncAssetTableScrollbars();
+      updateFloatingAssetHeader();
+    }
   );
 
   loadAssets();
