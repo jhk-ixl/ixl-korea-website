@@ -286,6 +286,19 @@
       "size": 22453,
       "uploadedAt": "2026-09-02T07:32:13.000Z",
       "updatedAt": "2026-09-02T07:32:20.442Z"
+    },
+    {
+      "key": "book-technovate",
+      "name": "book-technovate-GWXFze4uNwjLnMQj4Asbc3HcZKt2gy.jpg",
+      "fileName": "book-technovate-GWXFze4uNwjLnMQj4Asbc3HcZKt2gy.jpg",
+      "folder": "images",
+      "pathname": "images/book-technovate-GWXFze4uNwjLnMQj4Asbc3HcZKt2gy.jpg",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/images/book-technovate-GWXFze4uNwjLnMQj4Asbc3HcZKt2gy.jpg",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/images/book-technovate-GWXFze4uNwjLnMQj4Asbc3HcZKt2gy.jpg?download=1",
+      "type": "jpg",
+      "size": 198664,
+      "uploadedAt": "2026-09-02T07:32:50.000Z",
+      "updatedAt": "2026-09-02T07:32:56.933Z"
     }
   ]
 }
