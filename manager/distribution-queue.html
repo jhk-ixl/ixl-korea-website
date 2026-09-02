@@ -1237,14 +1237,42 @@ async function publishToLinkedIn() {
 
     if (!response.ok) {
 
-      throw new Error(
-        result.error ||
-        (
-          'LinkedIn Publish API HTTP ' +
-          response.status
-        )
-      );
+      let errorMessage =
+        'LinkedIn Publish API HTTP ' +
+        response.status;
 
+      if (result.error) {
+
+        if (
+          typeof result.error ===
+          'string'
+        ) {
+
+          errorMessage =
+            result.error;
+
+        } else {
+
+          errorMessage =
+            result.error.message ||
+            JSON.stringify(
+              result.error,
+              null,
+              2
+            );
+
+        }
+
+      } else if (result.message) {
+
+        errorMessage =
+          result.message;
+
+      }
+
+      throw new Error(
+        errorMessage
+      );
     }
 
 
