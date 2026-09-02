@@ -52,6 +52,19 @@
       "size": 2836838,
       "uploadedAt": "2026-09-02T06:15:55.000Z",
       "updatedAt": "2026-09-02T06:16:03.595Z"
+    },
+    {
+      "key": "ipa-profile",
+      "name": "IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
+      "fileName": "IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
+      "folder": "companyprofile",
+      "pathname": "companyprofile/IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf?download=1",
+      "type": "pdf",
+      "size": 1330722,
+      "uploadedAt": "2026-09-02T06:17:01.000Z",
+      "updatedAt": "2026-09-02T06:17:10.184Z"
     }
   ]
 }
