@@ -782,6 +782,11 @@
       return;
     }
 
+    if (!findRegistryByKey(assetKey)) {
+      alert(`Asset Key "${assetKey}" is not registered.\n\nReload the Asset Library and select a registered Asset Key.`);
+      return;
+    }
+
     const isEdit = editIndexValue !== '';
     const payload = {
       usageKey,
@@ -1015,6 +1020,16 @@
         data = await response.json();
 
       } else if (normalizedAction === 'UPDATE') {
+        const affectedUsages = usageMappings.filter(usage => usage.assetKey === existing.key);
+        if (affectedUsages.length) {
+          const usageList = affectedUsages.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
+          const confirmed = confirm(
+            `Asset Key "${existing.key}" is used by ${affectedUsages.length} Usage mapping(s):\n\n${usageList}\n\n` +
+            'UPDATE will make all of these usages point to the newly uploaded file. Continue?'
+          );
+          if (!confirmed) return;
+        }
+
         response = await fetch(
           '/api/insights-library?resource=assets',
           {
@@ -1025,6 +1040,7 @@
             credentials: 'same-origin',
             body: JSON.stringify({
               ...payload,
+              uploadedAt: existing.uploadedAt || payload.uploadedAt,
               index: data.existingIndex
             })
           }
@@ -1078,23 +1094,42 @@
       return;
     }
 
-    const response = await fetch(
+    const affectedUsages = usageMappings.filter(usage => usage.assetKey === item.key);
+    let confirmUsageKeyChange = false;
+
+    if (key !== item.key && affectedUsages.length) {
+      const usageList = affectedUsages.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
+      const confirmed = confirm(
+        `Asset Key "${item.key}" is currently used by ${affectedUsages.length} Usage mapping(s):\n\n` +
+        `${usageList}\n\nChange the Asset Key to "${key}" and update all of these Usage mappings automatically?`
+      );
+      if (!confirmed) return;
+      confirmUsageKeyChange = true;
+    }
+
+    let response = await fetch(
       '/api/insights-library?resource=assets',
       {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({
-          ...item,
-          key,
-          index
-        })
+        body: JSON.stringify({ ...item, key, index, confirmUsageKeyChange })
       }
     );
 
-    const data = await response.json();
+    let data = await response.json();
+
+    if (response.status === 409 && data.usageConflict) {
+      const affected = Array.isArray(data.affectedUsages) ? data.affectedUsages : [];
+      const usageList = affected.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
+      const confirmed = confirm(`${data.error}\n\n${usageList}\n\nUpdate all affected Usage mappings to "${key}" and continue?`);
+      if (!confirmed) return;
+      response = await fetch('/api/insights-library?resource=assets', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+        body: JSON.stringify({ ...item, key, index, confirmUsageKeyChange: true })
+      });
+      data = await response.json();
+    }
 
     if (response.status === 409 && data.duplicate) {
       const existing = data.existingItem || {};
@@ -1118,7 +1153,11 @@
       throw new Error(data.error || 'Failed to update Asset Registry.');
     }
 
-    alert(`Asset Key updated.\n\n${data.item?.key || key}`);
+    const affectedCount = Number(data.affectedUsageCount || 0);
+    alert(
+      `Asset Key updated.\n\n${data.item?.key || key}` +
+      (affectedCount ? `\n\n${affectedCount} Usage mapping(s) updated automatically.` : '')
+    );
     await loadAssets();
   }
 

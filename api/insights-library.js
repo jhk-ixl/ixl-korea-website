@@ -251,6 +251,63 @@ export default async function handler(req, res) {
 
 
   /* =========================================
+     RELATED DATA HELPERS
+     ========================================= */
+
+  async function loadRelatedDataFile(relatedResource) {
+    const relatedConfig = DATA_FILES[relatedResource];
+    const relatedFileUrl =
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+      `/contents/${relatedConfig.path}`;
+    const response = await fetch(`${relatedFileUrl}?ref=${GITHUB_BRANCH}`, { headers: githubHeaders });
+    if (!response.ok) {
+      const error = new Error(`Could not load ${relatedResource} data.`);
+      error.statusCode = response.status === 404 ? 404 : 500;
+      throw error;
+    }
+    const currentFile = await response.json();
+    const data = JSON.parse(Buffer.from(currentFile.content, 'base64').toString('utf8'));
+    if (!data || !Array.isArray(data[relatedConfig.arrayKey])) {
+      const error = new Error(`Unexpected ${relatedResource} data format.`);
+      error.statusCode = 500;
+      throw error;
+    }
+    return { sha: currentFile.sha, data, list: data[relatedConfig.arrayKey] };
+  }
+
+  async function writeRelatedDataFile(relatedResource, data, sha, message) {
+    const relatedConfig = DATA_FILES[relatedResource];
+    const relatedFileUrl =
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+      `/contents/${relatedConfig.path}`;
+    const content = Buffer.from(JSON.stringify(data, null, 2) + '\n', 'utf8').toString('base64');
+    const response = await fetch(relatedFileUrl, {
+      method: 'PUT', headers: { ...githubHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, content, sha, branch: GITHUB_BRANCH })
+    });
+    if (!response.ok) {
+      const error = new Error(`${relatedResource} data changed before this save completed. Reload and try again.`);
+      error.statusCode = response.status === 409 ? 409 : response.status === 403 ? 403 : 500;
+      throw error;
+    }
+    return await response.json();
+  }
+
+  function getUsagesForAssetKey(usages, assetKey) {
+    return usages.filter(usage => usage.assetKey === assetKey);
+  }
+
+  async function assertUsageAssetExists(assetKey) {
+    const assetsCurrent = await loadRelatedDataFile('assets');
+    if (!assetsCurrent.list.some(asset => asset.key === assetKey)) {
+      const error = new Error(`Asset Key "${assetKey}" does not exist in Asset Registry.`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+
+  /* =========================================
      WRITE DATA FILE
      ========================================= */
 
@@ -769,8 +826,7 @@ export default async function handler(req, res) {
 
       uploadedAt:
         cleanString(
-          body.uploadedAt ||
-          body.updatedAt
+          body.uploadedAt
         ),
 
       updatedAt:
@@ -1050,6 +1106,11 @@ export default async function handler(req, res) {
       }
 
 
+      if (resource === 'usage') {
+        await assertUsageAssetExists(item.assetKey);
+      }
+
+
       /* Usage duplicate */
 
       if (
@@ -1187,10 +1248,22 @@ export default async function handler(req, res) {
       }
 
 
-      const item =
+      let item =
         normalizeByResource(
           body
         );
+
+
+      if (resource === 'assets') {
+        item = {
+          ...item,
+          uploadedAt: cleanString(list[index]?.uploadedAt || body.uploadedAt)
+        };
+      }
+
+      if (resource === 'usage') {
+        await assertUsageAssetExists(item.assetKey);
+      }
 
 
       /*
@@ -1236,6 +1309,26 @@ export default async function handler(req, res) {
               requestedItem:
                 item
             });
+        }
+      }
+
+
+      let relatedUsageCurrent = null;
+      let affectedUsages = [];
+      let oldAssetKey = '';
+
+      if (resource === 'assets') {
+        oldAssetKey = cleanString(list[index]?.key);
+        if (oldAssetKey && item.key !== oldAssetKey) {
+          relatedUsageCurrent = await loadRelatedDataFile('usage');
+          affectedUsages = getUsagesForAssetKey(relatedUsageCurrent.list, oldAssetKey);
+          if (affectedUsages.length && body.confirmUsageKeyChange !== true) {
+            return res.status(409).json({
+              error: `Asset Key "${oldAssetKey}" is used by ${affectedUsages.length} Usage mapping(s). Confirm the key change to update those mappings.`,
+              usageConflict: true, oldKey: oldAssetKey, newKey: item.key,
+              affectedUsages: affectedUsages.map(usage => ({ usageKey: usage.usageKey, page: usage.page, label: usage.label }))
+            });
+          }
         }
       }
 
@@ -1302,6 +1395,23 @@ export default async function handler(req, res) {
         );
 
 
+      let usageCommit = null;
+
+      if (resource === 'assets' && oldAssetKey && item.key !== oldAssetKey && affectedUsages.length && relatedUsageCurrent) {
+        const changedAt = new Date().toISOString();
+        relatedUsageCurrent.data.usages = relatedUsageCurrent.list.map(usage =>
+          usage.assetKey === oldAssetKey
+            ? { ...usage, assetKey: item.key, updatedAt: changedAt }
+            : usage
+        );
+        const usageResult = await writeRelatedDataFile(
+          'usage', relatedUsageCurrent.data, relatedUsageCurrent.sha,
+          `Update usage Asset Key: ${oldAssetKey} -> ${item.key}`
+        );
+        usageCommit = usageResult?.commit?.sha || null;
+      }
+
+
       res.setHeader(
         'Cache-Control',
         'no-store, max-age=0'
@@ -1327,7 +1437,12 @@ export default async function handler(req, res) {
               ?.sha || null,
 
           updatedBy:
-            manager.login
+            manager.login,
+
+          affectedUsageCount:
+            affectedUsages.length,
+
+          usageCommit
         });
     }
 
@@ -1376,6 +1491,19 @@ export default async function handler(req, res) {
 
       const deletedItem =
         list[index];
+
+
+      if (resource === 'assets') {
+        const usageCurrent = await loadRelatedDataFile('usage');
+        const affectedUsages = getUsagesForAssetKey(usageCurrent.list, deletedItem.key);
+        if (affectedUsages.length) {
+          return res.status(409).json({
+            error: `Asset Key "${deletedItem.key}" is used by ${affectedUsages.length} Usage mapping(s). Remove or change those Usage mappings first.`,
+            usageConflict: true, assetKey: deletedItem.key,
+            affectedUsages: affectedUsages.map(usage => ({ usageKey: usage.usageKey, page: usage.page, label: usage.label }))
+          });
+        }
+      }
 
 
       list.splice(
