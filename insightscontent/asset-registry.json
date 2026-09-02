@@ -208,6 +208,19 @@
       "size": 227075,
       "uploadedAt": "2026-09-02T07:29:28.000Z",
       "updatedAt": "2026-09-02T07:29:33.786Z"
+    },
+    {
+      "key": "book-connectivate",
+      "name": "book-connectivate-hbvta7YjpLR8rmEHBVP8duWVg0tnBN.jpg",
+      "fileName": "book-connectivate-hbvta7YjpLR8rmEHBVP8duWVg0tnBN.jpg",
+      "folder": "images",
+      "pathname": "images/book-connectivate-hbvta7YjpLR8rmEHBVP8duWVg0tnBN.jpg",
+      "url": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/images/book-connectivate-hbvta7YjpLR8rmEHBVP8duWVg0tnBN.jpg",
+      "downloadUrl": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/images/book-connectivate-hbvta7YjpLR8rmEHBVP8duWVg0tnBN.jpg?download=1",
+      "type": "jpg",
+      "size": 212391,
+      "uploadedAt": "2026-09-02T07:29:54.000Z",
+      "updatedAt": "2026-09-02T07:30:00.879Z"
     }
   ]
 }
