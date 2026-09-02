@@ -70,6 +70,13 @@
       "label": "Home Hero Image",
       "assetKey": "hero-innovation",
       "updatedAt": "2026-09-02T09:48:09.487Z"
+    },
+    {
+      "usageKey": "about-jinhong-kim-photo",
+      "page": "Website / About / Korea MD",
+      "label": "Jinhong Kim Photo",
+      "assetKey": "jinhong-kim",
+      "updatedAt": "2026-09-02T09:49:08.229Z"
     }
   ]
 }
