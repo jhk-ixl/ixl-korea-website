@@ -56,6 +56,13 @@
       "label": "ISO 56001 Audit Pitch Deck",
       "assetKey": "audit-pitch-deck-clients",
       "updatedAt": "2026-09-02T08:20:27.217Z"
+    },
+    {
+      "usageKey": "site-header-logo",
+      "page": "Page / Function: Website / Global Header",
+      "label": "IXL Korea Logo",
+      "assetKey": "ixl-korea-logo",
+      "updatedAt": "2026-09-02T09:41:18.586Z"
     }
   ]
 }
