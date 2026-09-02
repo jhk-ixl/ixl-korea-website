@@ -381,7 +381,15 @@
 <h2>From Innovation Opportunity to Organizational Capability.</h2>
 <div class="offerings-intro-row">
 <p class="offerings-lead">IXL Korea delivers innovation through two complementary service tracks: Breakthrough Results and Capability Building. Seven programs can be deployed individually or integrated into a tailored pathway to deliver business results while building lasting innovation capabilities.</p>
-<a class="offerings-overview-btn" href="https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf" target="_blank" rel="noopener noreferrer">View 7 Programs →</a>
+<a
+  class="offerings-overview-btn"
+  href="#"
+  data-asset-usage="home-offerings-profile-pdf"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  View 7 Programs →
+</a>
 </div>
 </div>
 <div class="offerings-grid">
@@ -1621,6 +1629,7 @@ document.addEventListener('click', function (e) {
     }
 
 let assetRegistry = [];
+let assetUsage = [];
 
     function itemUrl(item) {
         if (item.assetKey) {
@@ -1634,6 +1643,46 @@ let assetRegistry = [];
         }
 
         return item.asset || item.url || '#';
+    }
+
+
+    function resolveAssetUsageLinks() {
+        document.querySelectorAll('[data-asset-usage]').forEach(function (element) {
+            const usageKey = element.dataset.assetUsage;
+
+            const usage = assetUsage.find(function (entry) {
+                return entry.usageKey === usageKey;
+            });
+
+            if (!usage) {
+                console.error('Asset Usage not found:', usageKey);
+                return;
+            }
+
+            const asset = assetRegistry.find(function (entry) {
+                return entry.key === usage.assetKey;
+            });
+
+            if (!asset) {
+                console.error(
+                    'Asset Registry entry not found:',
+                    usage.assetKey
+                );
+                return;
+            }
+
+            const assetUrl = asset.url || asset.pathname;
+
+            if (!assetUrl) {
+                console.error(
+                    'Asset URL not found:',
+                    usage.assetKey
+                );
+                return;
+            }
+
+            element.href = assetUrl;
+        });
     }
 
     function needsNewTab(url) {
@@ -1731,11 +1780,18 @@ let assetRegistry = [];
 
     async function loadInsights() {
         try {
-            const [insightsResponse, assetsResponse] = await Promise.all([
+                const [
+                insightsResponse,
+                assetsResponse,
+                usageResponse
+            ] = await Promise.all([
                 fetch('insightscontent/insights-data.json', {
                     cache: 'no-store'
                 }),
                 fetch('insightscontent/asset-registry.json', {
+                    cache: 'no-store'
+                }),
+                fetch('insightscontent/asset-usage.json', {
                     cache: 'no-store'
                 })
             ]);
@@ -1759,6 +1815,17 @@ let assetRegistry = [];
                 assetRegistry = [];
             }
 
+            if (usageResponse.ok) {
+                const usageData = await usageResponse.json();
+                assetUsage = Array.isArray(usageData)
+                    ? usageData
+                    : (Array.isArray(usageData.usages) ? usageData.usages : []);
+            } else {
+                console.error('Asset Usage could not be loaded.');
+                assetUsage = [];
+            }
+
+            resolveAssetUsageLinks();
             renderAllInsights();
         } catch (error) {
             console.error('Failed to load Insights data:', error);
