@@ -115,6 +115,30 @@ collections:
                 name: "summary"
                 widget: "text"
 
+              - label: "Slug"
+                name: "slug"
+                widget: "string"
+                required: false
+                hint: "Unique URL name for the detail page. Example: innovation-management-5-0"
+
+              - label: "Author"
+                name: "author"
+                widget: "string"
+                required: false
+
+              - label: "Full Body"
+                name: "body"
+                widget: "markdown"
+                required: false
+                hint: "Full article content. When entered, the Article Read button is shown on the website."
+
+              - label: "Source"
+                name: "source"
+                widget: "string"
+                required: false
+                hint: "Original source or reference information."
+
+
               - label: "External / Existing URL"
                 name: "url"
                 widget: "string"
