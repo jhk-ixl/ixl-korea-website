@@ -242,7 +242,11 @@
             </th>
 
             <th>
-              Link
+              IXL Detail
+            </th>
+
+            <th>
+              External
             </th>
 
             <th>
@@ -328,14 +332,13 @@
 
 
         <label>
-          Link
+          IXL Detail Link
+          <a id="queue-edit-detail-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+        </label>
 
-          <a
-            id="queue-edit-link"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          ></a>
+        <label>
+          External Link
+          <a id="queue-edit-external-link" href="#" target="_blank" rel="noopener noreferrer"></a>
         </label>
 
 
@@ -527,9 +530,14 @@
           item._fileName || ''
         );
 
-      const finalLink =
+      const detailLink =
         getFinalLink(
-          item.link || ''
+          item.detailLink || item.link || ''
+        );
+
+      const externalLink =
+        getFinalLink(
+          item.externalLink || ''
         );
 
 
@@ -575,10 +583,11 @@
         );
 
 
-      const safeLink =
-        escapeHtml(
-          finalLink
-        );
+      const safeDetailLink =
+        escapeHtml(detailLink);
+
+      const safeExternalLink =
+        escapeHtml(externalLink);
 
 
       return `
@@ -620,23 +629,11 @@
 
 
           <td>
+            ${safeDetailLink ? `<a href="${safeDetailLink}" target="_blank" rel="noopener noreferrer">Open ↗</a>` : '—'}
+          </td>
 
-            ${
-              safeLink
-
-                ? `
-                  <a
-                    href="${safeLink}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Open ↗
-                  </a>
-                `
-
-                : '—'
-            }
-
+          <td>
+            ${safeExternalLink ? `<a href="${safeExternalLink}" target="_blank" rel="noopener noreferrer">Open ↗</a>` : '—'}
           </td>
 
           <td>
@@ -964,32 +961,29 @@
         item.postText || '';
 
 
-      const editLink =
-        document.getElementById(
-          'queue-edit-link'
-        );
+      const editDetailLink =
+        document.getElementById('queue-edit-detail-link');
 
+      const detailLink =
+        item.detailLink || item.link || '';
 
-      if (item.link) {
-
-        editLink.textContent =
-          item.link;
-
-        editLink.href =
-          item.link.startsWith('http')
-            ? item.link
-            : '../' +
-              item.link.replace(/^\/+/, '');
-
+      if (detailLink) {
+        editDetailLink.textContent = detailLink;
+        editDetailLink.href = getFinalLink(detailLink);
       } else {
+        editDetailLink.textContent = 'No IXL Detail Link';
+        editDetailLink.removeAttribute('href');
+      }
 
-        editLink.textContent =
-          'No Link';
+      const editExternalLink =
+        document.getElementById('queue-edit-external-link');
 
-        editLink.removeAttribute(
-          'href'
-        );
-
+      if (item.externalLink) {
+        editExternalLink.textContent = item.externalLink;
+        editExternalLink.href = getFinalLink(item.externalLink);
+      } else {
+        editExternalLink.textContent = 'No External Link';
+        editExternalLink.removeAttribute('href');
       }
 
 
@@ -1118,14 +1112,20 @@ async function publishToLinkedIn() {
       'queue-edit-asset-key'
     ).value.trim();
 
-  const linkElement =
-    document.getElementById(
-      'queue-edit-link'
-    );
+  const detailLinkElement =
+    document.getElementById('queue-edit-detail-link');
 
-  const link =
-    linkElement.hasAttribute('href')
-      ? linkElement.href
+  const detailLink =
+    detailLinkElement.hasAttribute('href')
+      ? detailLinkElement.href
+      : '';
+
+  const externalLinkElement =
+    document.getElementById('queue-edit-external-link');
+
+  const externalLink =
+    externalLinkElement.hasAttribute('href')
+      ? externalLinkElement.href
       : '';
 
 
@@ -1211,7 +1211,8 @@ async function publishToLinkedIn() {
           body:
             JSON.stringify({
               postText,
-              link,
+              detailLink,
+              externalLink,
               mediaType,
               mediaFile,
               assetKey

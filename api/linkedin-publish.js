@@ -1,4 +1,4 @@
-import crypto from "crypto";
+const crypto = require("crypto");
 
 const LINKEDIN_VERSION = "202608";
 
@@ -98,114 +98,26 @@ function getProductionMediaUrl(mediaFile) {
 }
 
 
-async function resolveMediaFile(assetKey, mediaFile) {
+function buildPostText(postText, detailLink, externalLink, legacyLink = "") {
+  const cleanText = String(postText || "").trim();
+  const cleanDetailLink = String(detailLink || legacyLink || "").trim();
+  const cleanExternalLink = String(externalLink || "").trim();
 
-  const cleanAssetKey =
-    String(assetKey || "").trim();
+  const parts = [cleanText];
 
-  const fallbackMediaFile =
-    String(mediaFile || "").trim();
-
-  if (!cleanAssetKey) {
-    return fallbackMediaFile;
-  }
-
-  try {
-
-    const registryResponse =
-      await fetch(
-        "https://ixl-korea-website.vercel.app/insightscontent/asset-registry.json",
-        {
-          cache: "no-store"
-        }
-      );
-
-    if (!registryResponse.ok) {
-      throw new Error(
-        `Asset Registry HTTP ${registryResponse.status}`
-      );
-    }
-
-    const registryData =
-      await registryResponse.json();
-
-    const assets =
-      Array.isArray(registryData)
-        ? registryData
-        : (
-            Array.isArray(registryData?.assets)
-              ? registryData.assets
-              : []
-          );
-
-    const asset =
-      assets.find(
-        (entry) =>
-          String(entry?.key || "").trim() ===
-          cleanAssetKey
-      );
-
-    if (!asset) {
-      throw new Error(
-        `Asset Key was not found: ${cleanAssetKey}`
-      );
-    }
-
-    const resolved =
-      String(
-        asset.url ||
-        asset.pathname ||
-        ""
-      ).trim();
-
-    if (!resolved) {
-      throw new Error(
-        `Asset URL is missing for key: ${cleanAssetKey}`
-      );
-    }
-
-    return resolved;
-
-  } catch (error) {
-
-    console.error(
-      "Asset Key resolution failed:",
-      cleanAssetKey,
-      error
-    );
-
-    if (fallbackMediaFile) {
-      return fallbackMediaFile;
-    }
-
-    throw error;
-  }
-}
-
-
-function buildPostText(postText, link) {
-
-  const cleanText =
-    String(postText || "").trim();
-
-  const cleanLink =
-    String(link || "").trim();
-
-  if (!cleanLink) {
-    return cleanText;
+  if (cleanDetailLink && !cleanText.includes(cleanDetailLink)) {
+    parts.push(cleanDetailLink);
   }
 
   if (
-    cleanText.includes(cleanLink)
+    cleanExternalLink &&
+    cleanExternalLink !== cleanDetailLink &&
+    !cleanText.includes(cleanExternalLink)
   ) {
-    return cleanText;
+    parts.push(cleanExternalLink);
   }
 
-  return (
-    cleanText +
-    "\n\n" +
-    cleanLink
-  );
+  return parts.filter(Boolean).join("\n\n");
 }
 
 
@@ -1293,7 +1205,7 @@ async function publishVideoPost(
 
 
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
 
   try {
 
@@ -1345,9 +1257,19 @@ export default async function handler(req, res) {
         ? req.body.postText.trim()
         : "";
 
-    const link =
+    const legacyLink =
       typeof req.body?.link === "string"
         ? req.body.link.trim()
+        : "";
+
+    const detailLink =
+      typeof req.body?.detailLink === "string"
+        ? req.body.detailLink.trim()
+        : "";
+
+    const externalLink =
+      typeof req.body?.externalLink === "string"
+        ? req.body.externalLink.trim()
         : "";
 
     const mediaType =
@@ -1362,18 +1284,6 @@ export default async function handler(req, res) {
         : "";
 
 
-    const assetKey =
-      typeof req.body?.assetKey === "string"
-        ? req.body.assetKey.trim()
-        : "";
-
-    const resolvedMediaFile =
-      await resolveMediaFile(
-        assetKey,
-        mediaFile
-      );
-
-
     if (!postText) {
 
       return res.status(400).json({
@@ -1385,7 +1295,9 @@ export default async function handler(req, res) {
     const finalPostText =
     buildPostText(
       postText,
-      link
+      detailLink,
+      externalLink,
+      legacyLink
     );
 
 let postId;
@@ -1400,7 +1312,7 @@ if (
   "document"
 ) {
 
-  if (!resolvedMediaFile) {
+  if (!mediaFile) {
 
     return res.status(400).json({
       error:
@@ -1414,7 +1326,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      resolvedMediaFile
+      mediaFile
     );
 
 
@@ -1423,7 +1335,7 @@ if (
   "image"
 ) {
 
-  if (!resolvedMediaFile) {
+  if (!mediaFile) {
 
     return res.status(400).json({
       error:
@@ -1437,7 +1349,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      resolvedMediaFile
+      mediaFile
     );
 
 
@@ -1446,7 +1358,7 @@ if (
   "video"
 ) {
 
-  if (!resolvedMediaFile) {
+  if (!mediaFile) {
 
     return res.status(400).json({
       error:
@@ -1460,7 +1372,7 @@ if (
       accessToken,
       memberId,
       finalPostText,
-      resolvedMediaFile
+      mediaFile
     );
 
 

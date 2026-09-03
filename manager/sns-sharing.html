@@ -328,17 +328,13 @@
 
 
         <div class="sns-compose-field">
+          <label for="share-detail-link">IXL Detail Link</label>
+          <input type="text" id="share-detail-link" placeholder="IXL Korea Knowledge detail URL">
+        </div>
 
-          <label for="share-link">
-            Link
-          </label>
-
-          <input
-            type="text"
-            id="share-link"
-            placeholder="Knowledge URL"
-          >
-
+        <div class="sns-compose-field">
+          <label for="share-external-link">External Link</label>
+          <input type="text" id="share-external-link" placeholder="Optional external source or related URL">
         </div>
 
         <div class="sns-compose-field">
@@ -433,12 +429,10 @@
         </p>
 
 
-        <a
-          href="#"
-          id="preview-link"
-          target="_blank"
-          rel="noopener noreferrer"
-        ></a>
+        <div class="sns-preview-links">
+          <a href="#" id="preview-detail-link" target="_blank" rel="noopener noreferrer"></a>
+          <a href="#" id="preview-external-link" target="_blank" rel="noopener noreferrer"></a>
+        </div>
 
         <div
           class="sns-preview-media"
@@ -623,190 +617,60 @@
 
 
     function updateShareContent() {
+      const titleField = document.getElementById('share-title');
+      const textField = document.getElementById('share-text');
+      const detailLinkField = document.getElementById('share-detail-link');
+      const externalLinkField = document.getElementById('share-external-link');
+      const mediaTypeField = document.getElementById('share-media-type');
+      const mediaFileField = document.getElementById('share-media-file');
 
-      const titleField =
-        document.getElementById(
-          'share-title'
-        );
-
-
-      const textField =
-        document.getElementById(
-          'share-text'
-        );
-
-
-      const linkField =
-        document.getElementById(
-          'share-link'
-        );
-
-      const mediaTypeField =
-        document.getElementById(
-          'share-media-type'
-        );
-
-
-      const mediaFileField =
-        document.getElementById(
-          'share-media-file'
-        );
-
-      if (
-        selectedItems.size === 0
-      ) {
-
-        titleField.value =
-          '';
-
-        textField.value =
-          '';
-
-        linkField.value =
-
-          '';
-        mediaTypeField.value =
-          'None';
-
-        mediaFileField.value =
-          '';
-
-        selectedAssetKey =
-          '';
-
-        titleField.placeholder =
-          'Select a Knowledge item first';
-
-
-        textField.placeholder =
-          'SNS sharing text will be prepared here.';
-
-
-        linkField.placeholder =
-          'Knowledge URL';
-
-
+      if (selectedItems.size === 0) {
+        titleField.value = '';
+        textField.value = '';
+        detailLinkField.value = '';
+        externalLinkField.value = '';
+        mediaTypeField.value = 'None';
+        mediaFileField.value = '';
+        selectedAssetKey = '';
         return;
       }
 
+      const item = allKnowledgeItems[[...selectedItems][0]];
+      if (!item) return;
 
+      titleField.value = item.title || '';
+      textField.value = item.summary || '';
 
-      const firstSelectedIndex =
-        [...selectedItems][0];
+      const slug = String(item.slug || '').trim();
+      detailLinkField.value = slug
+        ? window.location.origin + '/insight.html?slug=' + encodeURIComponent(slug)
+        : '';
 
+      const url = String(item.url || '').trim();
+      externalLinkField.value = url;
 
+      const asset = String(item.asset || '').trim();
+      selectedAssetKey = String(item.assetKey || '').trim();
 
-      const item =
-        allKnowledgeItems[
-          firstSelectedIndex
-        ];
+      const mediaSource = asset || url;
+      const lowerAsset = mediaSource.toLowerCase().split('?')[0].split('#')[0];
 
+      let mediaType = 'None';
+      let mediaFile = '';
 
-
-      if (!item) {
-        return;
+      if (/\.(jpg|jpeg|png|webp|gif)$/i.test(lowerAsset)) {
+        mediaType = 'Image';
+        mediaFile = mediaSource;
+      } else if (/\.pdf$/i.test(lowerAsset)) {
+        mediaType = 'Document';
+        mediaFile = mediaSource;
+      } else if (/\.(mp4|mov|m4v|webm)$/i.test(lowerAsset)) {
+        mediaType = 'Video';
+        mediaFile = mediaSource;
       }
 
-
-
-      titleField.value =
-        item.title || '';
-
-
-
-      textField.value =
-        item.summary || '';
-
-
-
-      const asset =
-        item.asset || '';
-
-      selectedAssetKey =
-        String(
-          item.assetKey || ''
-        ).trim();
-
-
-      const url =
-        item.url || '';
-
-
-      const mediaSource =
-        asset || url;
-
-      const lowerAsset =
-        mediaSource
-          .toLowerCase()
-          .split('?')[0]
-          .split('#')[0];
-
-
-      let mediaType =
-        'None';
-
-
-      let mediaFile =
-        '';
-
-
-      if (
-        /\.(jpg|jpeg|png|webp|gif)$/i.test(
-          lowerAsset
-        )
-      ) {
-
-        mediaType =
-          'Image';
-
-        mediaFile =
-         mediaSource;
-
-      } else if (
-        /\.pdf$/i.test(
-          lowerAsset
-        )
-      ) {
-
-        mediaType =
-          'Document';
-
-        mediaFile =
-         mediaSource;
-
-      } else if (
-        /\.(mp4|mov|m4v|webm)$/i.test(
-          lowerAsset
-        )
-      ) {
-
-        mediaType =
-          'Video';
-
-        mediaFile =
-         mediaSource;
-
-      }
-
-
-      mediaTypeField.value =
-        mediaType;
-
-
-      mediaFileField.value =
-        mediaFile;
-
-
-      /*
-       * URL은 외부 링크가 있으면 그것을 우선 사용합니다.
-       * asset이 일반 문서/페이지 링크인 경우에만
-       * 기존 동작을 유지합니다.
-       */
-
-      linkField.value =
-        mediaType === 'None'
-          ? (url || asset)
-          : '';
+      mediaTypeField.value = mediaType;
+      mediaFileField.value = mediaFile;
     }
 
 
@@ -1170,226 +1034,56 @@
        ========================================= */
 
     function preparePreview() {
+      const title = document.getElementById('share-title').value.trim();
+      const text = document.getElementById('share-text').value.trim();
+      const detailLink = document.getElementById('share-detail-link').value.trim();
+      const externalLink = document.getElementById('share-external-link').value.trim();
+      const mediaType = document.getElementById('share-media-type').value;
+      const mediaFile = document.getElementById('share-media-file').value.trim();
+      const channel = getSelectedChannel();
 
-      const title =
-        document
-          .getElementById(
-            'share-title'
-          )
-          .value
-          .trim();
+      document.getElementById('preview-channel').textContent = channel + ' Preview';
+      document.getElementById('preview-title').textContent = title || 'Untitled Post';
+      document.getElementById('preview-text').textContent = text;
 
-
-
-      const text =
-        document
-          .getElementById(
-            'share-text'
-          )
-          .value
-          .trim();
-
-
-
-      const link =
-        document
-          .getElementById(
-            'share-link'
-          )
-          .value
-          .trim();
-
-
-
-                const mediaType =
-        document
-          .getElementById(
-            'share-media-type'
-          )
-          .value;
-
-
-      const mediaFile =
-        document
-          .getElementById(
-            'share-media-file'
-          )
-          .value
-          .trim();
-
-      const channel =
-        getSelectedChannel();
-
-
-
-      document
-        .getElementById(
-          'preview-channel'
-        )
-        .textContent =
-          channel +
-          ' Preview';
-
-
-
-      document
-        .getElementById(
-          'preview-title'
-        )
-        .textContent =
-          title ||
-          'Untitled Post';
-
-
-
-      document
-        .getElementById(
-          'preview-text'
-        )
-        .textContent =
-          text;
-
-
-
-      const previewLink =
-        document.getElementById(
-          'preview-link'
-        );
-
-
-
-      if (link) {
-
-        previewLink.textContent =
-          link;
-
-
-        if (
-          link.startsWith(
-            'http://'
-          ) ||
-          link.startsWith(
-            'https://'
-          )
-        ) {
-
-          previewLink.href =
-            link;
-
-        } else {
-
-          previewLink.href =
-            '../' +
-            link.replace(
-              /^\/+/,
-              ''
-            );
-
+      const setLink = (id, value, label) => {
+        const el = document.getElementById(id);
+        if (!value) {
+          el.textContent = '';
+          el.removeAttribute('href');
+          el.style.display = 'none';
+          return;
         }
+        el.textContent = label + ': ' + value;
+        el.href = value.startsWith('http') ? value : '../' + value.replace(/^\/+/, '');
+        el.style.display = 'inline-block';
+      };
 
+      setLink('preview-detail-link', detailLink, 'IXL Detail');
+      setLink('preview-external-link', externalLink, 'External');
 
-        previewLink.style.display =
-          'inline-block';
+      const previewMedia = document.getElementById('preview-media');
+      const previewMediaType = document.getElementById('preview-media-type');
+      const previewMediaFile = document.getElementById('preview-media-file');
 
+      if (mediaType !== 'None' && mediaFile) {
+        previewMedia.hidden = false;
+        previewMediaType.textContent = mediaType;
+        previewMediaFile.textContent = mediaFile;
+        previewMediaFile.href = mediaFile.startsWith('http')
+          ? mediaFile
+          : '../' + mediaFile.replace(/^\/+/, '');
       } else {
-
-        previewLink.textContent =
-          '';
-
-
-        previewLink.removeAttribute(
-          'href'
-        );
-
-
-        previewLink.style.display =
-          'none';
-
+        previewMedia.hidden = true;
+        previewMediaType.textContent = '';
+        previewMediaFile.textContent = '';
+        previewMediaFile.removeAttribute('href');
       }
 
-      const previewMedia =
-        document.getElementById(
-          'preview-media'
-        );
-
-
-      const previewMediaType =
-        document.getElementById(
-          'preview-media-type'
-        );
-
-
-      const previewMediaFile =
-        document.getElementById(
-          'preview-media-file'
-        );
-
-
-      if (
-        mediaType !== 'None' &&
-        mediaFile
-      ) {
-
-        previewMedia.hidden =
-          false;
-
-
-        previewMediaType.textContent =
-          mediaType;
-
-
-        previewMediaFile.textContent =
-          mediaFile;
-
-
-        if (
-          mediaFile.startsWith('http://') ||
-          mediaFile.startsWith('https://')
-        ) {
-
-          previewMediaFile.href =
-            mediaFile;
-
-        } else {
-
-          previewMediaFile.href =
-            '../' +
-            mediaFile.replace(
-              /^\/+/,
-              ''
-            );
-
-        }
-
-      } else {
-
-        previewMedia.hidden =
-          true;
-
-
-        previewMediaType.textContent =
-          '';
-
-
-        previewMediaFile.textContent =
-          '';
-
-
-        previewMediaFile.removeAttribute(
-          'href'
-        );
-
-      }
-
-      document
-        .getElementById(
-          'sns-preview-section'
-        )
-        .scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-
+      document.getElementById('sns-preview-section').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
     }
 
 
@@ -1420,13 +1114,15 @@
 
 
 
-      const link =
-        document
-          .getElementById(
-            'share-link'
-          )
-          .value
-          .trim();
+      const detailLink =
+        document.getElementById(
+          'share-detail-link'
+        ).value.trim();
+
+      const externalLink =
+        document.getElementById(
+          'share-external-link'
+        ).value.trim();
 
 
 
@@ -1434,7 +1130,8 @@
 
         title,
         text,
-        link
+        detailLink,
+        externalLink
 
       ]
         .filter(Boolean)
@@ -1525,13 +1222,15 @@
           .trim();
 
 
-      const link =
-        document
-          .getElementById(
-            'share-link'
-          )
-          .value
-          .trim();
+      const detailLink =
+        document.getElementById(
+          'share-detail-link'
+        ).value.trim();
+
+      const externalLink =
+        document.getElementById(
+          'share-external-link'
+        ).value.trim();
 
       const mediaType =
         document
@@ -1602,7 +1301,8 @@
                   channel,
                   title,
                   postText,
-                  link,
+                  detailLink,
+                  externalLink,
                   mediaType,
                   mediaFile,
                   assetKey:

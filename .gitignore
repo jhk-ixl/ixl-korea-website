@@ -40,3 +40,8 @@ insightscontent/akaio-pass*
 
 # 외부에서 설치한것(예 @vercel/blob을 설치했죠)
 node_modules/
+
+#
+api/insights-library-backup.js.txt
+images/ixl-center cases.png
+insightscontent/Innovation-sweet-spots.pdf

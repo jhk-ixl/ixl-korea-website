@@ -313,9 +313,19 @@ export default async function handler(req, res) {
         ).trim();
 
 
-      const link =
+      const legacyLink =
         String(
           body.link || ''
+        ).trim();
+
+      const detailLink =
+        String(
+          body.detailLink || ''
+        ).trim();
+
+      const externalLink =
+        String(
+          body.externalLink || ''
         ).trim();
 
       const mediaType =
@@ -451,7 +461,14 @@ export default async function handler(req, res) {
         channel,
         title,
         postText,
-        link,
+
+        detailLink:
+          detailLink || legacyLink,
+
+        externalLink,
+
+        link:
+          detailLink || legacyLink || externalLink,
 
         mediaType:
           mediaType || 'None',
@@ -1003,7 +1020,7 @@ export default async function handler(req, res) {
 
     res.setHeader(
       'Allow',
-      'GET, PATCH'
+      'GET, POST, PATCH'
     );
 
 
