@@ -1239,8 +1239,8 @@ body {
 }
 
 
-/* UNIVERSITY CARDS */
-
+/* UNIVERSITY CARDS
+   Same visual language as the dark-navy Offering cards */
 .universities-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1250,41 +1250,43 @@ body {
 .university-card {
   min-height: 310px;
   padding: 38px;
-  background: #ffffff;
-  border: 1px solid #e2e8ef;
+  background: #071b33;
+  border: 1px solid #173a5c;
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(7, 27, 51, 0.05);
+  box-shadow: 0 10px 30px rgba(7, 27, 51, 0.12);
 }
 
 .university-number {
   display: block;
   margin-bottom: 34px;
-  color: #1597e5;
+  color: #087ee6;
   font-size: 15px;
   font-weight: 800;
 }
 
 .university-card h3 {
   margin: 0 0 18px;
-  color: #071b33;
+  color: #ffffff;
   font-size: 26px;
+  line-height: 1.28;
 }
 
 .university-card p {
   margin: 0 0 28px;
-  color: #56616c;
+  color: #d7e0e9;
   font-size: 16px;
   line-height: 1.7;
 }
 
 .university-tag {
   display: inline-block;
-  padding: 8px 12px;
-  background: #eaf4ff;
+  padding: 0;
+  background: transparent;
   color: #087ee6;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: 0;
+  font-size: 13px;
   font-weight: 700;
+  line-height: 1.45;
 }
 
 
@@ -1886,6 +1888,26 @@ body {
    ========================================= */
 
 @media (max-width: 900px) {
+
+  /* EN / KOR — mobile */
+  .header .language-switcher {
+    position: absolute;
+    top: 0;
+    right: var(--page-side-padding);
+    height: var(--mobile-logo-row-height);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 0;
+    z-index: 3100;
+  }
+
+  .header .language-switcher button {
+    padding: 4px 2px;
+    font-size: 12px;
+  }
+
+
 
   .hero {
     min-height: auto;
@@ -4150,24 +4172,6 @@ body {
     height: auto;
   }
 
-    /* EN / KOR — mobile */
-  .header .language-switcher {
-    position: absolute;
-    top: 0;
-    right: var(--page-side-padding);
-    height: var(--mobile-logo-row-height);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 0;
-    z-index: 3100;
-  }
-
-  .header .language-switcher button {
-    padding: 4px 2px;
-    font-size: 12px;
-  }
-
   .header nav {
     display: flex;
     visibility: visible;
@@ -4316,4 +4320,367 @@ body {
     flex-direction: column;
     gap: 18px;
   }
+}
+
+
+/* Keep short semantic phrases together on narrow screens */
+.no-break {
+  white-space: nowrap;
+}
+
+
+/* GIMI CIP service-card title
+   Accreditation intentionally sits on the next line. */
+.cip-card-title {
+  display: block;
+  white-space: normal;
+}
+
+.cip-card-title > span,
+.cip-card-title > small {
+  display: block;
+}
+
+.cip-card-title > small {
+  margin-top: 5px;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .cip-card-title > small {
+    font-size: 14px;
+  }
+}
+
+
+/* ---------- CASES — APPROVED UNIFIED LAYOUT ---------- */
+
+/* Upper IXL Center reference area */
+.cases-center-overview {
+  margin: 0 0 28px;
+}
+
+.cases-center-overview-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap: 44px;
+  align-items: center;
+}
+
+.cases-center-overview-visual {
+  min-height: 300px;
+  overflow: hidden;
+  background: #071b33;
+  border-radius: 9px;
+}
+
+.cases-center-overview-visual img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  object-fit: cover;
+}
+
+.cases-center-overview-highlight {
+  padding-right: 24px;
+}
+
+.cases-center-overview-highlight p {
+  margin: 0;
+  color: #0b665e;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.cases-center-overview-body {
+  margin: 30px 0 0;
+  color: #56616c;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* 01 and 02 full-width cards */
+.cases-experience-grid .case-summary-card {
+  grid-column: 1 / -1;
+  min-height: 0;
+  padding: 28px 34px;
+  background: #071b33;
+  border-color: #173a5c;
+  color: #ffffff;
+}
+
+.cases-experience-grid .ixl-korea-summary {
+  background: #071b33;
+  border-color: #173a5c;
+}
+
+.case-summary-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.case-summary-card .number,
+.case-navy-card .number {
+  color: #1597e5;
+}
+
+.case-summary-card .case-type,
+.case-navy-card .case-type {
+  color: #d7e0e9;
+}
+
+.case-summary-card h3,
+.case-navy-card h3 {
+  color: #ffffff;
+}
+
+.case-summary-card > p,
+.case-navy-card > p {
+  color: #d7e0e9;
+}
+
+/* 03 and 04 now use the same navy visual language */
+.case-navy-card {
+  background: #071b33;
+  border-color: #173a5c;
+  color: #ffffff;
+}
+
+.case-navy-card .case-clients-label {
+  color: #1597e5;
+}
+
+.case-navy-card .case-clients span {
+  background: transparent;
+  border-color: rgba(255,255,255,.34);
+  color: #ffffff;
+}
+
+.case-navy-card .case-path,
+.case-navy-card .case-focus {
+  border-top-color: rgba(255,255,255,.18);
+  color: #d7e0e9;
+}
+
+.case-navy-card .case-path b {
+  color: #1597e5;
+}
+
+@media (max-width: 900px) {
+  .cases-center-overview-top {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .cases-center-overview-highlight {
+    padding-right: 0;
+  }
+
+  .cases-center-overview-highlight p {
+    font-size: 19px;
+  }
+
+  .cases-center-overview-visual,
+  .cases-center-overview-visual img {
+    min-height: 220px;
+  }
+
+  .cases-experience-grid .case-summary-card {
+    padding: 26px 24px;
+  }
+}
+
+
+/* ---------- CASES v7 — IXL CENTER OVERVIEW REFINEMENT ---------- */
+.cases-center-overview {
+  margin-bottom: 34px;
+}
+
+.cases-center-overview-top {
+  grid-template-columns: minmax(0, 1.08fr) minmax(420px, .92fr);
+  gap: 52px;
+}
+
+.cases-center-overview-visual {
+  min-height: 330px;
+  background: #ffffff;
+  border-radius: 0;
+}
+
+.cases-center-overview-visual img {
+  min-height: 330px;
+  object-fit: cover;
+}
+
+.cases-center-overview-highlight p {
+  color: #0b665e;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.52;
+}
+
+.cases-center-overview-body {
+  max-width: none;
+  margin-top: 34px;
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+@media (max-width: 900px) {
+  .cases-center-overview-top {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .cases-center-overview-visual,
+  .cases-center-overview-visual img {
+    min-height: 220px;
+  }
+
+  .cases-center-overview-highlight p {
+    font-size: 18px;
+  }
+
+  .cases-center-overview-body {
+    font-size: 15px;
+    line-height: 1.75;
+  }
+}
+
+
+/* ---------- CASES v8 — THREE CASE CARDS / LIGHT THEME ---------- */
+
+/* Remaining 01 / 02 / 03 cards use one consistent light theme */
+.cases-experience-grid .ixl-korea-summary,
+.cases-experience-grid .case-navy-card {
+  background: #ffffff;
+  border: 1px solid #dfe6ee;
+  color: #071b33;
+  box-shadow: 0 8px 24px rgba(7, 27, 51, 0.04);
+}
+
+.cases-experience-grid .ixl-korea-summary .number,
+.cases-experience-grid .case-navy-card .number {
+  color: #1597e5;
+}
+
+.cases-experience-grid .ixl-korea-summary .case-type,
+.cases-experience-grid .case-navy-card .case-type {
+  color: #687684;
+}
+
+.cases-experience-grid .ixl-korea-summary h3,
+.cases-experience-grid .case-navy-card h3 {
+  color: #071b33;
+}
+
+.cases-experience-grid .ixl-korea-summary > p,
+.cases-experience-grid .case-navy-card > p {
+  color: #56616c;
+}
+
+.cases-experience-grid .case-navy-card .case-clients-label {
+  color: #087ee6;
+}
+
+.cases-experience-grid .case-navy-card .case-clients span {
+  background: #ffffff;
+  border-color: #dfe6ee;
+  color: #344252;
+}
+
+.cases-experience-grid .case-navy-card .case-path,
+.cases-experience-grid .case-navy-card .case-focus {
+  border-top-color: #dfe6ee;
+  color: #687684;
+}
+
+.cases-experience-grid .case-navy-card .case-path b {
+  color: #087ee6;
+}
+
+
+/* =========================================================
+   CASES v9 — FINAL APPROVED VISUAL
+   01 / 02 / 03 = navy cards with white text
+   Bottom company + university -> impact bar = white / dark text
+   ========================================================= */
+
+/* 01 IXL Korea + 02 MBA Innovation Olympics + 03 University-wide CIP */
+.cases-experience-grid .ixl-korea-summary,
+.cases-experience-grid .case-navy-card {
+  background: #071b33;
+  border: 1px solid #173a5c;
+  color: #ffffff;
+  box-shadow: 0 10px 28px rgba(7, 27, 51, 0.12);
+}
+
+.cases-experience-grid .ixl-korea-summary .number,
+.cases-experience-grid .case-navy-card .number {
+  color: #1597e5;
+}
+
+.cases-experience-grid .ixl-korea-summary .case-type,
+.cases-experience-grid .case-navy-card .case-type {
+  color: #d7e0e9;
+}
+
+.cases-experience-grid .ixl-korea-summary h3,
+.cases-experience-grid .case-navy-card h3 {
+  color: #ffffff;
+}
+
+.cases-experience-grid .ixl-korea-summary > p,
+.cases-experience-grid .case-navy-card > p {
+  color: #d7e0e9;
+}
+
+.cases-experience-grid .case-navy-card .case-clients-label {
+  color: #1597e5;
+}
+
+.cases-experience-grid .case-navy-card .case-clients span {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.35);
+  color: #ffffff;
+}
+
+.cases-experience-grid .case-navy-card .case-path,
+.cases-experience-grid .case-navy-card .case-focus {
+  border-top-color: rgba(255,255,255,.18);
+  color: #d7e0e9;
+}
+
+.cases-experience-grid .case-navy-card .case-path b {
+  color: #1597e5;
+}
+
+/* Bottom logic bar — white background / dark text */
+.cases-message {
+  background: #ffffff;
+  color: #071b33;
+  border: 1px solid #dfe6ee;
+  box-shadow: 0 8px 22px rgba(7, 27, 51, 0.04);
+}
+
+.cases-message strong {
+  color: #071b33;
+}
+
+.cases-message span {
+  color: #344252;
+}
+
+.cases-message-arrow,
+.cases-message-plus {
+  color: #687684 !important;
 }
