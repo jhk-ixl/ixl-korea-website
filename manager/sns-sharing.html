@@ -671,6 +671,20 @@
 
       mediaTypeField.value = mediaType;
       mediaFileField.value = mediaFile;
+
+      /*
+      * Avoid duplicate SNS resources.
+      * If External Link and Primary Media point to the same resource,
+      * keep it only as Media.
+      */
+      if (
+        externalLinkField.value &&
+        mediaFile &&
+        externalLinkField.value === mediaFile
+      ) {
+        externalLinkField.value = '';
+      }
+
     }
 
 
