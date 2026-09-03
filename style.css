@@ -4150,6 +4150,24 @@ body {
     height: auto;
   }
 
+    /* EN / KOR — mobile */
+  .header .language-switcher {
+    position: absolute;
+    top: 0;
+    right: var(--page-side-padding);
+    height: var(--mobile-logo-row-height);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 0;
+    z-index: 3100;
+  }
+
+  .header .language-switcher button {
+    padding: 4px 2px;
+    font-size: 12px;
+  }
+
   .header nav {
     display: flex;
     visibility: visible;
