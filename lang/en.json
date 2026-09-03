@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "title": "IXL Korea | Turning Innovation into Growth"
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "companyOverview": "Company Overview",
+    "ixlCenterTeam": "IXL Center Team",
+    "advisoryBoard": "Advisory Board",
+    "partners": "Partners",
+    "office": "Our Office",
+    "companyProfile": "Company Profile",
+    "offerings": "Offerings",
+    "universities": "Universities",
+    "cases": "Cases",
+    "insights": "Insights",
+    "contact": "Contact"
+  },
+  "home": {
+    "heroTitle": "Turning Innovation<br/>into Growth",
+    "heroKeywords": "Strategy · AI · People · System",
+    "description": "We help organizations discover new growth opportunities, build breakthrough business concepts, and develop sustainable innovation capabilities.",
+    "exploreOfferings": "Explore Our Offerings →",
+    "contact": "Contact IXL Korea →"
+  },
+  "auto": {},
+  "placeholder": {}
+}
