@@ -57,7 +57,13 @@
         const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
 
         for (const raw of lines) {
-            const line = raw.trim();
+            let line = raw.trim();
+
+            // Decap's Rich Text editor can preserve pasted Markdown markers
+            // with a leading backslash (for example: \## Heading).
+            // Normalize only supported block markers before parsing.
+            line = line.replace(/^\\(?=(?:#{2,4}\s+|[-*]\s+|>\s?))/, '');
+
             if (!line) { closeList(); continue; }
 
             const h = line.match(/^(#{2,4})\s+(.+)$/);
@@ -94,21 +100,6 @@
 
     function isPdf(url) {
         return /\.pdf(?:$|[?#])/i.test(url || '');
-    }
-
-    function referenceHtml(item) {
-        const url = assetUrl(item);
-        if (!url || !isPdf(url)) return '';
-        const safe = escapeHtml(url);
-        return `
-          <section class="knowledge-reference">
-            <p class="knowledge-reference-label">REFERENCE MATERIAL</p>
-            <h2>Related Presentation / PDF</h2>
-            <div class="knowledge-reference-actions">
-              <a href="${safe}" target="_blank" rel="noopener noreferrer">View PDF →</a>
-              <a href="${safe}" download>Download PDF ↓</a>
-            </div>
-          </section>`;
     }
 
     function sourceHtml(item, fallback) {
@@ -222,7 +213,6 @@
                 <p class="eyebrow">${escapeHtml((item.type || 'INSIGHT').toUpperCase())}</p>
                 <h1>${escapeHtml(item.title)}</h1>
                 <p>${escapeHtml(item.summary || '')}</p>
-                ${referenceHtml(item)}
                 ${backLinkHtml(item)}
               </div>`;
             return;
@@ -240,7 +230,6 @@
           </header>
           <div class="knowledge-body">${markdownToHtml(body)}</div>
           ${sourceHtml(item, fallback)}
-          ${referenceHtml(item)}
           ${backLinkHtml(item)}
         `;
     }
