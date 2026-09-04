@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Insights Library | IXL Korea Manager</title>
+  <title>Knowledge Builder | IXL Korea Manager</title>
 
   <link rel="stylesheet" href="manager.css">
   <script src="manager-guard.js"></script>
@@ -19,7 +19,7 @@
   <style>
 
     /* =========================================
-       INSIGHTS LIBRARY
+       KNOWLEDGE BUILDER
        ========================================= */
 
     .insights-toolbar {
@@ -391,10 +391,10 @@
         KNOWLEDGE MANAGEMENT
       </span>
 
-      <h2>Insights Library</h2>
+      <h2>Knowledge Builder</h2>
 
       <p>
-        Search, organize, add and edit IXL Korea Insights content.
+        Create, organize and manage reusable IXL Korea Knowledge Items.
       </p>
 
     </section>
@@ -413,7 +413,7 @@
           id="add-insight"
           class="insights-btn primary"
         >
-          + Add Insight
+          + Add Knowledge
         </button>
 
         <input
@@ -473,27 +473,9 @@
           </label>
 
           <select id="insights-type">
-
             <option value="">
               All Types
             </option>
-
-            <option value="news">
-              News
-            </option>
-
-            <option value="article">
-              Article
-            </option>
-
-            <option value="video">
-              Video
-            </option>
-
-            <option value="external">
-              External Link
-            </option>
-
           </select>
 
         </div>
@@ -515,7 +497,7 @@
       <div class="insights-editor-header">
 
         <h3 id="editor-title">
-          Add Insight
+          Add Knowledge
         </h3>
 
       </div>
@@ -529,12 +511,7 @@
             Type *
           </label>
 
-          <select id="edit-type">
-            <option value="news">News</option>
-            <option value="article">Article</option>
-            <option value="video">Video</option>
-            <option value="external">External Link</option>
-          </select>
+          <select id="edit-type"></select>
 
         </div>
 
@@ -545,13 +522,7 @@
             Access Level *
           </label>
 
-          <select id="edit-access">
-            <option value="Public">Public</option>
-            <option value="Members">Members</option>
-            <option value="Professionals">Professionals</option>
-            <option value="Clients">Clients</option>
-            <option value="Internal">Internal</option>
-          </select>
+          <select id="edit-access"></select>
 
         </div>
 
@@ -606,6 +577,74 @@
           </label>
 
           <textarea id="edit-summary"></textarea>
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label for="edit-slug">
+            Slug
+          </label>
+
+          <input
+            type="text"
+            id="edit-slug"
+            placeholder="example-knowledge-item"
+          >
+
+          <span class="insights-field-hint">
+            Used for the Knowledge detail URL.
+          </span>
+
+        </div>
+
+
+        <div class="insights-field">
+
+          <label for="edit-author">
+            Author
+          </label>
+
+          <input
+            type="text"
+            id="edit-author"
+            placeholder="Author name"
+          >
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-source">
+            Source
+          </label>
+
+          <input
+            type="text"
+            id="edit-source"
+            placeholder="IXL Korea, IXL Center, GIMI, external source..."
+          >
+
+        </div>
+
+
+        <div class="insights-field full">
+
+          <label for="edit-body">
+            Markdown Body
+          </label>
+
+          <textarea
+            id="edit-body"
+            rows="18"
+            placeholder="Write or paste Markdown content here..."
+          ></textarea>
+
+          <span class="insights-field-hint">
+            Main long-form Knowledge content. Markdown formatting is supported.
+          </span>
 
         </div>
 
@@ -817,7 +856,7 @@
             >
 
             <span>
-              Feature this Insight
+              Feature in Public Insights
             </span>
 
           </div>
@@ -911,7 +950,7 @@
       id="insights-empty"
       class="insights-empty"
     >
-      No Insights content matches the current search or filter.
+      No Knowledge Items match the current search or filter.
     </div>
 
   </main>
@@ -1001,6 +1040,184 @@
 
     }
 
+
+    /* =========================================
+       KNOWLEDGE MASTER DATA
+       ========================================= */
+
+    async function loadKnowledgeMasterData() {
+
+      const [
+        typeResponse,
+        accessResponse
+      ] =
+        await Promise.all([
+          fetch(
+            '../insightscontent/knowledge-types.json',
+            {
+              cache: 'no-store'
+            }
+          ),
+          fetch(
+            '../insightscontent/access-levels.json',
+            {
+              cache: 'no-store'
+            }
+          )
+        ]);
+
+
+      if (
+        !typeResponse.ok ||
+        !accessResponse.ok
+      ) {
+        throw new Error(
+          'Could not load Knowledge Master Data.'
+        );
+      }
+
+
+      const [
+        typeData,
+        accessData
+      ] =
+        await Promise.all([
+          typeResponse.json(),
+          accessResponse.json()
+        ]);
+
+
+      const types =
+        Array.isArray(typeData.types)
+          ? typeData.types
+          : [];
+
+      const accessLevels =
+        Array.isArray(
+          accessData.accessLevels
+        )
+          ? accessData.accessLevels
+          : [];
+
+
+      const filterSelect =
+        document.getElementById(
+          'insights-type'
+        );
+
+      const typeSelect =
+        document.getElementById(
+          'edit-type'
+        );
+
+      const accessSelect =
+        document.getElementById(
+          'edit-access'
+        );
+
+
+      filterSelect.innerHTML =
+        '<option value="">All Types</option>';
+
+      typeSelect.innerHTML = '';
+
+      accessSelect.innerHTML = '';
+
+
+      types.forEach(
+        item => {
+
+          const value =
+            String(
+              item.value || ''
+            ).trim();
+
+          const name =
+            String(
+              item.name || value
+            ).trim();
+
+          if (!value) {
+            return;
+          }
+
+
+          const filterOption =
+            document.createElement(
+              'option'
+            );
+
+          filterOption.value =
+            value;
+
+          filterOption.textContent =
+            name;
+
+          filterSelect.appendChild(
+            filterOption
+          );
+
+
+          const editOption =
+            document.createElement(
+              'option'
+            );
+
+          editOption.value =
+            value;
+
+          editOption.textContent =
+            name;
+
+          typeSelect.appendChild(
+            editOption
+          );
+
+        }
+      );
+
+
+      accessLevels.forEach(
+        item => {
+
+          const name =
+            String(
+              item.name || ''
+            ).trim();
+
+          if (!name) {
+            return;
+          }
+
+
+          const option =
+            document.createElement(
+              'option'
+            );
+
+          option.value =
+            name;
+
+          option.textContent =
+            name;
+
+          accessSelect.appendChild(
+            option
+          );
+
+        }
+      );
+
+
+      if (
+        !typeSelect.options.length ||
+        !accessSelect.options.length
+      ) {
+        throw new Error(
+          'Knowledge Master Data is empty.'
+        );
+      }
+    }
 
     /* =========================================
        LOAD
@@ -1141,6 +1358,8 @@
 
       try {
 
+        await loadKnowledgeMasterData();
+
         await loadAssetRegistry();
 
         const response =
@@ -1160,7 +1379,7 @@
 
           throw new Error(
             result.error ||
-            'Could not load Insights.'
+            'Could not load Knowledge Items.'
           );
 
         }
@@ -1462,7 +1681,7 @@
       document.getElementById(
         'editor-title'
       ).textContent =
-        'Add Insight';
+        'Add Knowledge';
 
 
       document.getElementById(
@@ -1499,6 +1718,30 @@
 
       document.getElementById(
         'edit-summary'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-slug'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-author'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-source'
+      ).value =
+        '';
+
+
+      document.getElementById(
+        'edit-body'
       ).value =
         '';
 
@@ -1605,7 +1848,7 @@
       document.getElementById(
         'editor-title'
       ).textContent =
-        'Edit Insight';
+        'Edit Knowledge';
 
 
       document.getElementById(
@@ -1642,6 +1885,30 @@
         'edit-summary'
       ).value =
         item.summary || '';
+
+
+      document.getElementById(
+        'edit-slug'
+      ).value =
+        item.slug || '';
+
+
+      document.getElementById(
+        'edit-author'
+      ).value =
+        item.author || '';
+
+
+      document.getElementById(
+        'edit-source'
+      ).value =
+        item.source || '';
+
+
+      document.getElementById(
+        'edit-body'
+      ).value =
+        item.body || '';
 
 
       document.getElementById(
@@ -2043,6 +2310,26 @@
             'edit-summary'
           ).value.trim(),
 
+        slug:
+          document.getElementById(
+            'edit-slug'
+          ).value.trim(),
+
+        author:
+          document.getElementById(
+            'edit-author'
+          ).value.trim(),
+
+        source:
+          document.getElementById(
+            'edit-source'
+          ).value.trim(),
+
+        body:
+          document.getElementById(
+            'edit-body'
+          ).value,
+
         topics:
           inputToArray(
             document.getElementById(
@@ -2165,7 +2452,7 @@
 
           throw new Error(
             result.error ||
-            'Insight could not be saved.'
+            'Knowledge Item could not be saved.'
           );
 
         }
@@ -2173,8 +2460,8 @@
 
         showMessage(
           isEdit
-            ? 'Insight updated successfully.'
-            : 'Insight added successfully.',
+            ? 'Knowledge Item updated successfully.'
+            : 'Knowledge Item added successfully.',
           'success'
         );
 
@@ -2232,7 +2519,7 @@
 
       const confirmed =
         window.confirm(
-          `Delete this Insight?\n\n${item.title}\n\nThis action updates the production Insights data.`
+          `Delete this Knowledge Item?\n\n${item.title}\n\nThis action updates the production Knowledge data.`
         );
 
 
@@ -2272,7 +2559,7 @@
 
           throw new Error(
             result.error ||
-            'Insight could not be deleted.'
+            'Knowledge Item could not be deleted.'
           );
 
         }

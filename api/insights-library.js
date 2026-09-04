@@ -533,10 +533,107 @@ export default async function handler(req, res) {
 
 
   /* =========================================
+     KNOWLEDGE MASTER DATA
+     ========================================= */
+
+  async function loadKnowledgeMasterData() {
+
+    async function loadJson(path) {
+
+      const url =
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+        `/contents/${path}`;
+
+      const response =
+        await fetch(
+          `${url}?ref=${GITHUB_BRANCH}`,
+          {
+            headers:
+              githubHeaders
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          `Knowledge master data could not be loaded: ${path}`
+        );
+      }
+
+      const file =
+        await response.json();
+
+      if (
+        !file.content
+      ) {
+        throw new Error(
+          `Invalid Knowledge master data response: ${path}`
+        );
+      }
+
+      const decoded =
+        Buffer
+          .from(
+            file.content,
+            'base64'
+          )
+          .toString(
+            'utf8'
+          );
+
+      return JSON.parse(
+        decoded
+      );
+    }
+
+
+    const [
+      typeData,
+      accessData
+    ] =
+      await Promise.all([
+        loadJson(
+          'insightscontent/knowledge-types.json'
+        ),
+        loadJson(
+          'insightscontent/access-levels.json'
+        )
+      ]);
+
+
+    return {
+
+      allowedTypes:
+        Array.isArray(typeData.types)
+          ? typeData.types
+              .map(
+                item =>
+                  cleanString(
+                    item.value
+                  ).toLowerCase()
+              )
+              .filter(Boolean)
+          : [],
+
+      allowedAccessLevels:
+        Array.isArray(accessData.accessLevels)
+          ? accessData.accessLevels
+              .map(
+                item =>
+                  cleanString(
+                    item.name
+                  )
+              )
+              .filter(Boolean)
+          : []
+
+    };
+  }
+
+  /* =========================================
      NORMALIZE INSIGHT
      ========================================= */
 
-  function normalizeInsight(body) {
+  function normalizeInsight(body, validation = {}) {
 
     const type =
       cleanString(
@@ -565,6 +662,30 @@ export default async function handler(req, res) {
     const summary =
       cleanString(
         body.summary
+      );
+
+
+    const slug =
+      cleanString(
+        body.slug
+      );
+
+
+    const author =
+      cleanString(
+        body.author
+      );
+
+
+    const source =
+      cleanString(
+        body.source
+      );
+
+
+    const bodyContent =
+      String(
+        body.body ?? ''
       );
 
 
@@ -597,21 +718,20 @@ export default async function handler(req, res) {
       body.featured === true;
 
 
-    const allowedTypes = [
-      'news',
-      'article',
-      'video',
-      'external'
-    ];
+    const allowedTypes =
+      Array.isArray(
+        validation.allowedTypes
+      )
+        ? validation.allowedTypes
+        : [];
 
 
-    const allowedAccessLevels = [
-      'Public',
-      'Members',
-      'Professionals',
-      'Clients',
-      'Internal'
-    ];
+    const allowedAccessLevels =
+      Array.isArray(
+        validation.allowedAccessLevels
+      )
+        ? validation.allowedAccessLevels
+        : [];
 
 
     if (
@@ -622,7 +742,7 @@ export default async function handler(req, res) {
 
       const error =
         new Error(
-          'Invalid Insight type.'
+          'Invalid Knowledge Type.'
         );
 
       error.statusCode = 400;
@@ -716,6 +836,15 @@ export default async function handler(req, res) {
       title,
 
       summary,
+
+      slug,
+
+      author,
+
+      source,
+
+      body:
+        bodyContent,
 
       url,
 
@@ -911,14 +1040,15 @@ export default async function handler(req, res) {
   }
 
 
-  function normalizeByResource(body) {
+  function normalizeByResource(body, validation = {}) {
 
     if (
       resource === 'insights'
     ) {
 
       return normalizeInsight(
-        body
+        body,
+        validation
       );
     }
 
@@ -1028,9 +1158,16 @@ export default async function handler(req, res) {
         ];
 
 
+      const validation =
+        resource === 'insights'
+          ? await loadKnowledgeMasterData()
+          : {};
+
+
       let item =
         normalizeByResource(
-          body
+          body,
+          validation
         );
 
 
@@ -1248,9 +1385,16 @@ export default async function handler(req, res) {
       }
 
 
+      const validation =
+        resource === 'insights'
+          ? await loadKnowledgeMasterData()
+          : {};
+
+
       let item =
         normalizeByResource(
-          body
+          body,
+          validation
         );
 
 
