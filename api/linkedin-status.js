@@ -1,101 +1,103 @@
-function parseCookies(cookieHeader = "") {
-  return Object.fromEntries(
-    cookieHeader
-      .split(";")
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .map((part) => {
-        const index = part.indexOf("=");
+import {
+  getLinkedInSession
+} from '../lib/linkedin/session.js';
 
-        if (index === -1) {
-          return [decodeURIComponent(part), ""];
-        }
+export default async function handler(
+  req,
+  res
+) {
+  if (req.method !== 'GET') {
+    res.setHeader(
+      'Allow',
+      'GET'
+    );
 
-        return [
-          decodeURIComponent(part.slice(0, index)),
-          decodeURIComponent(part.slice(index + 1)),
-        ];
-      })
-  );
-}
-
-export default async function handler(req, res) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", "GET");
-    return res.status(405).json({
-      ok: false,
-      error: "Method not allowed",
-    });
+    return res
+      .status(405)
+      .json({
+        ok: false,
+        error:
+          'Method not allowed'
+      });
   }
 
   try {
-    const cookies = parseCookies(req.headers.cookie || "");
+    const session =
+      getLinkedInSession(req);
 
-    const accessToken = cookies.linkedin_access_token;
-    const expiresAtRaw = cookies.linkedin_token_expires_at;
+    if (!session.connected) {
+      if (
+        session.status ===
+        'expired'
+      ) {
+        return res
+          .status(200)
+          .json({
+            ok: true,
+            connected:
+              false,
+            status:
+              'expired',
+            expiresAt:
+              new Date(
+                session.expiresAt
+              ).toISOString(),
+            daysRemaining:
+              0,
+            message:
+              'LinkedIn access token has expired.'
+          });
+      }
 
-    if (!accessToken || !expiresAtRaw) {
-      return res.status(200).json({
-        ok: true,
-        connected: false,
-        status: "disconnected",
-        message: "LinkedIn is not connected.",
-      });
+      return res
+        .status(200)
+        .json({
+          ok: true,
+          connected:
+            false,
+          status:
+            session.status,
+          message:
+            session.status ===
+              'invalid'
+              ? 'LinkedIn session data is invalid. Please reconnect LinkedIn.'
+              : 'LinkedIn is not connected.'
+        });
     }
 
-    const expiresAt = Number(expiresAtRaw);
-
-    if (!Number.isFinite(expiresAt)) {
-      return res.status(200).json({
+    return res
+      .status(200)
+      .json({
         ok: true,
-        connected: false,
-        status: "invalid",
-        message: "LinkedIn token expiration information is invalid.",
+        connected:
+          true,
+        status:
+          session.status,
+        expiresAt:
+          new Date(
+            session.expiresAt
+          ).toISOString(),
+        daysRemaining:
+          session.daysRemaining,
+        reconnectUrl:
+          '/api/linkedin-auth'
       });
-    }
-
-    const now = Date.now();
-    const remainingMs = expiresAt - now;
-
-    if (remainingMs <= 0) {
-      return res.status(200).json({
-        ok: true,
-        connected: false,
-        status: "expired",
-        expiresAt: new Date(expiresAt).toISOString(),
-        daysRemaining: 0,
-        message: "LinkedIn access token has expired.",
-      });
-    }
-
-    const daysRemaining = Math.ceil(
-      remainingMs / (1000 * 60 * 60 * 24)
+  } catch (error) {
+    console.error(
+      'LinkedIn status error:',
+      error
     );
 
-    let status = "connected";
-
-    if (daysRemaining <= 7) {
-      status = "critical";
-    } else if (daysRemaining <= 14) {
-      status = "warning";
-    }
-
-    return res.status(200).json({
-      ok: true,
-      connected: true,
-      status,
-      expiresAt: new Date(expiresAt).toISOString(),
-      daysRemaining,
-      reconnectUrl: "/api/linkedin-auth",
-    });
-  } catch (error) {
-    console.error("LinkedIn status error:", error);
-
-    return res.status(500).json({
-      ok: false,
-      connected: false,
-      status: "error",
-      error: "Unable to check LinkedIn connection status.",
-    });
+    return res
+      .status(500)
+      .json({
+        ok: false,
+        connected:
+          false,
+        status:
+          'error',
+        error:
+          'Unable to check LinkedIn connection status.'
+      });
   }
-};
+}

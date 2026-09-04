@@ -1,36 +1,28 @@
 import {
+  clearCookie
+} from '../lib/http/cookies.js';
+
+import {
   getAuthenticatedManager
-} from '../lib/manager-auth-utils.js';
+} from '../lib/manager/auth.js';
 
-
-export default async function handler(req, res) {
-
-  /* =========================================
-     GET
-     CHECK MANAGER SESSION
-     ========================================= */
-
+export default async function handler(
+  req,
+  res
+) {
   if (req.method === 'GET') {
-
     const manager =
       getAuthenticatedManager(req);
-
 
     res.setHeader(
       'Cache-Control',
       'no-store, max-age=0'
     );
 
-
-    /* -----------------------------------------
-       AUTH NOT CONFIGURED
-       ----------------------------------------- */
-
     if (
       manager.reason ===
       'not_configured'
     ) {
-
       console.error(
         'Manager authentication environment variables are missing.'
       );
@@ -38,90 +30,60 @@ export default async function handler(req, res) {
       return res
         .status(500)
         .json({
-          authenticated: false,
+          authenticated:
+            false,
           error:
             'Manager authentication is not configured.'
         });
-
     }
 
-
-    /* -----------------------------------------
-       NOT AUTHENTICATED
-       ----------------------------------------- */
-
-    if (
-      !manager.authenticated
-    ) {
-
+    if (!manager.authenticated) {
       return res
         .status(401)
         .json({
-          authenticated: false
+          authenticated:
+            false
         });
-
     }
-
-
-    /* -----------------------------------------
-       AUTHENTICATED
-       ----------------------------------------- */
 
     return res
       .status(200)
       .json({
-        authenticated: true,
+        authenticated:
+          true,
         login:
           manager.login
       });
-
   }
 
-
-  /* =========================================
-     POST
-     LOGOUT MANAGER
-     ========================================= */
-
   if (req.method === 'POST') {
-
     res.setHeader(
       'Set-Cookie',
-      [
-        'manager_session=',
-        'HttpOnly',
-        'Secure',
-        'SameSite=Lax',
-        'Path=/',
-        'Max-Age=0'
-      ].join('; ')
+      clearCookie(
+        'manager_session',
+        {
+          path: '/'
+        }
+      )
     );
-
 
     res.setHeader(
       'Cache-Control',
       'no-store, max-age=0'
     );
 
-
     return res
       .status(200)
       .json({
-        success: true
+        success:
+          true
       });
-
   }
-
-
-  /* =========================================
-     METHOD NOT ALLOWED
-     ========================================= */
 
   res.setHeader(
     'Allow',
     'GET, POST'
   );
-
 
   return res
     .status(405)
@@ -129,5 +91,4 @@ export default async function handler(req, res) {
       error:
         'Method not allowed.'
     });
-
 }

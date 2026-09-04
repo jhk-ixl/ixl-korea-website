@@ -1,35 +1,64 @@
-import crypto from "crypto";
+import {
+  randomHex
+} from '../lib/security/crypto.js';
 
-export default async function handler(req, res) {
-  const clientId = process.env.LINKEDIN_CLIENT_ID;
+import {
+  serializeCookie
+} from '../lib/http/cookies.js';
+
+import {
+  LINKEDIN_REDIRECT_URI
+} from '../lib/linkedin/config.js';
+
+export default async function handler(
+  req,
+  res
+) {
+  const clientId =
+    process.env.LINKEDIN_CLIENT_ID;
 
   if (!clientId) {
-    return res.status(500).json({
-      error: "LINKEDIN_CLIENT_ID is not configured."
-    });
+    return res
+      .status(500)
+      .json({
+        error:
+          'LINKEDIN_CLIENT_ID is not configured.'
+      });
   }
 
-  const redirectUri =
-    "https://ixl-korea-website.vercel.app/api/linkedin-callback";
-
-  // OAuth CSRF protection
-  const state = crypto.randomBytes(24).toString("hex");
+  const state =
+    randomHex(24);
 
   res.setHeader(
-    "Set-Cookie",
-    `linkedin_oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`
+    'Set-Cookie',
+    serializeCookie(
+      'linkedin_oauth_state',
+      state,
+      {
+        path: '/',
+        maxAge: 600
+      }
+    )
   );
 
-  const params = new URLSearchParams({
-    response_type: "code",
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    state,
-    scope: "openid profile w_member_social"
-  });
+  const params =
+    new URLSearchParams({
+      response_type:
+        'code',
+      client_id:
+        clientId,
+      redirect_uri:
+        LINKEDIN_REDIRECT_URI,
+      state,
+      scope:
+        'openid profile w_member_social'
+    });
 
   const authorizationUrl =
     `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
 
-  return res.redirect(302, authorizationUrl);
-};
+  return res.redirect(
+    302,
+    authorizationUrl
+  );
+}
