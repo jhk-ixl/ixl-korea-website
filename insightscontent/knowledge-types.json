@@ -1,64 +1,69 @@
 {
-    "types":  [
-                  {
-                      "name":  "News",
-                      "description":  "Announcements, updates and timely innovation developments.",
-                      "value":  "news"
-                  },
-                  {
-                      "name":  "Article",
-                      "description":  "Insights, perspectives and thought leadership content.",
-                      "value":  "article"
-                  },
-                  {
-                      "name":  "Video",
-                      "description":  "Video-based knowledge, interviews, presentations and events.",
-                      "value":  "video"
-                  },
-                  {
-                      "name":  "External Resource",
-                      "description":  "Selected external websites, references and knowledge resources.",
-                      "value":  "external"
-                  },
-                  {
-                      "name":  "Case",
-                      "description":  "Innovation cases, project experiences and business applications.",
-                      "value":  "case"
-                  },
-                  {
-                      "name":  "Research",
-                      "description":  "Research findings, studies, evidence and analytical material.",
-                      "value":  "research"
-                  },
-                  {
-                      "name":  "Framework",
-                      "description":  "Innovation frameworks, methodologies and structured approaches.",
-                      "value":  "framework"
-                  },
-                  {
-                      "name":  "Report",
-                      "description":  "Reports, white papers, assessments and analytical publications.",
-                      "value":  "report"
-                  },
-                  {
-                      "name":  "Presentation",
-                      "description":  "Presentation materials, briefings and executive content.",
-                      "value":  "presentation"
-                  },
-                  {
-                      "name":  "Learning Material",
-                      "description":  "Education, workshop, university and certification materials.",
-                      "value":  "learning-material"
-                  },
-                  {
-                      "name":  "Project Knowledge",
-                      "description":  "Lessons, insights and reusable knowledge generated from projects.",
-                      "value":  "project-knowledge"
-                  },
-                  {
-                      "name":  "foresight",
-                      "description":  "Future scenarios, emerging trends and strategic foresight knowledge.",
-                      "value":  "foresight"
-                  }
-              ]
+  "types": [
+    {
+      "name": "News",
+      "description": "Announcements, updates and timely innovation developments.",
+      "value": "news"
+    },
+    {
+      "name": "Article",
+      "description": "Insights, perspectives and thought leadership content.",
+      "value": "article"
+    },
+    {
+      "name": "Video",
+      "description": "Video-based knowledge, interviews, presentations and events.",
+      "value": "video"
+    },
+    {
+      "name": "External Resource",
+      "description": "Selected external websites, references and knowledge resources.",
+      "value": "external"
+    },
+    {
+      "name": "Case",
+      "description": "Innovation cases, project experiences and business applications.",
+      "value": "case"
+    },
+    {
+      "name": "Research",
+      "description": "Research findings, studies, evidence and analytical material.",
+      "value": "research"
+    },
+    {
+      "name": "Framework",
+      "description": "Innovation frameworks, methodologies and structured approaches.",
+      "value": "framework"
+    },
+    {
+      "name": "Report",
+      "description": "Reports, white papers, assessments and analytical publications.",
+      "value": "report"
+    },
+    {
+      "name": "Presentation",
+      "description": "Presentation materials, briefings and executive content.",
+      "value": "presentation"
+    },
+    {
+      "name": "Learning Material",
+      "description": "Education, workshop, university and certification materials.",
+      "value": "learning-material"
+    },
+    {
+      "name": "Project Knowledge",
+      "description": "Lessons, insights and reusable knowledge generated from projects.",
+      "value": "project-knowledge"
+    },
+    {
+      "name": "foresight",
+      "description": "Future scenarios, emerging trends and strategic foresight knowledge.",
+      "value": "foresight"
+    },
+    {
+      "name": "test type",
+      "description": "",
+      "value": "test-type"
+    }
+  ]
 }
