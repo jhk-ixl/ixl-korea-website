@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="manager.css">
 
   <script src="manager-guard.js"></script>
+  <script src="manager-common.js"></script>
 </head>
 
 
@@ -680,7 +681,7 @@
       if (
         externalLinkField.value &&
         mediaFile &&
-        externalLinkField.value === mediaFile
+        IXLManager.sameUrl(externalLinkField.value, mediaFile)
       ) {
         externalLinkField.value = '';
       }
@@ -1069,7 +1070,7 @@
           return;
         }
         el.textContent = label + ': ' + value;
-        el.href = value.startsWith('http') ? value : '../' + value.replace(/^\/+/, '');
+        el.href = IXLManager.toUrl(value);
         el.style.display = 'inline-block';
       };
 
@@ -1084,9 +1085,7 @@
         previewMedia.hidden = false;
         previewMediaType.textContent = mediaType;
         previewMediaFile.textContent = mediaFile;
-        previewMediaFile.href = mediaFile.startsWith('http')
-          ? mediaFile
-          : '../' + mediaFile.replace(/^\/+/, '');
+        previewMediaFile.href = IXLManager.toUrl(mediaFile);
       } else {
         previewMedia.hidden = true;
         previewMediaType.textContent = '';

@@ -2,6 +2,10 @@ import {
   requireManager
 } from '../lib/manager-auth-utils.js';
 
+import {
+  sameResourceUrl
+} from '../lib/url/common.js';
+
 
 export default async function handler(req, res) {
 
@@ -323,7 +327,7 @@ export default async function handler(req, res) {
           body.detailLink || ''
         ).trim();
 
-      const externalLink =
+      let externalLink =
         String(
           body.externalLink || ''
         ).trim();
@@ -338,6 +342,30 @@ export default async function handler(req, res) {
         String(
           body.mediaFile || ''
         ).trim();
+
+
+      /*
+         URL DATA INTEGRITY
+
+         External Link and Media File represent
+         independent distribution resources.
+
+         When both point to the same resource,
+         External Link is redundant and is removed
+         before the Queue item is stored.
+      */
+
+      if (
+        mediaType !== 'None' &&
+        sameResourceUrl(
+          externalLink,
+          mediaFile
+        )
+      ) {
+
+        externalLink = '';
+
+      }
 
 
       const assetKey =

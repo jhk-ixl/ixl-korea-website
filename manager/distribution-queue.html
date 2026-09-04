@@ -20,6 +20,7 @@
   >
 
   <script src="manager-guard.js"></script>
+  <script src="manager-common.js"></script>
 
 </head>
 
@@ -447,35 +448,6 @@
        HELPERS
        ========================================= */
 
-    function getFinalLink(link) {
-
-      if (!link) {
-        return '';
-      }
-
-
-      if (
-        link.startsWith('http://') ||
-        link.startsWith('https://')
-      ) {
-
-        return link;
-
-      }
-
-
-      return (
-        '../' +
-        link.replace(
-          /^\/+/,
-          ''
-        )
-      );
-
-    }
-
-
-
     function formatDate(value) {
 
       if (!value) {
@@ -531,12 +503,12 @@
         );
 
       const detailLink =
-        getFinalLink(
+        IXLManager.toUrl(
           item.detailLink || item.link || ''
         );
 
       const externalLink =
-        getFinalLink(
+        IXLManager.toUrl(
           item.externalLink || ''
         );
 
@@ -969,7 +941,7 @@
 
       if (detailLink) {
         editDetailLink.textContent = detailLink;
-        editDetailLink.href = getFinalLink(detailLink);
+        editDetailLink.href = IXLManager.toUrl(detailLink);
       } else {
         editDetailLink.textContent = 'No IXL Detail Link';
         editDetailLink.removeAttribute('href');
@@ -980,7 +952,7 @@
 
       if (item.externalLink) {
         editExternalLink.textContent = item.externalLink;
-        editExternalLink.href = getFinalLink(item.externalLink);
+        editExternalLink.href = IXLManager.toUrl(item.externalLink);
       } else {
         editExternalLink.textContent = 'No External Link';
         editExternalLink.removeAttribute('href');
@@ -1005,10 +977,7 @@
           item.mediaFile;
 
         editMediaFile.href =
-          item.mediaFile.startsWith('http')
-            ? item.mediaFile
-            : '../' +
-              item.mediaFile.replace(/^\/+/, '');
+          IXLManager.toUrl(item.mediaFile);
 
       } else {
 

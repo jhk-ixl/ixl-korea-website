@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="manager.css">
 
   <script src="manager-guard.js"></script>
+  <script src="manager-common.js"></script>
 </head>
 
 <body>
@@ -323,9 +324,7 @@
           const openHtml =
             url
               ? `<a href="${
-                  url.startsWith('http')
-                    ? url
-                    : '../' + url.replace(/^\/+/, '')
+                  IXLManager.toUrl(url)
                 }"
                 target="_blank"
                 rel="noopener noreferrer">
