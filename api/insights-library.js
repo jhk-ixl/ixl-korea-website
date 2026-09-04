@@ -28,6 +28,11 @@ export default async function handler(req, res) {
       arrayKey: 'assets'
     },
 
+    knowledgetypes: {
+      path: 'insightscontent/knowledge-types.json',
+      arrayKey: 'types'
+    },
+
     usage: {
       path: 'insightscontent/asset-usage.json',
       arrayKey: 'usages'
@@ -112,7 +117,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, knowledge, assets or usage.'
+          'Invalid resource. Use insights, knowledge, assets, usage or knowledgetypes.'
       });
   }
 
@@ -1045,7 +1050,118 @@ export default async function handler(req, res) {
   }
 
 
-  function normalizeByResource(body, validation = {}) {
+  function makeKnowledgeTypeValue(name, list = []) {
+    const base =
+      cleanString(name)
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') ||
+      'knowledge-type';
+
+    const used =
+      new Set(
+        list
+          .map(
+            item =>
+              cleanString(
+                item.value
+              ).toLowerCase()
+          )
+          .filter(Boolean)
+      );
+
+    if (!used.has(base)) {
+      return base;
+    }
+
+    let number = 2;
+
+    while (
+      used.has(
+        `${base}-${number}`
+      )
+    ) {
+      number += 1;
+    }
+
+    return `${base}-${number}`;
+  }
+
+
+  function normalizeKnowledgeType(
+    body,
+    existingItem = null,
+    list = []
+  ) {
+    const name =
+      cleanString(
+        body.name
+      );
+
+    const description =
+      cleanString(
+        body.description
+      );
+
+    if (!name) {
+      const error =
+        new Error(
+          'Knowledge Type name is required.'
+        );
+
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const existingValue =
+      existingItem
+        ? cleanString(
+            existingItem.value
+          )
+        : '';
+
+    const duplicateName =
+      list.some(
+        item =>
+          item !== existingItem &&
+          cleanString(
+            item.name
+          ).toLowerCase() ===
+            name.toLowerCase()
+      );
+
+    if (duplicateName) {
+      const error =
+        new Error(
+          'Knowledge Type name already exists.'
+        );
+
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const value =
+      existingValue ||
+      makeKnowledgeTypeValue(
+        name,
+        list
+      );
+
+    return {
+      name,
+      description,
+      value
+    };
+  }
+
+
+  function normalizeByResource(
+    body,
+    validation = {},
+    existingItem = null,
+    list = []
+  ) {
 
     if (
       (resource === 'insights' || resource === 'knowledge')
@@ -1054,6 +1170,18 @@ export default async function handler(req, res) {
       return normalizeInsight(
         body,
         validation
+      );
+    }
+
+
+    if (
+      resource === 'knowledgetypes'
+    ) {
+
+      return normalizeKnowledgeType(
+        body,
+        existingItem,
+        list
       );
     }
 
@@ -1086,6 +1214,17 @@ export default async function handler(req, res) {
       return (
         item.title ||
         `Item ${index}`
+      );
+    }
+
+
+    if (
+      resource === 'knowledgetypes'
+    ) {
+
+      return (
+        item.name ||
+        `Knowledge Type ${index}`
       );
     }
 
@@ -1172,7 +1311,9 @@ export default async function handler(req, res) {
       let item =
         normalizeByResource(
           body,
-          validation
+          validation,
+          null,
+          list
         );
 
 
@@ -1399,7 +1540,9 @@ export default async function handler(req, res) {
       let item =
         normalizeByResource(
           body,
-          validation
+          validation,
+          list[index],
+          list
         );
 
 
@@ -1640,6 +1783,50 @@ export default async function handler(req, res) {
 
       const deletedItem =
         list[index];
+
+
+      if (resource === 'knowledgetypes') {
+        const typeValue =
+          cleanString(
+            deletedItem.value
+          ).toLowerCase();
+
+        const knowledgeCurrent =
+          await loadRelatedDataFile(
+            'knowledge'
+          );
+
+        const affectedKnowledge =
+          knowledgeCurrent.list.filter(
+            item =>
+              cleanString(
+                item.type
+              ).toLowerCase() ===
+                typeValue
+          );
+
+        if (affectedKnowledge.length) {
+          return res
+            .status(409)
+            .json({
+              error:
+                `Knowledge Type "${deletedItem.name}" is used by ${affectedKnowledge.length} Knowledge item(s). Reclassify those items before deleting this Type.`,
+              typeConflict: true,
+              typeValue,
+              affectedCount:
+                affectedKnowledge.length,
+              affectedKnowledge:
+                affectedKnowledge.map(
+                  item => ({
+                    title:
+                      item.title || '',
+                    slug:
+                      item.slug || ''
+                  })
+                )
+            });
+        }
+      }
 
 
       if (resource === 'assets') {

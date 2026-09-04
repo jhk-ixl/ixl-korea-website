@@ -43,121 +43,389 @@
 
       <p>
         Manage the different forms of knowledge used across the IXL Korea
-        Innovation Knowledge Ecosystem. Knowledge types are designed to expand
-        as new content and use cases emerge.
+        Innovation Knowledge Ecosystem. Type names and descriptions are
+        managed here. Internal Type IDs are generated and maintained
+        automatically by the system.
       </p>
     </section>
-
 
     <section class="type-toolbar">
 
       <div>
-        <strong id="type-count">11</strong>
+        <strong id="type-count">0</strong>
         <span>Knowledge Types</span>
       </div>
 
       <div class="library-actions">
-        <button class="library-button primary" type="button" id="add-type-button">
+        <button
+          class="library-button primary"
+          type="button"
+          id="add-type-button"
+        >
           + Add Knowledge Type
         </button>
 
-        <a href="knowledge.html" class="library-button">
+        <a
+          href="knowledge.html"
+          class="library-button"
+        >
           Back to Knowledge Hub
         </a>
       </div>
 
     </section>
 
-
-    <section class="type-grid" id="type-grid">
-
-
-
-    </section>
+    <section
+      class="type-grid"
+      id="type-grid"
+    ></section>
 
   </main>
 
-    <script>
+  <script>
+    const API_URL =
+      '/api/insights-library?resource=knowledgetypes';
+
     let knowledgeTypes = [];
 
-    function renderKnowledgeTypes() {
-        const grid = document.getElementById('type-grid');
-        const count = document.getElementById('type-count');
 
-        count.textContent = knowledgeTypes.length;
-
-        grid.innerHTML = knowledgeTypes.map((type, index) => {
-        const number = String(index + 1).padStart(2, '0');
-
-        return `
-            <article class="type-card">
-            <span>${number}</span>
-            <h3>${type.name}</h3>
-            <p>${type.description || ''}</p>
-            </article>
-        `;
-        }).join('');
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    async function loadKnowledgeTypes() {
-        try {
-        const response = await fetch(
-            '../insightscontent/knowledge-types.json',
-            {
-            cache: 'no-store'
-            }
+
+    async function apiRequest(method, body = null) {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
+
+      if (body !== null) {
+        options.body =
+          JSON.stringify(body);
+      }
+
+      const response =
+        await fetch(
+          API_URL,
+          options
         );
 
+      let data = {};
+
+      try {
+        data =
+          await response.json();
+      } catch (error) {
+        data = {};
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          `Request failed: HTTP ${response.status}`
+        );
+      }
+
+      return data;
+    }
+
+
+    function renderKnowledgeTypes() {
+      const grid =
+        document.getElementById(
+          'type-grid'
+        );
+
+      const count =
+        document.getElementById(
+          'type-count'
+        );
+
+      count.textContent =
+        knowledgeTypes.length;
+
+      if (!knowledgeTypes.length) {
+        grid.innerHTML =
+          '<p>No Knowledge Types found.</p>';
+        return;
+      }
+
+      grid.innerHTML =
+        knowledgeTypes.map(
+          (type, index) => {
+
+            const number =
+              String(index + 1)
+                .padStart(2, '0');
+
+            return `
+              <article class="type-card">
+                <span>${number}</span>
+
+                <h3>
+                  ${escapeHtml(type.name)}
+                </h3>
+
+                <p>
+                  ${escapeHtml(type.description || '')}
+                </p>
+
+                <div class="library-actions">
+                  <button
+                    class="library-button edit-type-button"
+                    type="button"
+                    data-index="${index}"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    class="library-button delete-type-button"
+                    type="button"
+                    data-index="${index}"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            `;
+          }
+        ).join('');
+    }
+
+
+    async function loadKnowledgeTypes() {
+      try {
+        const response =
+          await fetch(
+            API_URL,
+            {
+              cache: 'no-store'
+            }
+          );
+
         if (!response.ok) {
-            throw new Error('HTTP ' + response.status);
+          throw new Error(
+            'HTTP ' + response.status
+          );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
-        knowledgeTypes = Array.isArray(data.types)
-            ? data.types
+        knowledgeTypes =
+          Array.isArray(data)
+            ? data
             : [];
 
         renderKnowledgeTypes();
 
-        } catch (error) {
-        console.error('Failed to load Knowledge Types:', error);
+      } catch (error) {
+        console.error(
+          'Failed to load Knowledge Types:',
+          error
+        );
 
-        document.getElementById('type-grid').innerHTML =
-            '<p>Knowledge Types could not be loaded.</p>';
+        document.getElementById(
+          'type-grid'
+        ).innerHTML =
+          '<p>Knowledge Types could not be loaded.</p>';
 
-        document.getElementById('type-count').textContent = '0';
-        }
+        document.getElementById(
+          'type-count'
+        ).textContent = '0';
+      }
     }
 
+
+    async function addKnowledgeType() {
+      const name =
+        window.prompt(
+          'Enter a new Knowledge Type name:'
+        );
+
+      if (
+        !name ||
+        !name.trim()
+      ) {
+        return;
+      }
+
+      const description =
+        window.prompt(
+          'Enter the Knowledge Type description:',
+          ''
+        );
+
+      try {
+        await apiRequest(
+          'POST',
+          {
+            name:
+              name.trim(),
+            description:
+              String(
+                description || ''
+              ).trim()
+          }
+        );
+
+        await loadKnowledgeTypes();
+
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+
+    async function editKnowledgeType(index) {
+      const current =
+        knowledgeTypes[index];
+
+      if (!current) {
+        return;
+      }
+
+      const name =
+        window.prompt(
+          'Edit Knowledge Type name:',
+          current.name || ''
+        );
+
+      if (
+        !name ||
+        !name.trim()
+      ) {
+        return;
+      }
+
+      const description =
+        window.prompt(
+          'Edit Knowledge Type description:',
+          current.description || ''
+        );
+
+      if (description === null) {
+        return;
+      }
+
+      try {
+        await apiRequest(
+          'PATCH',
+          {
+            index,
+            name:
+              name.trim(),
+            description:
+              String(
+                description || ''
+              ).trim()
+          }
+        );
+
+        await loadKnowledgeTypes();
+
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+
+    async function deleteKnowledgeType(index) {
+      const current =
+        knowledgeTypes[index];
+
+      if (!current) {
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          `Delete Knowledge Type "${current.name}"?\n\n` +
+          'Deletion will be blocked if Knowledge items still use this Type.'
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await apiRequest(
+          'DELETE',
+          {
+            index
+          }
+        );
+
+        await loadKnowledgeTypes();
+
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+
     document
-        .getElementById('add-type-button')
-        .addEventListener('click', function () {
+      .getElementById(
+        'add-type-button'
+      )
+      .addEventListener(
+        'click',
+        addKnowledgeType
+      );
 
-        const name = window.prompt(
-            'Enter a new Knowledge Type name:'
-        );
 
-        if (!name || !name.trim()) return;
+    document
+      .getElementById(
+        'type-grid'
+      )
+      .addEventListener(
+        'click',
+        event => {
 
-        knowledgeTypes.push({
-            name: name.trim(),
-            description: 'New knowledge type. Description can be defined later.'
-        });
+          const editButton =
+            event.target.closest(
+              '.edit-type-button'
+            );
 
-        renderKnowledgeTypes();
+          if (editButton) {
+            editKnowledgeType(
+              Number(
+                editButton.dataset.index
+              )
+            );
+            return;
+          }
 
-        alert(
-            'The new type is currently temporary. Persistent saving will be connected in the next step.'
-        );
-        });
+          const deleteButton =
+            event.target.closest(
+              '.delete-type-button'
+            );
+
+          if (deleteButton) {
+            deleteKnowledgeType(
+              Number(
+                deleteButton.dataset.index
+              )
+            );
+          }
+        }
+      );
+
 
     document.addEventListener(
-        'DOMContentLoaded',
-        loadKnowledgeTypes
+      'DOMContentLoaded',
+      loadKnowledgeTypes
     );
-    </script>
- 
+  </script>
 
 </body>
 </html>

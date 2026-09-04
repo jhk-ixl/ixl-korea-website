@@ -1102,6 +1102,25 @@
     }
 
 
+    let knowledgeTypeNameByValue =
+      new Map();
+
+
+    function getKnowledgeTypeName(value) {
+
+      const key =
+        String(value || '')
+          .trim()
+          .toLowerCase();
+
+      return (
+        knowledgeTypeNameByValue.get(key) ||
+        String(value || '').trim() ||
+        '—'
+      );
+    }
+
+
     function getSearchText(item) {
 
       return normalize([
@@ -1109,6 +1128,7 @@
         item.date,
         item.dateLabel,
         item.type,
+        getKnowledgeTypeName(item.type),
         item.title,
         item.summary,
         item.url,
@@ -1138,7 +1158,7 @@
       ] =
         await Promise.all([
           fetch(
-            '../insightscontent/knowledge-types.json',
+            '/api/insights-library?resource=knowledgetypes',
             {
               cache: 'no-store'
             }
@@ -1173,9 +1193,32 @@
 
 
       const types =
-        Array.isArray(typeData.types)
-          ? typeData.types
+        Array.isArray(typeData)
+          ? typeData
           : [];
+
+
+      knowledgeTypeNameByValue =
+        new Map(
+          types
+            .map(
+              item => [
+                String(
+                  item.value || ''
+                ).trim().toLowerCase(),
+
+                String(
+                  item.name ||
+                  item.value ||
+                  ''
+                ).trim()
+              ]
+            )
+            .filter(
+              pair =>
+                pair[0]
+            )
+        );
 
       const accessLevels =
         Array.isArray(
@@ -1704,7 +1747,7 @@
 
               <td>
                 <span class="insights-type">
-                  ${escapeHtml(item.type || '—')}
+                  ${escapeHtml(getKnowledgeTypeName(item.type))}
                 </span>
               </td>
 
