@@ -75,10 +75,24 @@
 
     </section>
 
-    <section
-      class="type-grid"
-      id="type-grid"
-    ></section>
+    <section class="manager-master-list">
+
+      <table class="manager-master-table">
+
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Description</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="type-grid"></tbody>
+
+      </table>
+
+    </section>
 
   </main>
 
@@ -139,7 +153,7 @@
 
 
     function renderKnowledgeTypes() {
-      const grid =
+      const body =
         document.getElementById(
           'type-grid'
         );
@@ -153,12 +167,22 @@
         knowledgeTypes.length;
 
       if (!knowledgeTypes.length) {
-        grid.innerHTML =
-          '<p>No Knowledge Types found.</p>';
+
+        body.innerHTML = `
+          <tr>
+            <td
+              colspan="4"
+              class="manager-master-empty"
+            >
+              No Knowledge Types found.
+            </td>
+          </tr>
+        `;
+
         return;
       }
 
-      grid.innerHTML =
+      body.innerHTML =
         knowledgeTypes.map(
           (type, index) => {
 
@@ -167,18 +191,22 @@
                 .padStart(2, '0');
 
             return `
-              <article class="type-card">
-                <span>${number}</span>
+              <tr>
 
-                <h3>
+                <td class="manager-master-index">
+                  ${number}
+                </td>
+
+                <td class="manager-master-name">
                   ${escapeHtml(type.name)}
-                </h3>
+                </td>
 
-                <p>
+                <td class="manager-master-description">
                   ${escapeHtml(type.description || '')}
-                </p>
+                </td>
 
-                <div class="library-actions">
+                <td class="manager-master-actions">
+
                   <button
                     class="library-button edit-type-button"
                     type="button"
@@ -188,14 +216,16 @@
                   </button>
 
                   <button
-                    class="library-button delete-type-button"
+                    class="library-button manager-master-delete delete-type-button"
                     type="button"
                     data-index="${index}"
                   >
                     Delete
                   </button>
-                </div>
-              </article>
+
+                </td>
+
+              </tr>
             `;
           }
         ).join('');
@@ -236,8 +266,16 @@
 
         document.getElementById(
           'type-grid'
-        ).innerHTML =
-          '<p>Knowledge Types could not be loaded.</p>';
+        ).innerHTML = `
+          <tr>
+            <td
+              colspan="4"
+              class="manager-master-empty"
+            >
+              Knowledge Types could not be loaded.
+            </td>
+          </tr>
+        `;
 
         document.getElementById(
           'type-count'
