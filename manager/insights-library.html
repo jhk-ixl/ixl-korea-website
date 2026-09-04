@@ -963,7 +963,7 @@
        ========================================= */
 
     const API_URL =
-      '/api/insights-library';
+      '/api/insights-library?resource=knowledge';
 
 
     let insightsItems = [];
@@ -1227,7 +1227,7 @@
 
       const response =
         await fetch(
-          `${API_URL}?resource=assets`,
+          '/api/insights-library?resource=assets',
           {
             cache: 'no-store'
           }

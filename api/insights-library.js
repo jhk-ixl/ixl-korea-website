@@ -18,6 +18,11 @@ export default async function handler(req, res) {
       arrayKey: 'items'
     },
 
+    knowledge: {
+      path: 'insightscontent/knowledge-data.json',
+      arrayKey: 'items'
+    },
+
     assets: {
       path: 'insightscontent/asset-registry.json',
       arrayKey: 'assets'
@@ -107,7 +112,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, assets or usage.'
+          'Invalid resource. Use insights, knowledge, assets or usage.'
       });
   }
 
@@ -1043,7 +1048,7 @@ export default async function handler(req, res) {
   function normalizeByResource(body, validation = {}) {
 
     if (
-      resource === 'insights'
+      (resource === 'insights' || resource === 'knowledge')
     ) {
 
       return normalizeInsight(
@@ -1075,7 +1080,7 @@ export default async function handler(req, res) {
   ) {
 
     if (
-      resource === 'insights'
+      (resource === 'insights' || resource === 'knowledge')
     ) {
 
       return (
@@ -1159,7 +1164,7 @@ export default async function handler(req, res) {
 
 
       const validation =
-        resource === 'insights'
+        (resource === 'insights' || resource === 'knowledge')
           ? await loadKnowledgeMasterData()
           : {};
 
@@ -1386,7 +1391,7 @@ export default async function handler(req, res) {
 
 
       const validation =
-        resource === 'insights'
+        (resource === 'insights' || resource === 'knowledge')
           ? await loadKnowledgeMasterData()
           : {};
 
