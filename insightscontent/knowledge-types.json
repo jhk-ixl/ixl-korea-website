@@ -59,11 +59,6 @@
       "name": "foresight",
       "description": "Future scenarios, emerging trends and strategic foresight knowledge.",
       "value": "foresight"
-    },
-    {
-      "name": "rename test type",
-      "description": "temporary test type",
-      "value": "test-type"
     }
   ]
 }
