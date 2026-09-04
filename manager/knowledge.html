@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Knowledge Management | IXL Korea Manager</title>
+  <title>Knowledge | IXL Korea Manager</title>
+
   <link rel="stylesheet" href="manager.css">
 
   <script src="manager-guard.js"></script>
@@ -22,7 +23,7 @@
     <nav class="manager-nav">
       <a href="index.html">Dashboard</a>
       <a href="knowledge.html" class="active">Knowledge</a>
-      <a href="index.html#distribution">Distribution</a>
+      <a href="distribution.html">Distribution</a>
       <a href="index.html#community">Community</a>
       <a href="index.html#education">Education</a>
       <a href="index.html#business">Business</a>
@@ -34,203 +35,488 @@
 
   </header>
 
-  <main class="manager-main">
 
-    <section class="manager-intro">
-      <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+  <main class="manager-main manager-control-center">
 
-      <h2>Knowledge Hub</h2>
+    <!-- ======================================================
+         PAGE HEADER
+         ====================================================== -->
 
-      <p>
-        Build, organize and manage IXL Korea's innovation knowledge assets.
-        Knowledge types and classifications are designed to expand as the
-        ecosystem grows.
-      </p>
+    <section class="manager-page-header">
+
+      <div>
+
+        <span class="section-eyebrow">
+          KNOWLEDGE
+        </span>
+
+        <h2>
+          Knowledge Control Center
+        </h2>
+
+        <p>
+          Create, organize, govern and reuse IXL Korea knowledge
+          across publishing, distribution, education and future
+          ecosystem applications.
+        </p>
+
+      </div>
+
+      <div class="manager-page-header-meta">
+
+        <span class="manager-status-badge active">
+          KNOWLEDGE CORE
+        </span>
+
+      </div>
+
     </section>
 
 
-    <section class="knowledge-actions">
+    <!-- ======================================================
+         KNOWLEDGE LIFECYCLE
+         ====================================================== -->
 
-      <!-- Add / Edit Knowledge -->
-      <a class="knowledge-action primary" href="../admin/">
+    <section class="manager-lifecycle">
 
-        <span class="label">CONTENT MANAGEMENT</span>
+      <div class="manager-lifecycle-step active">
+        <span>01</span>
+        <strong>Create</strong>
+        <small>Build knowledge from sources</small>
+      </div>
 
-        <h3>Add / Edit Knowledge</h3>
+      <div class="manager-lifecycle-arrow">→</div>
 
-        <p>
-          Open the current CMS to create, edit and publish
-          Insights and knowledge content.
-        </p>
+      <div class="manager-lifecycle-step">
+        <span>02</span>
+        <strong>Manage</strong>
+        <small>Classify, govern and maintain</small>
+      </div>
 
-        <span class="status active">OPEN CMS →</span>
+      <div class="manager-lifecycle-arrow">→</div>
 
-      </a>
+      <div class="manager-lifecycle-step">
+        <span>03</span>
+        <strong>Utilize</strong>
+        <small>Publish, distribute and reuse</small>
+      </div>
 
-            <!-- Insights Library -->
-      <a class="knowledge-action" href="insights-library.html">
+    </section>
 
-        <span class="label">INSIGHTS</span>
 
-        <h3>Insights Library</h3>
+    <!-- ======================================================
+         KNOWLEDGE CREATION
+         ====================================================== -->
 
-        <p>
-          Search, sort, filter, add, edit and delete
-          Insights content from one Manager workspace.
-        </p>
+    <section class="manager-workspace-section">
 
-        <span class="status active">ACTIVE →</span>
+      <div class="manager-section-heading">
 
-      </a>
+        <div>
+          <span class="section-eyebrow">
+            KNOWLEDGE CREATION
+          </span>
 
-      <!-- Knowledge Library -->
-      <a class="knowledge-action" href="knowledge-library.html">
+          <h3>
+            Create Knowledge
+          </h3>
 
-        <span class="label">LIBRARY</span>
+          <p>
+            Prepare source materials and combine them into reusable
+            Knowledge Items.
+          </p>
+        </div>
 
-        <h3>Knowledge Library</h3>
+        <span class="manager-section-number">
+          01
+        </span>
 
-        <p>
-          Browse and manage accumulated knowledge across
-          content types, topics and industries.
-        </p>
+      </div>
 
-        <span class="status active">ACTIVE →</span>
 
-      </a>
+      <div class="manager-action-grid creation-grid">
 
-            <!-- Asset Library -->
-      <a class="knowledge-action" href="asset-library.html">
+        <!-- KNOWLEDGE BUILDER -->
 
-        <span class="label">ASSETS</span>
+        <div class="manager-action-card manager-action-card-primary">
 
-        <h3>Asset Library</h3>
+          <div class="manager-action-card-top">
 
-        <p>
-          Manage website files stored in Vercel Blob,
-          including PDFs, presentations, images and videos.
-        </p>
+            <span class="manager-action-kicker">
+              CORE WORKSPACE
+            </span>
 
-        <span class="status active">ACTIVE →</span>
+            <span class="manager-status-badge developing">
+              NEXT
+            </span>
 
-      </a>
+          </div>
 
+          <h4>
+            Knowledge Builder
+          </h4>
 
-      <!-- Knowledge Types -->
-      <a class="knowledge-action" href="knowledge-types.html">
+          <p>
+            Assemble title, summary, classifications, CMS article,
+            Asset Keys and external sources into one complete
+            Knowledge Item.
+          </p>
 
-        <span class="label">STRUCTURE</span>
+          <div class="manager-action-meta">
+            Title · Summary · Sources · Metadata
+          </div>
 
-        <h3>Knowledge Types</h3>
+          <span class="manager-action-link muted">
+            Builder workspace →
+          </span>
 
-        <p>
-          Manage extensible knowledge types such as News,
-          Article, Case, Research, Video and future formats.
-        </p>
+        </div>
 
-        <span class="status active">ACTIVE →</span>
 
-      </a>
+        <!-- CMS MARKDOWN -->
 
+        <a
+          class="manager-action-card"
+          href="../admin/"
+        >
 
-      <!-- Topics -->
-      <a class="knowledge-action" href="topics.html">
+          <div class="manager-action-card-top">
 
-        <span class="label">CLASSIFICATION</span>
+            <span class="manager-action-kicker">
+              CONTENT SOURCE
+            </span>
 
-        <h3>Topics</h3>
+            <span class="manager-status-badge active">
+              ACTIVE
+            </span>
 
-        <p>
-          Manage flexible knowledge topics such as Innovation Management,
-          Growth Strategy, Foresight, AI for Innovation and future subjects.
-        </p>
+          </div>
 
-        <span class="status active">ACTIVE →</span>
+          <h4>
+            Markdown Articles
+          </h4>
 
-      </a>
+          <p>
+            Use Decap CMS as the dedicated authoring workspace
+            for long-form Markdown article content.
+          </p>
 
+          <div class="manager-action-meta">
+            Article body · Working title · Author
+          </div>
 
-      <!-- Access Levels -->
-      <a class="knowledge-action" href="access-levels.html">
-
-        <span class="label">ACCESS</span>
-
-        <h3>Access Levels</h3>
-
-        <p>
-          Control knowledge access for Public, Members,
-          Professionals, Clients and Internal users.
-        </p>
-
-        <span class="status active">ACTIVE →</span>
-
-      </a>
-
-
-      <!-- Industries -->
-      <a class="knowledge-action" href="industries.html">
-
-        <span class="label">CLASSIFICATION</span>
-
-        <h3>Industries</h3>
-
-        <p>
-          Manage flexible industry classifications used to organize
-          knowledge across sectors and business domains.
-        </p>
-
-        <span class="status active">ACTIVE →</span>
-
-      </a>
-
-
-      <!-- Programs -->
-      <a class="knowledge-action" href="programs.html">
-
-        <span class="label">CLASSIFICATION</span>
-
-        <h3>Programs</h3>
-
-        <p>
-          Manage program classifications used to connect knowledge
-          with IXL Korea programs and initiatives.
-        </p>
-
-        <span class="status active">ACTIVE →</span>
-
-      </a>
-
-        <a class="knowledge-action" href="tags.html">
-
-        <span class="label">CLASSIFICATION</span>
-
-        <h3>Tags</h3>
-
-        <p>
-            Manage flexible tags used to classify, connect and discover
-            knowledge across the IXL Korea ecosystem.
-        </p>
-
-        <span class="status active">ACTIVE →</span>
+          <span class="manager-action-link">
+            Open CMS →
+          </span>
 
         </a>
 
 
-      <!-- Knowledge Search -->
-      <a class="knowledge-action" href="knowledge-search.html">
+        <!-- ASSET -->
 
-        <span class="label">INTELLIGENCE</span>
+        <a
+          class="manager-action-card"
+          href="asset-library.html"
+        >
 
-        <h3>Knowledge Search</h3>
+          <div class="manager-action-card-top">
 
-        <p>
-          Search and filter knowledge across types, topics, industries,
-          programs, tags and access levels.
-        </p>
+            <span class="manager-action-kicker">
+              MANAGED SOURCE
+            </span>
 
-        <span class="status active">ACTIVE →</span>
+            <span class="manager-status-badge active">
+              ACTIVE
+            </span>
 
-      </a>
+          </div>
+
+          <h4>
+            Asset Management
+          </h4>
+
+          <p>
+            Manage PDFs, images, presentations and videos through
+            Blob storage, Asset Registry and reusable Asset Keys.
+          </p>
+
+          <div class="manager-action-meta">
+            Blob · Registry · Asset Key · Usage
+          </div>
+
+          <span class="manager-action-link">
+            Manage Assets →
+          </span>
+
+        </a>
+
+
+        <!-- EXTERNAL -->
+
+        <div class="manager-action-card">
+
+          <div class="manager-action-card-top">
+
+            <span class="manager-action-kicker">
+              EXTERNAL SOURCE
+            </span>
+
+            <span class="manager-status-badge developing">
+              NEXT
+            </span>
+
+          </div>
+
+          <h4>
+            External Sources
+          </h4>
+
+          <p>
+            Register selected external articles, websites, reports,
+            videos and reference URLs for use in Knowledge Builder.
+          </p>
+
+          <div class="manager-action-meta">
+            URL · Source · Reference · Notes
+          </div>
+
+          <span class="manager-action-link muted">
+            Source registry →
+          </span>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         KNOWLEDGE MANAGEMENT
+         ====================================================== -->
+
+    <section class="manager-workspace-section">
+
+      <div class="manager-section-heading">
+
+        <div>
+          <span class="section-eyebrow">
+            KNOWLEDGE MANAGEMENT
+          </span>
+
+          <h3>
+            Manage Knowledge
+          </h3>
+
+          <p>
+            Search, classify, govern and maintain completed
+            Knowledge Items throughout their lifecycle.
+          </p>
+        </div>
+
+        <span class="manager-section-number">
+          02
+        </span>
+
+      </div>
+
+
+      <div class="manager-management-layout">
+
+        <div class="manager-management-primary">
+
+          <a
+            class="manager-action-card manager-action-card-wide"
+            href="knowledge-library.html"
+          >
+
+            <div class="manager-action-card-top">
+
+              <span class="manager-action-kicker">
+                MASTER LIBRARY
+              </span>
+
+              <span class="manager-status-badge active">
+                ACTIVE
+              </span>
+
+            </div>
+
+            <h4>
+              Knowledge Library
+            </h4>
+
+            <p>
+              Review accumulated knowledge and its key metadata,
+              access level, classifications and available resources.
+            </p>
+
+            <span class="manager-action-link">
+              Open Knowledge Library →
+            </span>
+
+          </a>
+
+
+          <a
+            class="manager-action-card manager-action-card-wide"
+            href="knowledge-search.html"
+          >
+
+            <div class="manager-action-card-top">
+
+              <span class="manager-action-kicker">
+                DISCOVERY
+              </span>
+
+              <span class="manager-status-badge active">
+                ACTIVE
+              </span>
+
+            </div>
+
+            <h4>
+              Knowledge Search
+            </h4>
+
+            <p>
+              Search across types, topics, industries, programs,
+              tags and access levels.
+            </p>
+
+            <span class="manager-action-link">
+              Search Knowledge →
+            </span>
+
+          </a>
+
+        </div>
+
+
+        <div class="manager-panel">
+
+          <div class="manager-panel-heading">
+
+            <div>
+              <span class="manager-action-kicker">
+                GOVERNANCE
+              </span>
+
+              <h4>
+                Classification & Access
+              </h4>
+            </div>
+
+          </div>
+
+
+          <div class="manager-link-list">
+
+            <a href="knowledge-types.html">
+              <span>Knowledge Types</span>
+              <b>→</b>
+            </a>
+
+            <a href="topics.html">
+              <span>Topics</span>
+              <b>→</b>
+            </a>
+
+            <a href="industries.html">
+              <span>Industries</span>
+              <b>→</b>
+            </a>
+
+            <a href="programs.html">
+              <span>Programs</span>
+              <b>→</b>
+            </a>
+
+            <a href="tags.html">
+              <span>Tags</span>
+              <b>→</b>
+            </a>
+
+            <a href="access-levels.html">
+              <span>Access Levels</span>
+              <b>→</b>
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ======================================================
+         KNOWLEDGE UTILIZATION
+         ====================================================== -->
+
+    <section class="manager-workspace-section">
+
+      <div class="manager-section-heading">
+
+        <div>
+          <span class="section-eyebrow">
+            KNOWLEDGE UTILIZATION
+          </span>
+
+          <h3>
+            Publish & Reuse
+          </h3>
+
+          <p>
+            Use managed knowledge across public communication,
+            distribution and future ecosystem applications.
+          </p>
+        </div>
+
+        <span class="manager-section-number">
+          03
+        </span>
+
+      </div>
+
+
+      <div class="manager-utilization-grid">
+
+        <a
+          class="manager-utilization-item"
+          href="insights-library.html"
+        >
+          <span>PUBLICATION</span>
+          <strong>Public Insights</strong>
+          <small>Current Insights workspace</small>
+        </a>
+
+
+        <a
+          class="manager-utilization-item"
+          href="distribution.html"
+        >
+          <span>DISTRIBUTION</span>
+          <strong>SNS & Channels</strong>
+          <small>LinkedIn and distribution workflow</small>
+        </a>
+
+
+        <div class="manager-utilization-item disabled">
+          <span>LEARNING</span>
+          <strong>Education</strong>
+          <small>Future knowledge reuse</small>
+        </div>
+
+
+        <div class="manager-utilization-item disabled">
+          <span>ECOSYSTEM</span>
+          <strong>Community & Business</strong>
+          <small>Future engagement and opportunities</small>
+        </div>
+
+      </div>
 
     </section>
 
