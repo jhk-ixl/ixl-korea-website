@@ -42,54 +42,6 @@
         }[ch]));
     }
 
-    function inlineMarkdown(text) {
-        let s = escapeHtml(text);
-        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
-        s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
-            '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-        return s;
-    }
-
-    function markdownToHtml(markdown) {
-        const lines = String(markdown || '').replace(/\r/g, '').split('\n');
-        let html = '', inList = false;
-        const closeList = () => { if (inList) { html += '</ul>'; inList = false; } };
-
-        for (const raw of lines) {
-            let line = raw.trim();
-
-            // Decap's Rich Text editor can preserve pasted Markdown markers
-            // with a leading backslash (for example: \## Heading).
-            // Normalize only supported block markers before parsing.
-            line = line.replace(/^\\(?=(?:#{2,4}\s+|[-*]\s+|>\s?))/, '');
-
-            if (!line) { closeList(); continue; }
-
-            const h = line.match(/^(#{2,4})\s+(.+)$/);
-            if (h) {
-                closeList();
-                const level = Math.min(h[1].length, 4);
-                html += `<h${level}>${inlineMarkdown(h[2])}</h${level}>`;
-                continue;
-            }
-            if (/^[-*]\s+/.test(line)) {
-                if (!inList) { html += '<ul>'; inList = true; }
-                html += `<li>${inlineMarkdown(line.replace(/^[-*]\s+/, ''))}</li>`;
-                continue;
-            }
-            if (/^>\s?/.test(line)) {
-                closeList();
-                html += `<blockquote>${inlineMarkdown(line.replace(/^>\s?/, ''))}</blockquote>`;
-                continue;
-            }
-            closeList();
-            html += `<p>${inlineMarkdown(line)}</p>`;
-        }
-        closeList();
-        return html;
-    }
-
     function assetUrl(item) {
         if (item.assetKey) {
             const a = registry.find(x => x.key === item.assetKey);
@@ -228,7 +180,7 @@
             <h1>${escapeHtml(item.title)}</h1>
             ${item.summary ? `<p class="knowledge-lead">${escapeHtml(item.summary)}</p>` : ''}
           </header>
-          <div class="knowledge-body">${markdownToHtml(body)}</div>
+          <div class="knowledge-body">${IXLMarkdown.render(body)}</div>
           ${sourceHtml(item, fallback)}
           ${backLinkHtml(item)}
         `;
