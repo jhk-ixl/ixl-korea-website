@@ -154,6 +154,71 @@
     }
 
 
+    let knowledgeTypes = [];
+
+    let knowledgeTypeNameByValue =
+      new Map();
+
+
+    function getKnowledgeTypeName(value) {
+
+      const key =
+        String(value || '')
+          .trim()
+          .toLowerCase();
+
+      return (
+        knowledgeTypeNameByValue.get(key) ||
+        String(value || '').trim() ||
+        'Unclassified'
+      );
+
+    }
+
+
+    async function loadKnowledgeTypes() {
+
+      const response =
+        await fetch(
+          '/api/insights-library?resource=knowledgetypes',
+          {
+            cache: 'no-store'
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          'Could not load Knowledge Types.'
+        );
+      }
+
+      const data =
+        await response.json();
+
+      knowledgeTypes =
+        Array.isArray(data)
+          ? data
+          : [];
+
+      knowledgeTypeNameByValue =
+        new Map(
+          knowledgeTypes
+            .map(item => [
+              String(
+                item.value || ''
+              ).trim().toLowerCase(),
+
+              String(
+                item.name ||
+                item.value ||
+                ''
+              ).trim()
+            ])
+            .filter(pair => pair[0])
+        );
+
+    }
+
     function uniqueValues(items, getter) {
 
       return [
@@ -190,18 +255,47 @@
     }
 
 
+    function addKnowledgeTypeOptions() {
+
+      const select =
+        document.getElementById(
+          'filter-type'
+        );
+
+      knowledgeTypes.forEach(type => {
+
+        const value =
+          String(
+            type.value || ''
+          ).trim();
+
+        if (!value) {
+          return;
+        }
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          value.toLowerCase();
+
+        option.textContent =
+          String(
+            type.name ||
+            value
+          ).trim();
+
+        select.appendChild(option);
+
+      });
+
+    }
+
     function buildFilters() {
 
-      addOptions(
-        'filter-type',
-        uniqueValues(
-          knowledgeItems,
-          item =>
-            item.type
-              ? [item.type]
-              : []
-        )
-      );
+      addKnowledgeTypeOptions();
 
 
       addOptions(
@@ -338,7 +432,7 @@
 
               <div class="search-result-meta">
                 <span>${item.dateLabel || item.date || ''}</span>
-                <span>${item.type || 'Unclassified'}</span>
+                <span>${getKnowledgeTypeName(item.type)}</span>
                 <span>${access}</span>
               </div>
 
@@ -462,6 +556,7 @@
             item.title || '',
             item.summary || '',
             item.type || '',
+            getKnowledgeTypeName(item.type),
             item.dateLabel || '',
             access,
             ...topics,
@@ -554,7 +649,7 @@
 
         const response =
           await fetch(
-            '../insightscontent/insights-data.json',
+            '../insightscontent/knowledge-data.json',
             {
               cache: 'no-store'
             }
@@ -585,6 +680,8 @@
             new Date(a.date || 0)
         );
 
+
+        await loadKnowledgeTypes();
 
         buildFilters();
 

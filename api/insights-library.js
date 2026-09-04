@@ -1791,10 +1791,18 @@ export default async function handler(req, res) {
             deletedItem.value
           ).toLowerCase();
 
-        const knowledgeCurrent =
-          await loadRelatedDataFile(
-            'knowledge'
-          );
+        const [
+          knowledgeCurrent,
+          insightsCurrent
+        ] =
+          await Promise.all([
+            loadRelatedDataFile(
+              'knowledge'
+            ),
+            loadRelatedDataFile(
+              'insights'
+            )
+          ]);
 
         const affectedKnowledge =
           knowledgeCurrent.list.filter(
@@ -1805,18 +1813,41 @@ export default async function handler(req, res) {
                 typeValue
           );
 
-        if (affectedKnowledge.length) {
+        const affectedInsights =
+          insightsCurrent.list.filter(
+            item =>
+              cleanString(
+                item.type
+              ).toLowerCase() ===
+                typeValue
+          );
+
+        const affectedCount =
+          affectedKnowledge.length +
+          affectedInsights.length;
+
+        if (affectedCount) {
           return res
             .status(409)
             .json({
               error:
-                `Knowledge Type "${deletedItem.name}" is used by ${affectedKnowledge.length} Knowledge item(s). Reclassify those items before deleting this Type.`,
+                `Knowledge Type "${deletedItem.name}" is used by ${affectedKnowledge.length} Knowledge item(s) and ${affectedInsights.length} Public Insights item(s). Reclassify those items before deleting this Type.`,
               typeConflict: true,
               typeValue,
-              affectedCount:
-                affectedKnowledge.length,
+              affectedCount,
+
               affectedKnowledge:
                 affectedKnowledge.map(
+                  item => ({
+                    title:
+                      item.title || '',
+                    slug:
+                      item.slug || ''
+                  })
+                ),
+
+              affectedInsights:
+                affectedInsights.map(
                   item => ({
                     title:
                       item.title || '',
@@ -1827,7 +1858,6 @@ export default async function handler(req, res) {
             });
         }
       }
-
 
       if (resource === 'assets') {
         const usageCurrent = await loadRelatedDataFile('usage');

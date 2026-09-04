@@ -1105,6 +1105,18 @@
     let knowledgeTypeNameByValue =
       new Map();
 
+    let knowledgeTypeValues = [];
+
+
+    function getDefaultKnowledgeTypeValue() {
+
+      return (
+        knowledgeTypeValues[0] ||
+        ''
+      );
+
+    }
+
 
     function getKnowledgeTypeName(value) {
 
@@ -1196,6 +1208,17 @@
         Array.isArray(typeData)
           ? typeData
           : [];
+
+
+      knowledgeTypeValues =
+        types
+          .map(
+            item =>
+              String(
+                item.value || ''
+              ).trim()
+          )
+          .filter(Boolean);
 
 
       knowledgeTypeNameByValue =
@@ -1895,7 +1918,7 @@
       document.getElementById(
         'edit-type'
       ).value =
-        'news';
+        getDefaultKnowledgeTypeValue();
 
 
       document.getElementById(
@@ -2062,7 +2085,8 @@
       document.getElementById(
         'edit-type'
       ).value =
-        item.type || 'news';
+        item.type ||
+        getDefaultKnowledgeTypeValue();
 
 
       document.getElementById(
