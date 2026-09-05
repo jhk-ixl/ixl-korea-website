@@ -7,6 +7,7 @@
   <title>Knowledge Library | IXL Korea Manager</title>
   <link rel="stylesheet" href="manager.css">
 
+  <script src="manager-common.js"></script>
   <script src="manager-guard.js"></script>
 </head>
 
@@ -111,9 +112,20 @@
     </section>
 
 
-    <section class="library-table-wrap">
+    <section class="library-table-wrap manager-scroll-table-wrap" id="knowledge-table-scroll-wrap">
 
-      <table class="library-table">
+      <div
+        id="knowledge-table-top-scroll"
+        class="manager-table-top-scroll"
+        aria-label="Knowledge table horizontal scroll"
+      >
+        <div
+          id="knowledge-table-top-scroll-inner"
+          class="manager-table-top-scroll-inner"
+        ></div>
+      </div>
+
+      <table class="library-table manager-scroll-table" id="knowledge-library-table">
 
         <thead>
           <tr>
@@ -389,6 +401,13 @@
         empty.style.display =
           'block';
 
+        IXLManager.syncScrollTable({
+          topScrollId: 'knowledge-table-top-scroll',
+          topInnerId: 'knowledge-table-top-scroll-inner',
+          wrapId: 'knowledge-table-scroll-wrap',
+          tableId: 'knowledge-library-table'
+        });
+
         return;
       }
 
@@ -401,6 +420,13 @@
 
       empty.style.display =
         'none';
+
+      IXLManager.syncScrollTable({
+        topScrollId: 'knowledge-table-top-scroll',
+        topInnerId: 'knowledge-table-top-scroll-inner',
+        wrapId: 'knowledge-table-scroll-wrap',
+        tableId: 'knowledge-library-table'
+      });
     }
 
 

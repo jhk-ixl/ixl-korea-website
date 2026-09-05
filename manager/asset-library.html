@@ -7,6 +7,7 @@
   <title>Asset Library | IXL Korea Manager</title>
   <link rel="stylesheet" href="manager.css">
 
+  <script src="manager-common.js"></script>
   <script src="manager-guard.js"></script>
 
 
@@ -14,23 +15,6 @@
     import { upload } from 'https://esm.sh/@vercel/blob/client';
     window.vercelBlobUpload = upload;
   </script>
-
-
-  <style>
-    #asset-table-scroll-wrap {
-      scrollbar-gutter: stable;
-    }
-
-    #asset-library-table thead th {
-      position: -webkit-sticky;
-      position: sticky;
-      top: 18px;
-      z-index: 50;
-      background: #f7f9fc;
-      box-shadow: 0 1px 0 #e2e8f0;
-    }
-  </style>
-
 </head>
 
 <body>
@@ -208,36 +192,25 @@
 
 
     <section
-      class="library-table-wrap"
+      class="library-table-wrap manager-scroll-table-wrap"
       id="asset-table-scroll-wrap"
-      style="
-        max-height:calc(100vh - 120px);
-        overflow:auto;
-        position:relative;
-      "
     >
 
       <div
         id="asset-table-top-scroll"
-        style="
-          position:sticky;
-          top:0;
-          z-index:70;
-          overflow-x:auto;
-          overflow-y:hidden;
-          background:#fff;
-          height:18px;
-        "
+        class="manager-table-top-scroll"
         aria-label="Asset table horizontal scroll"
       >
         <div
           id="asset-table-top-scroll-inner"
-          style="height:1px;"
+          class="manager-table-top-scroll-inner"
         ></div>
       </div>
 
-      <table class="library-table" id="asset-library-table">
-
+      <table
+        class="library-table manager-scroll-table"
+        id="asset-library-table"
+      >
         <thead>
           <tr>
             <th>File</th>
@@ -539,43 +512,6 @@
     }
   }
 
-
-  function syncAssetTableScrollbars() {
-    const topScroll = document.getElementById('asset-table-top-scroll');
-    const topInner = document.getElementById('asset-table-top-scroll-inner');
-    const tableWrap = document.getElementById('asset-table-scroll-wrap');
-    const table = document.getElementById('asset-library-table');
-
-    if (!topScroll || !topInner || !tableWrap || !table) return;
-
-    topInner.style.width = `${table.scrollWidth}px`;
-
-    if (!topScroll.dataset.syncBound) {
-      let fromTop = false;
-      let fromBottom = false;
-
-      topScroll.addEventListener('scroll', () => {
-        if (fromBottom) return;
-
-        fromTop = true;
-        tableWrap.scrollLeft = topScroll.scrollLeft;
-        fromTop = false;
-      });
-
-      tableWrap.addEventListener('scroll', () => {
-        if (!fromTop) {
-          fromBottom = true;
-          topScroll.scrollLeft = tableWrap.scrollLeft;
-          fromBottom = false;
-        }
-      });
-
-      topScroll.dataset.syncBound = 'true';
-    }
-
-    topScroll.scrollLeft = tableWrap.scrollLeft;
-  }
-
   function renderAssets() {
     const tbody = document.getElementById('asset-table-body');
     const empty = document.getElementById('library-empty');
@@ -682,7 +618,12 @@
     empty.style.display = filtered.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
 
-    requestAnimationFrame(syncAssetTableScrollbars);
+    IXLManager.syncScrollTable({
+      topScrollId: 'asset-table-top-scroll',
+      topInnerId: 'asset-table-top-scroll-inner',
+      wrapId: 'asset-table-scroll-wrap',
+      tableId: 'asset-library-table'
+    });
   }
 
   async function copyAssetUrl(url) {
@@ -1801,12 +1742,6 @@
       }
     }
   );
-
-  window.addEventListener(
-    'resize',
-    syncAssetTableScrollbars
-  );
-
   loadAssets();
 
 </script>

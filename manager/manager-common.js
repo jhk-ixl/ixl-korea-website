@@ -93,8 +93,44 @@
 
   }
 
+  function syncScrollTable({
+    topScrollId,
+    topInnerId,
+    wrapId,
+    tableId
+  }) {
+    const topScroll = document.getElementById(topScrollId);
+    const topInner = document.getElementById(topInnerId);
+    const wrap = document.getElementById(wrapId);
+    const table = document.getElementById(tableId);
 
-  window.IXLManager = {
+    if (!topScroll || !topInner || !wrap || !table) {
+      return;
+    }
+
+    const update = () => {
+      topInner.style.width = `${table.scrollWidth}px`;
+      topScroll.scrollLeft = wrap.scrollLeft;
+    };
+
+    if (!topScroll.dataset.syncBound) {
+      topScroll.addEventListener('scroll', () => {
+        wrap.scrollLeft = topScroll.scrollLeft;
+      });
+
+      wrap.addEventListener('scroll', () => {
+        topScroll.scrollLeft = wrap.scrollLeft;
+      });
+
+      window.addEventListener('resize', update);
+
+      topScroll.dataset.syncBound = 'true';
+    }
+
+    requestAnimationFrame(update);
+  }
+
+window.IXLManager = {
     toUrl:
       toManagerUrl,
 
@@ -102,7 +138,10 @@
       normalizeManagerUrl,
 
     sameUrl:
-      sameManagerUrl
+      sameManagerUrl,
+
+    syncScrollTable:
+      syncScrollTable
   };
 
 

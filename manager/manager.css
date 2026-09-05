@@ -1753,3 +1753,39 @@ a.manager-utilization-item:hover {
 }
 
 /* END MANAGER MASTER DATA LIST */
+
+/* =========================================
+   MANAGER SCROLL TABLE SYSTEM
+   Asset Library / Knowledge Library
+   ========================================= */
+
+.manager-scroll-table-wrap {
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  position: relative;
+  scrollbar-gutter: stable;
+}
+
+.manager-table-top-scroll {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  height: 18px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #fff;
+}
+
+.manager-table-top-scroll-inner {
+  height: 1px;
+}
+
+.manager-scroll-table thead th {
+  position: sticky;
+  top: 18px;
+  z-index: 50;
+  background: #f7f9fc;
+  box-shadow: 0 1px 0 #e2e8f0;
+}
+
+/* END MANAGER SCROLL TABLE SYSTEM */
