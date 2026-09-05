@@ -928,26 +928,6 @@
 
         </div>
 
-
-        <div class="insights-field">
-
-          <label>Featured</label>
-
-          <div class="insights-checkbox">
-
-            <input
-              type="checkbox"
-              id="edit-featured"
-            >
-
-            <span>
-              Feature in Public Insights
-            </span>
-
-          </div>
-
-        </div>
-
       </div>
 
 
@@ -2019,12 +1999,6 @@
       ).value =
         '';
 
-
-      document.getElementById(
-        'edit-featured'
-      ).checked =
-        false;
-
       document.getElementById(
         'edit-file'
         ).value = '';
@@ -2198,12 +2172,6 @@
       document.getElementById(
         'edit-file'
         ).value = '';
-
-
-      document.getElementById(
-        'edit-featured'
-      ).checked =
-        item.featured === true;
 
 
       clearMessage();
@@ -2599,12 +2567,7 @@
             assetPath,
 
         assetKey:
-            assetKey,
-
-        featured:
-          document.getElementById(
-            'edit-featured'
-          ).checked
+            assetKey
 
       };
 

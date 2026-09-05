@@ -368,6 +368,12 @@ export default async function handler(req, res) {
       }
 
 
+      const knowledgeId =
+        String(
+          body.knowledgeId || ''
+        ).trim();
+
+
       const assetKey =
         String(
           body.assetKey || ''
@@ -486,6 +492,7 @@ export default async function handler(req, res) {
       const queueData = {
         createdDate,
         createdAt: now.toISOString(),
+        knowledgeId,
         channel,
         title,
         postText,

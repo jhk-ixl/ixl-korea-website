@@ -495,6 +495,8 @@
 
     let selectedAssetKey = '';
 
+    let selectedKnowledgeId = '';
+
     const selectedItems =
       new Set();
 
@@ -633,11 +635,14 @@
         mediaTypeField.value = 'None';
         mediaFileField.value = '';
         selectedAssetKey = '';
+        selectedKnowledgeId = '';
         return;
       }
 
       const item = allKnowledgeItems[[...selectedItems][0]];
       if (!item) return;
+
+      selectedKnowledgeId = String(item.knowledgeId || '').trim();
 
       titleField.value = item.title || '';
       textField.value = item.summary || '';
@@ -1318,6 +1323,8 @@
                   externalLink,
                   mediaType,
                   mediaFile,
+                  knowledgeId:
+                    selectedKnowledgeId,
                   assetKey:
                     selectedAssetKey
                 })
@@ -1422,7 +1429,7 @@
         const response =
           await fetch(
 
-            '../insightscontent/insights-data.json',
+            '../insightscontent/knowledge-data.json',
 
             {
               cache: 'no-store'

@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import {
   requireManager
 } from '../lib/manager-auth-utils.js';
@@ -645,6 +647,12 @@ export default async function handler(req, res) {
 
   function normalizeInsight(body, validation = {}) {
 
+    const knowledgeId =
+      cleanString(
+        body.knowledgeId
+      );
+
+
     const type =
       cleanString(
         body.type
@@ -814,6 +822,8 @@ export default async function handler(req, res) {
 
 
     return {
+
+      knowledgeId,
 
       type,
 
@@ -1156,6 +1166,16 @@ export default async function handler(req, res) {
   }
 
 
+  function createKnowledgeId() {
+    return (
+      'kn_' +
+      crypto.randomUUID()
+        .replace(/-/g, '')
+        .toLowerCase()
+    );
+  }
+
+
   function normalizeByResource(
     body,
     validation = {},
@@ -1167,10 +1187,24 @@ export default async function handler(req, res) {
       (resource === 'insights' || resource === 'knowledge')
     ) {
 
-      return normalizeInsight(
-        body,
-        validation
-      );
+      const normalized =
+        normalizeInsight(
+          body,
+          validation
+        );
+
+      if (resource === 'knowledge') {
+        return {
+          ...normalized,
+          knowledgeId:
+            cleanString(existingItem?.knowledgeId) ||
+            cleanString(body.knowledgeId) ||
+            createKnowledgeId(),
+          featured: undefined
+        };
+      }
+
+      return normalized;
     }
 
 
