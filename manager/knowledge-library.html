@@ -55,6 +55,35 @@
     </section>
 
 
+    <section class="manager-library-overview" aria-label="Knowledge management overview">
+
+      <article class="manager-overview-card">
+        <span class="manager-overview-label">TOTAL KNOWLEDGE</span>
+        <strong class="manager-overview-value" id="overview-total">0</strong>
+        <small class="manager-overview-note">All Knowledge Master items</small>
+      </article>
+
+      <article class="manager-overview-card">
+        <span class="manager-overview-label">PUBLIC ACCESS</span>
+        <strong class="manager-overview-value" id="overview-public">0</strong>
+        <small class="manager-overview-note">Knowledge available at Public access level</small>
+      </article>
+
+      <article class="manager-overview-card">
+        <span class="manager-overview-label">WEBSITE INSIGHTS</span>
+        <strong class="manager-overview-value" id="overview-insights">0</strong>
+        <small class="manager-overview-note">Knowledge represented in Website Insights</small>
+      </article>
+
+      <article class="manager-overview-card">
+        <span class="manager-overview-label">SNS DISTRIBUTED</span>
+        <strong class="manager-overview-value" id="overview-sns">0</strong>
+        <small class="manager-overview-note">Unique Knowledge published to SNS channels</small>
+      </article>
+
+    </section>
+
+
     <section class="library-toolbar">
 
       <div class="library-count">
@@ -137,7 +166,6 @@
             <th>Programs</th>
             <th>Tags</th>
             <th>Access</th>
-            <th>Featured</th>
             <th>Open</th>
           </tr>
         </thead>
@@ -229,9 +257,6 @@
 
       const access =
         item.access || 'Public';
-
-      const featured =
-        item.featured ? 'Yes' : 'No';
 
 
       const topics =
@@ -350,11 +375,6 @@
 
           <td>
             ${access}
-          </td>
-
-
-          <td>
-            ${featured}
           </td>
 
 
@@ -644,6 +664,156 @@
     }
 
 
+    function normalizeKnowledgeId(value) {
+      return String(value || '').trim();
+    }
+
+
+    function getResourceItems(data) {
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (data && Array.isArray(data.items)) {
+        return data.items;
+      }
+
+      return [];
+    }
+
+
+    async function fetchJson(url) {
+      const response = await fetch(url, {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Could not load ${url} (HTTP ${response.status}).`
+        );
+      }
+
+      return response.json();
+    }
+
+
+    async function loadKnowledgeOverview(knowledgeItems) {
+      const total =
+        knowledgeItems.length;
+
+      const publicAccess =
+        knowledgeItems.filter(
+          item =>
+            String(
+              item.access ||
+              item.accessLevel ||
+              'Public'
+            )
+              .trim()
+              .toLowerCase() === 'public'
+        ).length;
+
+      const knowledgeIds =
+        new Set(
+          knowledgeItems
+            .map(item =>
+              normalizeKnowledgeId(
+                item.knowledgeId
+              )
+            )
+            .filter(Boolean)
+        );
+
+      let websiteInsights = 0;
+      let snsDistributed = 0;
+
+      const overviewLoads =
+        await Promise.allSettled([
+          fetchJson(
+            '../insightscontent/insights-data.json'
+          ),
+          fetchJson(
+            '/api/distribution-queue'
+          )
+        ]);
+
+      if (overviewLoads[0].status === 'fulfilled') {
+        const insightKnowledgeIds =
+          new Set(
+            getResourceItems(
+              overviewLoads[0].value
+            )
+              .map(item =>
+                normalizeKnowledgeId(
+                  item.knowledgeId
+                )
+              )
+              .filter(id =>
+                id &&
+                knowledgeIds.has(id)
+              )
+          );
+
+        websiteInsights =
+          insightKnowledgeIds.size;
+      } else {
+        console.warn(
+          'Website Insights overview could not be loaded:',
+          overviewLoads[0].reason
+        );
+      }
+
+      if (overviewLoads[1].status === 'fulfilled') {
+        const distributedKnowledgeIds =
+          new Set(
+            getResourceItems(
+              overviewLoads[1].value
+            )
+              .filter(item =>
+                String(
+                  item.status || ''
+                )
+                  .trim()
+                  .toLowerCase() === 'published'
+              )
+              .map(item =>
+                normalizeKnowledgeId(
+                  item.knowledgeId
+                )
+              )
+              .filter(id =>
+                id &&
+                knowledgeIds.has(id)
+              )
+          );
+
+        snsDistributed =
+          distributedKnowledgeIds.size;
+      } else {
+        console.warn(
+          'SNS Distribution overview could not be loaded:',
+          overviewLoads[1].reason
+        );
+      }
+
+      document.getElementById(
+        'overview-total'
+      ).textContent = total;
+
+      document.getElementById(
+        'overview-public'
+      ).textContent = publicAccess;
+
+      document.getElementById(
+        'overview-insights'
+      ).textContent = websiteInsights;
+
+      document.getElementById(
+        'overview-sns'
+      ).textContent = snsDistributed;
+    }
+
+
     async function loadKnowledgeLibrary() {
 
       const empty =
@@ -707,6 +877,11 @@
 
 
         renderKnowledge(
+          allKnowledgeItems
+        );
+
+
+        await loadKnowledgeOverview(
           allKnowledgeItems
         );
 

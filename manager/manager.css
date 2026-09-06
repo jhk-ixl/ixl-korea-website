@@ -1792,3 +1792,62 @@ a.manager-utilization-item:hover {
 }
 
 /* END MANAGER SCROLL TABLE SYSTEM */
+
+/* =========================================
+   MANAGER LIBRARY OVERVIEW SYSTEM
+   Reusable management overview metrics
+   ========================================= */
+
+.manager-library-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.manager-overview-card {
+  min-width: 0;
+  padding: 18px 19px;
+  background: #ffffff;
+  border: 1px solid #e2e8ef;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(7, 27, 51, 0.04);
+}
+
+.manager-overview-label {
+  display: block;
+  margin-bottom: 12px;
+  color: #718096;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.manager-overview-value {
+  display: block;
+  margin-bottom: 7px;
+  color: #071b33;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.manager-overview-note {
+  display: block;
+  color: #7b8794;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .manager-library-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .manager-library-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* END MANAGER LIBRARY OVERVIEW SYSTEM */
