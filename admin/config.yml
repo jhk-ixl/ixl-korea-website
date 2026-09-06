@@ -4,10 +4,10 @@ backend:
   name: github
   repo: jhk-ixl/ixl-korea-website
   branch: master
-  base_url: https://ixl-korea-website.vercel.app
+  base_url: https://ixlkorea.co.kr
   auth_endpoint: auth
-  site_domain: ixl-korea-website.vercel.app
-
+  site_domain: https://ixlkorea.co.kr
+  
 media_folder: "insightscontent/uploads"
 public_folder: "/insightscontent/uploads"
 
