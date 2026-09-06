@@ -18,8 +18,9 @@ import {
   getGitHubUser
 } from '../lib/oauth/github.js';
 
-const MANAGER_CALLBACK_URL =
-  'https://ixl-korea-website.vercel.app/api/manager-callback';
+import {
+  getManagerCallbackUrl
+} from '../lib/manager/url.js';
 
 export default async function handler(
   req,
@@ -69,6 +70,24 @@ export default async function handler(
       .status(500)
       .send(
         'Manager authentication is not configured.'
+      );
+  }
+
+  let managerCallbackUrl;
+
+  try {
+    managerCallbackUrl =
+      getManagerCallbackUrl(req);
+  } catch (error) {
+    console.error(
+      'Invalid Manager origin:',
+      error
+    );
+
+    return res
+      .status(400)
+      .send(
+        'Invalid Manager origin.'
       );
   }
 
@@ -138,7 +157,7 @@ export default async function handler(
         clientSecret,
         code,
         redirectUri:
-          MANAGER_CALLBACK_URL,
+          managerCallbackUrl,
         userAgent:
           'IXL-Korea-Manager'
       });

@@ -6,8 +6,9 @@ import {
   createManagerOAuthState
 } from '../lib/manager/auth.js';
 
-const MANAGER_CALLBACK_URL =
-  'https://ixl-korea-website.vercel.app/api/manager-callback';
+import {
+  getManagerCallbackUrl
+} from '../lib/manager/url.js';
 
 export default async function handler(
   req,
@@ -51,6 +52,25 @@ export default async function handler(
       });
   }
 
+  let managerCallbackUrl;
+
+  try {
+    managerCallbackUrl =
+      getManagerCallbackUrl(req);
+  } catch (error) {
+    console.error(
+      'Invalid Manager origin:',
+      error
+    );
+
+    return res
+      .status(400)
+      .json({
+        error:
+          'Invalid Manager origin.'
+      });
+  }
+
   const state =
     createManagerOAuthState(
       sessionSecret
@@ -80,7 +100,7 @@ export default async function handler(
 
   githubAuthorizeUrl.searchParams.set(
     'redirect_uri',
-    MANAGER_CALLBACK_URL
+    managerCallbackUrl
   );
 
   githubAuthorizeUrl.searchParams.set(
