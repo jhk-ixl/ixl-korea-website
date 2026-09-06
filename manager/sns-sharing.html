@@ -298,6 +298,20 @@
 
         <div class="sns-compose-field">
 
+          <label for="share-language">
+            Language
+          </label>
+
+          <select id="share-language">
+            <option value="en" selected>English</option>
+            <option value="ko">Korean</option>
+          </select>
+
+        </div>
+
+
+        <div class="sns-compose-field">
+
           <label for="share-title">
             Title
           </label>
@@ -454,14 +468,6 @@
         </div>
 
         <div class="sns-preview-actions">
-
-          <button
-            type="button"
-            class="library-button"
-            id="copy-post"
-          >
-            Copy Post
-          </button>
 
 
           <button
@@ -1048,6 +1054,29 @@
     }
 
 
+    function getSelectedLanguage() {
+
+      const select =
+        document.getElementById(
+          'share-language'
+        );
+
+      return select
+        ? select.value
+        : 'en';
+
+    }
+
+
+    function getLanguageLabel(value) {
+
+      return value === 'ko'
+        ? 'Korean'
+        : 'English';
+
+    }
+
+
 
     /* =========================================
        PREVIEW
@@ -1061,8 +1090,10 @@
       const mediaType = document.getElementById('share-media-type').value;
       const mediaFile = document.getElementById('share-media-file').value.trim();
       const channel = getSelectedChannel();
+      const language = getSelectedLanguage();
 
-      document.getElementById('preview-channel').textContent = channel + ' Preview';
+      document.getElementById('preview-channel').textContent =
+        channel + ' · ' + getLanguageLabel(language) + ' Preview';
       document.getElementById('preview-title').textContent = title || 'Untitled Post';
       document.getElementById('preview-text').textContent = text;
 
@@ -1103,113 +1134,6 @@
         block: 'start'
       });
     }
-
-
-
-    /* =========================================
-       COPY POST
-       ========================================= */
-
-    async function copyPost() {
-
-      const title =
-        document
-          .getElementById(
-            'share-title'
-          )
-          .value
-          .trim();
-
-
-
-      const text =
-        document
-          .getElementById(
-            'share-text'
-          )
-          .value
-          .trim();
-
-
-
-      const detailLink =
-        document.getElementById(
-          'share-detail-link'
-        ).value.trim();
-
-      const externalLink =
-        document.getElementById(
-          'share-external-link'
-        ).value.trim();
-
-
-
-      const content = [
-
-        title,
-        text,
-        detailLink,
-        externalLink
-
-      ]
-        .filter(Boolean)
-        .join('\n\n');
-
-
-
-      if (!content) {
-        return;
-      }
-
-
-
-      try {
-
-        await navigator
-          .clipboard
-          .writeText(
-            content
-          );
-
-
-
-        const button =
-          document.getElementById(
-            'copy-post'
-          );
-
-
-        const originalText =
-          button.textContent;
-
-
-        button.textContent =
-          'Copied ✓';
-
-
-
-        setTimeout(
-          () => {
-
-            button.textContent =
-              originalText;
-
-          },
-          1500
-        );
-
-
-
-      } catch (error) {
-
-        console.error(
-          'Failed to copy post:',
-          error
-        );
-
-      }
-
-    }
 /* =========================================
    ADD TO DISTRIBUTION QUEUE
    ========================================= */
@@ -1220,6 +1144,10 @@
         document.querySelector(
           'input[name="sns-channel"]:checked'
         )?.value || 'LinkedIn';
+
+
+      const language =
+        getSelectedLanguage();
 
 
       const title =
@@ -1317,6 +1245,7 @@
               body:
                 JSON.stringify({
                   channel,
+                  language,
                   title,
                   postText,
                   detailLink,
@@ -1541,28 +1470,6 @@
             .addEventListener(
               'click',
               preparePreview
-            );
-
-        }
-
-
-
-        /* COPY POST */
-
-        const copyPostButton =
-          document.getElementById(
-            'copy-post'
-          );
-
-
-        if (
-          copyPostButton
-        ) {
-
-          copyPostButton
-            .addEventListener(
-              'click',
-              copyPost
             );
 
         }

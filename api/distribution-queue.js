@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import {
   requireManager
 } from '../lib/manager-auth-utils.js';
@@ -5,6 +7,16 @@ import {
 import {
   sameResourceUrl
 } from '../lib/url/common.js';
+
+
+function createDistributionId() {
+  return (
+    'dist_' +
+    crypto.randomUUID()
+      .replace(/-/g, '')
+      .toLowerCase()
+  );
+}
 
 
 export default async function handler(req, res) {
@@ -305,6 +317,14 @@ export default async function handler(req, res) {
         ).trim();
 
 
+      const language =
+        String(
+          body.language || 'en'
+        )
+          .trim()
+          .toLowerCase();
+
+
       const title =
         String(
           body.title || ''
@@ -412,6 +432,22 @@ export default async function handler(req, res) {
 
     }        
 
+      if (
+        !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/.test(
+          language
+        )
+      ) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              'Invalid language code.'
+          });
+
+      }
+
+
       /* =========================================
         VALIDATE REQUIRED FIELDS
         ========================================= */
@@ -490,10 +526,13 @@ export default async function handler(req, res) {
         ========================================= */
 
       const queueData = {
+        distributionId:
+          createDistributionId(),
         createdDate,
         createdAt: now.toISOString(),
         knowledgeId,
         channel,
+        language,
         title,
         postText,
 
@@ -627,9 +666,14 @@ export default async function handler(req, res) {
 
           fileName,
 
+          distributionId:
+            queueData.distributionId,
+
           createdDate,
 
           channel,
+
+          language,
 
           title,
 
