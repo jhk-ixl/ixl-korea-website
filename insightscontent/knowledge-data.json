@@ -118,15 +118,50 @@
       }
     },
     {
+      "knowledgeId": "kn_d5556a6e91cb48fda7b982317eab585e",
+      "type": "external",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "Explore innovation, growth and strategy perspectives from IXL Center's global innovation network.",
-      "dateLabel": "IXL CENTER",
       "date": "2026-08-01",
+      "dateLabel": "IXL CENTER",
+      "title": "Innovation & Growth Perspectives",
+      "summary": "Explore innovation, growth and strategy perspectives from IXL Center's global innovation network.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "https://www.ixl-center.com/",
       "asset": "",
-      "title": "Innovation & Growth Perspectives",
-      "type": "external",
-      "knowledgeId": "kn_d5556a6e91cb48fda7b982317eab585e"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "Innovation & Growth Perspectives",
+          "summary": "Explore innovation, growth and strategy perspectives from IXL Center's global innovation network.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "external",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "https://www.ixl-center.com/",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "access": "Public",
