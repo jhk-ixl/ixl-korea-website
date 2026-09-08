@@ -1122,7 +1122,11 @@
 
     let thumbnailTime = item.thumbnailTime;
 
-    if (String(item.type || '').toLowerCase() === 'video') {
+    if (
+      ['video', 'mp4', 'webm'].includes(
+        String(item.type || '').toLowerCase()
+      )
+    ) {
       const enteredThumbnailTime = prompt(
         'Thumbnail Time (seconds)',
         item.thumbnailTime ?? 0.1
