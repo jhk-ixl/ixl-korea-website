@@ -267,15 +267,50 @@
       "knowledgeId": "kn_c74a76d20003459aac06e7a5d505cda3"
     },
     {
+      "knowledgeId": "kn_d724cca8aae44b5481994d87f3a3150f",
+      "type": "video",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "At the Global Innovation Management Institute (GIMI), our mission is to democratize innovation worldwide. With years of experience in training, certifying, and implementing best practices in innovation, we introduce the GIMI Innovation Awards. This ceremony aims to recognize and celebrate organizations and individuals’ innovations initiatives in the public, private, and social sectors. ",
-      "dateLabel": "GIMI Awards Highlight",
       "date": "2025-11-30",
+      "dateLabel": "GIMI Awards Highlight",
+      "title": "2025 GIMI Awards Highlight?",
+      "summary": "At the Global Innovation Management Institute (GIMI), our mission is to democratize innovation worldwide. With years of experience in training, certifying, and implementing best practices in innovation, we introduce the GIMI Innovation Awards. This ceremony aims to recognize and celebrate organizations and individuals’ innovations initiatives in the public, private, and social sectors.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "https://www.youtube.com/watch?v=f_iHVWSs5cE",
       "asset": "",
-      "title": "2025 GIMI Awards Highlight?",
-      "type": "video",
-      "knowledgeId": "kn_d724cca8aae44b5481994d87f3a3150f"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "2025 GIMI Awards Highlight?",
+          "summary": "At the Global Innovation Management Institute (GIMI), our mission is to democratize innovation worldwide. With years of experience in training, certifying, and implementing best practices in innovation, we introduce the GIMI Innovation Awards. This ceremony aims to recognize and celebrate organizations and individuals’ innovations initiatives in the public, private, and social sectors.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "video",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "https://www.youtube.com/watch?v=f_iHVWSs5cE",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "knowledgeId": "kn_7c6166e08e874f1c9a4b116d4dcd2fff",
