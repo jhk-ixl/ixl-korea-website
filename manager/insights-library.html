@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="manager.css">
   <script src="manager-guard.js"></script>
 <script src="../markdown-renderer.js?v=20260904-v1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <script type="module">
     import { upload } from 'https://esm.sh/@vercel/blob/client';
@@ -369,6 +370,43 @@
       flex-wrap: wrap;
     }
 
+
+    .asset-picker-thumb canvas,
+    .selected-asset-preview canvas {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .asset-picker-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #fff;
+    }
+
+    .asset-picker-article-thumb {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      overflow: hidden;
+      background: #fff;
+      color: #354b61;
+      text-align: left;
+      font-size: 9px;
+      font-weight: 500;
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .asset-picker-article-thumb strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
+      color: #17324d;
+    }
+
     .selected-asset-card {
       display: none;
       align-items: flex-start;
@@ -400,7 +438,7 @@
 
     .selected-asset-card {
       display: none;
-      grid-template-columns: 170px minmax(0, 1fr) auto;
+      grid-template-columns: 220px minmax(0, 1fr) auto;
       align-items: stretch;
       gap: 16px;
       padding: 14px;
@@ -415,7 +453,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 110px;
+      min-height: 150px;
       border: 1px solid #dde4eb;
       border-radius: 7px;
       background: #f4f7fa;
@@ -430,7 +468,7 @@
     .selected-asset-preview video,
     .selected-asset-preview iframe {
       width: 100%;
-      height: 110px;
+      height: 150px;
       border: 0;
       object-fit: contain;
       background: #fff;
@@ -1868,18 +1906,19 @@
         return `<img src="${safePath}" alt="">`;
       }
 
-      if (kind === 'video' && path && mode === 'card') {
-        return `<video src="${safePath}" muted preload="metadata"></video>`;
+      if (kind === 'video' && path) {
+        return `<video src="${safePath}#t=0.1" muted preload="metadata"></video>`;
       }
 
-      if (kind === 'pdf' && path && mode === 'card') {
-        return `<iframe src="${safePath}#page=1&toolbar=0&navpanes=0&scrollbar=0" title="PDF preview"></iframe>`;
+      if (kind === 'pdf' && path) {
+        return `<canvas class="pdf-thumbnail" data-pdf-src="${safePath}" aria-label="PDF first page thumbnail"></canvas>`;
+      }
+
+      if (kind === 'markdown' && path) {
+        return `<div class="asset-picker-article-thumb" data-markdown-src="${safePath}"><strong>ARTICLE</strong><span>Loading preview...</span></div>`;
       }
 
       const labels = {
-        pdf: 'PDF',
-        video: 'VIDEO',
-        markdown: 'ARTICLE',
         presentation: 'PPT',
         document: 'DOC',
         file: 'FILE'
@@ -1888,11 +1927,81 @@
       return escapeHtml(labels[kind] || getAssetIconLabel(asset));
     }
 
+    async function renderPdfThumbnail(canvas) {
+      const src = canvas?.dataset?.pdfSrc;
+      if (!src || !window.pdfjsLib) return;
+
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdf = await window.pdfjsLib.getDocument({ url: src }).promise;
+        const page = await pdf.getPage(1);
+        const base = page.getViewport({ scale: 1 });
+        const host = canvas.parentElement;
+        const maxWidth = Math.max(60, host?.clientWidth || 150);
+        const maxHeight = Math.max(50, host?.clientHeight || 110);
+        const scale = Math.min(maxWidth / base.width, maxHeight / base.height);
+        const viewport = page.getViewport({ scale: Math.max(scale, 0.15) });
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+
+        await page.render({
+          canvasContext: canvas.getContext('2d'),
+          viewport,
+          transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0]
+        }).promise;
+      } catch (error) {
+        console.warn('PDF thumbnail unavailable:', error);
+        const host = canvas.parentElement;
+        if (host) host.textContent = 'PDF';
+      }
+    }
+
+    async function renderMarkdownThumbnail(node) {
+      const src = node?.dataset?.markdownSrc;
+      if (!src) return;
+      try {
+        const response = await fetch(src, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Markdown preview unavailable');
+        let body = await response.text();
+        body = body
+          .replace(/^---[\s\S]*?---\s*/m, '')
+          .replace(/!\[[^\]]*\]\([^)]+\)/g, '')
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+          .replace(/[#>*_`~-]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        const span = node.querySelector('span');
+        if (span) span.textContent = body.slice(0, 180) || 'Markdown Article';
+      } catch (error) {
+        const span = node.querySelector('span');
+        if (span) span.textContent = 'Markdown Article';
+      }
+    }
+
+    function hydrateAssetThumbnails(root = document) {
+      root.querySelectorAll('canvas.pdf-thumbnail[data-pdf-src]').forEach(canvas => {
+        if (canvas.dataset.ready === '1') return;
+        canvas.dataset.ready = '1';
+        renderPdfThumbnail(canvas);
+      });
+
+      root.querySelectorAll('.asset-picker-article-thumb[data-markdown-src]').forEach(node => {
+        if (node.dataset.ready === '1') return;
+        node.dataset.ready = '1';
+        renderMarkdownThumbnail(node);
+      });
+    }
+
     function renderAssetPicker() {
       const list = document.getElementById('asset-picker-list');
       const query = normalize(document.getElementById('asset-picker-search').value);
-      const mediaType = document.getElementById('edit-media-type').value;
-      const assets = assetRegistry.filter(asset => assetMatchesMediaType(asset, mediaType));
+      const assets = [...assetRegistry];
       const folders = getChildFolders(assets, assetPickerFolder).filter(folder =>
         !query || normalize(folder.split('/').pop()).includes(query)
       );
@@ -1928,6 +2037,7 @@
           </button>`;
         }).join('');
         list.innerHTML = folderHtml + fileHtml;
+        hydrateAssetThumbnails(list);
         return;
       }
 
@@ -1948,15 +2058,12 @@
         </button>`);
       });
       list.innerHTML = `<div class="asset-picker-details-head"><span>Name</span><span>Type</span><span>Path</span></div>${rows.join('')}`;
+      hydrateAssetThumbnails(list);
     }
 
     function openAssetPicker() {
-      const mediaType = document.getElementById('edit-media-type').value;
-      if (!['image','video','pdf','markdown','presentation','document'].includes(mediaType)) {
-        showMessage('Select a library-based Media Type before choosing an Asset.', 'error');
-        return;
-      }
       assetPickerFolder = '';
+      assetPickerView = 'details';
       document.getElementById('asset-picker-search').value = '';
       renderAssetPicker();
       const backdrop = document.getElementById('asset-picker-backdrop');
@@ -1974,11 +2081,29 @@
     function chooseAsset(assetKey) {
       const asset = getAssetByKey(assetKey);
       if (!asset) return;
+
+      const detectedType = getAssetPreviewKind(asset);
+      const mediaTypeByKind = {
+        image: 'image',
+        video: 'video',
+        pdf: 'pdf',
+        markdown: 'markdown',
+        presentation: 'presentation',
+        document: 'document'
+      };
+
+      const mediaType = mediaTypeByKind[detectedType];
+      if (mediaType) {
+        document.getElementById('edit-media-type').value = mediaType;
+      }
+
       versionDrafts[activeVersion].media = {
         url: '',
         asset: getAssetPath(asset),
         assetKey: asset.key || ''
       };
+
+      updateMediaEditorVisibility();
       renderSelectedAsset();
       closeAssetPicker();
     }
@@ -2020,6 +2145,7 @@
 
       preview.innerHTML = getAssetPreviewMarkup(displayAsset, 'card');
       card.classList.add('open');
+      hydrateAssetThumbnails(card);
     }
 
     function syncEditorToActiveVersion() {
