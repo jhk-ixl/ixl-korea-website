@@ -365,7 +365,7 @@
         }
       },
       "representativeMedia": {
-        "type": "video",
+        "type": "external",
         "ko": {
           "url": "",
           "asset": "",
