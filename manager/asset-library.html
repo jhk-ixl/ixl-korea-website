@@ -1120,6 +1120,29 @@
       return;
     }
 
+    let thumbnailTime = item.thumbnailTime;
+
+    if (String(item.type || '').toLowerCase() === 'video') {
+      const enteredThumbnailTime = prompt(
+        'Thumbnail Time (seconds)',
+        item.thumbnailTime ?? 0.1
+      );
+
+      if (enteredThumbnailTime === null) return;
+
+      const parsedThumbnailTime = Number(enteredThumbnailTime);
+
+      if (
+        !Number.isFinite(parsedThumbnailTime) ||
+        parsedThumbnailTime < 0
+      ) {
+        alert('Thumbnail Time must be 0 or greater.');
+        return;
+      }
+
+      thumbnailTime = parsedThumbnailTime;
+    }
+
     const affectedUsages = usageMappings.filter(usage => usage.assetKey === item.key);
     let confirmUsageKeyChange = false;
 
@@ -1139,7 +1162,7 @@
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ ...item, key, index, confirmUsageKeyChange })
+        body: JSON.stringify({ ...item, key, thumbnailTime, index, confirmUsageKeyChange })
       }
     );
 
@@ -1152,7 +1175,7 @@
       if (!confirmed) return;
       response = await fetch('/api/insights-library?resource=assets', {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-        body: JSON.stringify({ ...item, key, index, confirmUsageKeyChange: true })
+        body: JSON.stringify({ ...item, key, thumbnailTime, index, confirmUsageKeyChange: true })
       });
       data = await response.json();
     }
