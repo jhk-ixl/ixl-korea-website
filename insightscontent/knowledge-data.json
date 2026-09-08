@@ -304,8 +304,8 @@
       "source": "",
       "body": "",
       "url": "insightscontent/GIMI-홍보영상-ver4.0.mp4",
-      "asset": "",
-      "assetKey": "",
+      "asset": "insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+      "assetKey": "gimi-ver4-0",
       "versions": {
         "ko": {
           "title": "",
@@ -327,8 +327,8 @@
         },
         "other": {
           "url": "insightscontent/GIMI-홍보영상-ver4.0.mp4",
-          "asset": "",
-          "assetKey": ""
+          "asset": "insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
+          "assetKey": "gimi-ver4-0"
         }
       }
     },
