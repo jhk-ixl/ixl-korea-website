@@ -72,19 +72,50 @@
       "knowledgeId": "kn_6ff530a3e8124b09ba87cca0edcad337"
     },
     {
-      "topics": [],
-      "access": "Public",
-      "summary": "Discover AKAIO 1.0 and how AI-powered innovation can support the innovation journey from insights and foresight to opportunities and business concepts.",
-      "dateLabel": "AKAIO 1.0",
-      "date": "2026-08-01",
-      "url": "",
-      "programs": [],
-      "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/AKAIO-1.0-Product-Launch-Web-xrrcR1SYghvZwGnzXm72TwZo8O9bc3.mp4",
-      "title": "AKAIO 1.0 Product Launch",
-      "tags": [],
+      "knowledgeId": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c",
       "type": "video",
+      "topics": [],
       "industries": [],
-      "knowledgeId": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c"
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
+      "access": "Public",
+      "date": "2026-08-01",
+      "dateLabel": "AKAIO 1.0",
+      "title": "AKAIO 1.0 Product Launch",
+      "summary": "Discover AKAIO 1.0 and how AI-powered innovation can support the innovation journey from insights and foresight to opportunities and business concepts.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
+      "url": "",
+      "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/AKAIO-1.0-Product-Launch-Web-xrrcR1SYghvZwGnzXm72TwZo8O9bc3.mp4",
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "AKAIO 1.0 Product Launch",
+          "summary": "Discover AKAIO 1.0 and how AI-powered innovation can support the innovation journey from insights and foresight to opportunities and business concepts.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "video",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/insights/AKAIO-1.0-Product-Launch-Web-xrrcR1SYghvZwGnzXm72TwZo8O9bc3.mp4",
+          "assetKey": ""
+        }
+      }
     },
     {
       "access": "Public",
