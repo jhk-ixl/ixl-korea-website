@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+﻿import crypto from 'node:crypto';
 
 import {
   requireManager
@@ -161,7 +161,7 @@ export default async function handler(req, res) {
           .replace(/\.[^.]+$/, '')
           .normalize('NFKD')
           .toLowerCase()
-          .replace(/[^a-z0-9가-힣]+/g, '-')
+          .replace(/[^a-z0-9媛-??+/g, '-')
           .replace(/^-+|-+$/g, '');
 
       const [assets, usages] = await Promise.all([
@@ -264,6 +264,96 @@ export default async function handler(req, res) {
     }
   }
 
+
+  /* =========================================
+     ASSET PROXY
+     Same-origin PDF thumbnail source
+     ========================================= */
+
+  if (resource === 'assetproxy') {
+
+    if (req.method !== 'GET') {
+      res.setHeader('Allow', 'GET');
+
+      return res
+        .status(405)
+        .json({
+          error: 'Method not allowed.'
+        });
+    }
+
+    const assetUrl =
+      String(
+        req.query?.url || ''
+      ).trim();
+
+    if (!assetUrl) {
+      return res
+        .status(400)
+        .json({
+          error: 'Asset URL is required.'
+        });
+    }
+
+    let parsedUrl;
+
+    try {
+      parsedUrl =
+        new URL(assetUrl);
+    } catch {
+      return res
+        .status(400)
+        .json({
+          error: 'Invalid Asset URL.'
+        });
+    }
+
+    if (
+      parsedUrl.protocol !== 'https:' ||
+      !parsedUrl.hostname.endsWith(
+        '.public.blob.vercel-storage.com'
+      )
+    ) {
+      return res
+        .status(400)
+        .json({
+          error: 'Asset URL is not allowed.'
+        });
+    }
+
+    const upstream =
+      await fetch(
+        parsedUrl.toString()
+      );
+
+    if (!upstream.ok) {
+      return res
+        .status(upstream.status)
+        .json({
+          error: 'Asset could not be loaded.'
+        });
+    }
+
+    const buffer =
+      Buffer.from(
+        await upstream.arrayBuffer()
+      );
+
+    res.setHeader(
+      'Content-Type',
+      upstream.headers.get('content-type') ||
+        'application/pdf'
+    );
+
+    res.setHeader(
+      'Cache-Control',
+      'public, max-age=3600, s-maxage=3600'
+    );
+
+    return res
+      .status(200)
+      .send(buffer);
+  }
 
   const resourceConfig =
     DATA_FILES[resource];
@@ -629,7 +719,7 @@ export default async function handler(req, res) {
       )
       .toLowerCase()
       .replace(
-        /[^a-z0-9가-힣]+/g,
+        /[^a-z0-9媛-??+/g,
         '-'
       )
       .replace(

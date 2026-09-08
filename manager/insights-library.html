@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="manager.css">
   <script src="manager-guard.js"></script>
 <script src="../markdown-renderer.js?v=20260904-v1"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
     import { upload } from 'https://esm.sh/@vercel/blob/client';
 
@@ -397,27 +398,7 @@
       font-size: 10px;
       color: #17324d;
     }
-
-
-    .asset-pdf-thumbnail {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: #fff;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .asset-picker-thumb .asset-pdf-thumbnail {
-      transform: scale(1.02);
-      transform-origin: center top;
-    }
-
-    .selected-asset-preview .asset-pdf-thumbnail {
-      min-height: 150px;
-    }
-
-    .selected-asset-card {
+.selected-asset-card {
       display: none;
       align-items: flex-start;
       justify-content: space-between;
@@ -1921,8 +1902,7 @@
       }
 
       if (kind === 'pdf' && path) {
-        const pdfUrl = `${safePath}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
-        return `<iframe class="asset-pdf-thumbnail" src="${pdfUrl}" title="PDF first page" tabindex="-1"></iframe>`;
+        return `<canvas class="pdf-thumbnail" data-pdf-url="${safePath}" aria-label="PDF first page thumbnail"></canvas>`;
       }
 
       if (kind === 'markdown' && path) {
@@ -1936,6 +1916,51 @@
       };
 
       return escapeHtml(labels[kind] || getAssetIconLabel(asset));
+    }
+
+    async function renderPdfThumbnail(canvas) {
+      const assetUrl = canvas?.dataset?.pdfUrl;
+      if (!assetUrl || !window.pdfjsLib) return;
+
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const proxyUrl =
+          `/api/insights-library?resource=assetproxy&url=${encodeURIComponent(assetUrl)}`;
+
+        const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
+        const page = await pdf.getPage(1);
+        const baseViewport = page.getViewport({ scale: 1 });
+
+        const host = canvas.parentElement;
+        const maxWidth = Math.max(80, host?.clientWidth || 160);
+        const maxHeight = Math.max(60, host?.clientHeight || 120);
+        const scale = Math.min(
+          maxWidth / baseViewport.width,
+          maxHeight / baseViewport.height
+        );
+
+        const viewport = page.getViewport({ scale: Math.max(scale, 0.15) });
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(viewport.width * ratio);
+        canvas.height = Math.floor(viewport.height * ratio);
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+
+        const context = canvas.getContext('2d');
+
+        await page.render({
+          canvasContext: context,
+          viewport,
+          transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0]
+        }).promise;
+      } catch (error) {
+        console.warn('PDF thumbnail unavailable:', error);
+        const host = canvas.parentElement;
+        if (host) host.textContent = 'PDF';
+      }
     }
 
     async function renderMarkdownThumbnail(node) {
@@ -1969,6 +1994,12 @@
     }
 
     function hydrateAssetThumbnails(root = document) {
+      root.querySelectorAll('canvas.pdf-thumbnail[data-pdf-url]').forEach(canvas => {
+        if (canvas.dataset.ready === '1') return;
+        canvas.dataset.ready = '1';
+        renderPdfThumbnail(canvas);
+      });
+
       root.querySelectorAll('.asset-picker-article-thumb[data-markdown-src]').forEach(node => {
         if (node.dataset.ready === '1') return;
         node.dataset.ready = '1';
