@@ -796,233 +796,183 @@ export default async function handler(req, res) {
      NORMALIZE INSIGHT
      ========================================= */
 
+  function normalizeKnowledgeVersion(value = {}) {
+    return {
+      title: cleanString(value.title),
+      summary: cleanString(value.summary),
+      body: String(value.body ?? '')
+    };
+  }
+
+
+  function normalizeRepresentativeMediaVersion(value = {}) {
+    return {
+      url: cleanString(value.url),
+      asset: cleanString(value.asset),
+      assetKey: slugifyKey(value.assetKey)
+    };
+  }
+
+
+  function hasKnowledgeVersionContent(version) {
+    return Boolean(
+      version.title ||
+      version.summary ||
+      String(version.body || '').trim()
+    );
+  }
+
+
   function normalizeInsight(body, validation = {}) {
 
-    const knowledgeId =
-      cleanString(
-        body.knowledgeId
-      );
+    const knowledgeId = cleanString(body.knowledgeId);
+    const type = cleanString(body.type).toLowerCase();
+    const date = cleanString(body.date);
+    const dateLabel = cleanString(body.dateLabel);
+    const slug = cleanString(body.slug);
+    const author = cleanString(body.author);
+    const source = cleanString(body.source);
+    const access = cleanString(body.access || 'Public');
+    const featured = body.featured === true;
 
+    const allowedTypes = Array.isArray(validation.allowedTypes)
+      ? validation.allowedTypes
+      : [];
 
-    const type =
-      cleanString(
-        body.type
-      ).toLowerCase();
+    const allowedAccessLevels = Array.isArray(validation.allowedAccessLevels)
+      ? validation.allowedAccessLevels
+      : [];
 
-
-    const date =
-      cleanString(
-        body.date
-      );
-
-
-    const dateLabel =
-      cleanString(
-        body.dateLabel
-      );
-
-
-    const title =
-      cleanString(
-        body.title
-      );
-
-
-    const summary =
-      cleanString(
-        body.summary
-      );
-
-
-    const slug =
-      cleanString(
-        body.slug
-      );
-
-
-    const author =
-      cleanString(
-        body.author
-      );
-
-
-    const source =
-      cleanString(
-        body.source
-      );
-
-
-    const bodyContent =
-      String(
-        body.body ?? ''
-      );
-
-
-    const url =
-      cleanString(
-        body.url
-      );
-
-
-    const asset =
-      cleanString(
-        body.asset
-      );
-
-
-    const assetKey =
-      slugifyKey(
-        body.assetKey
-      );
-
-
-    const access =
-      cleanString(
-        body.access ||
-        'Public'
-      );
-
-
-    const featured =
-      body.featured === true;
-
-
-    const allowedTypes =
-      Array.isArray(
-        validation.allowedTypes
-      )
-        ? validation.allowedTypes
-        : [];
-
-
-    const allowedAccessLevels =
-      Array.isArray(
-        validation.allowedAccessLevels
-      )
-        ? validation.allowedAccessLevels
-        : [];
-
-
-    if (
-      !allowedTypes.includes(
-        type
-      )
-    ) {
-
-      const error =
-        new Error(
-          'Invalid Knowledge Type.'
-        );
-
+    if (!allowedTypes.includes(type)) {
+      const error = new Error('Invalid Knowledge Type.');
       error.statusCode = 400;
-
       throw error;
     }
 
-
-    if (
-      !date ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(
-        date
-      )
-    ) {
-
-      const error =
-        new Error(
-          'A valid date in YYYY-MM-DD format is required.'
-        );
-
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const error = new Error('A valid date in YYYY-MM-DD format is required.');
       error.statusCode = 400;
-
       throw error;
     }
 
-
-    if (
-      !dateLabel ||
-      !title ||
-      !summary
-    ) {
-
-      const error =
-        new Error(
-          'Display Label, Title and Summary are required.'
-        );
-
+    if (!dateLabel) {
+      const error = new Error('Display Label is required.');
       error.statusCode = 400;
-
       throw error;
     }
 
-
-    if (
-      !allowedAccessLevels.includes(
-        access
-      )
-    ) {
-
-      const error =
-        new Error(
-          'Invalid Access Level.'
-        );
-
+    if (!allowedAccessLevels.includes(access)) {
+      const error = new Error('Invalid Access Level.');
       error.statusCode = 400;
-
       throw error;
     }
 
+    const hasVersionPayload = Boolean(body.versions && typeof body.versions === 'object');
+
+    let versions;
+    let representativeMedia;
+
+    if (hasVersionPayload) {
+      versions = {
+        ko: normalizeKnowledgeVersion(body.versions.ko),
+        other: normalizeKnowledgeVersion(body.versions.other)
+      };
+
+      const koHasAny = hasKnowledgeVersionContent(versions.ko);
+      const otherHasAny = hasKnowledgeVersionContent(versions.other);
+
+      if (!koHasAny && !otherHasAny) {
+        const error = new Error('At least one Knowledge content version is required.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      if ((koHasAny && (!versions.ko.title || !versions.ko.summary)) ||
+          (otherHasAny && (!versions.other.title || !versions.other.summary))) {
+        const error = new Error('Each used Knowledge version requires Title and Summary.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const media = body.representativeMedia || {};
+      const mediaType = cleanString(media.type || 'none').toLowerCase();
+      const allowedMediaTypes = ['none', 'image', 'video', 'pdf', 'external'];
+
+      if (!allowedMediaTypes.includes(mediaType)) {
+        const error = new Error('Invalid Representative Media Type.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      representativeMedia = {
+        type: mediaType,
+        ko: normalizeRepresentativeMediaVersion(media.ko),
+        other: normalizeRepresentativeMediaVersion(media.other)
+      };
+    } else {
+      // Legacy Insights / pre-version Knowledge compatibility.
+      const title = cleanString(body.title);
+      const summary = cleanString(body.summary);
+      if (!title || !summary) {
+        const error = new Error('Display Label, Title and Summary are required.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      return {
+        knowledgeId,
+        type,
+        topics: normalizeStringArray(body.topics),
+        industries: normalizeStringArray(body.industries),
+        programs: normalizeStringArray(body.programs),
+        tags: normalizeStringArray(body.tags),
+        access,
+        date,
+        dateLabel,
+        title,
+        summary,
+        slug,
+        author,
+        source,
+        body: String(body.body ?? ''),
+        url: cleanString(body.url),
+        asset: cleanString(body.asset),
+        assetKey: slugifyKey(body.assetKey),
+        featured
+      };
+    }
+
+    // Legacy mirror fields remain during transition so current public/community
+    // readers do not break. Korean is preferred; otherwise Other is used.
+    const primaryVersion = hasKnowledgeVersionContent(versions.ko)
+      ? versions.ko
+      : versions.other;
+
+    const primaryMedia = hasKnowledgeVersionContent(versions.ko)
+      ? representativeMedia.ko
+      : representativeMedia.other;
 
     return {
-
       knowledgeId,
-
       type,
-
-      topics:
-        normalizeStringArray(
-          body.topics
-        ),
-
-      industries:
-        normalizeStringArray(
-          body.industries
-        ),
-
-      programs:
-        normalizeStringArray(
-          body.programs
-        ),
-
-      tags:
-        normalizeStringArray(
-          body.tags
-        ),
-
+      topics: normalizeStringArray(body.topics),
+      industries: normalizeStringArray(body.industries),
+      programs: normalizeStringArray(body.programs),
+      tags: normalizeStringArray(body.tags),
       access,
-
       date,
-
       dateLabel,
-
-      title,
-
-      summary,
-
+      title: primaryVersion.title,
+      summary: primaryVersion.summary,
       slug,
-
       author,
-
       source,
-
-      body:
-        bodyContent,
-
-      url,
-
-      asset,
-
-      assetKey,
-
+      body: primaryVersion.body,
+      url: primaryMedia.url,
+      asset: primaryMedia.asset,
+      assetKey: primaryMedia.assetKey,
+      versions,
+      representativeMedia,
       featured
     };
   }
@@ -1418,6 +1368,8 @@ export default async function handler(req, res) {
     ) {
 
       return (
+        item?.versions?.ko?.title ||
+        item?.versions?.other?.title ||
         item.title ||
         `Item ${index}`
       );
@@ -2157,6 +2109,8 @@ export default async function handler(req, res) {
                 affectedKnowledge.map(
                   item => ({
                     title:
+                      item?.versions?.ko?.title ||
+                      item?.versions?.other?.title ||
                       item.title || '',
                     slug:
                       item.slug || ''
@@ -2167,6 +2121,8 @@ export default async function handler(req, res) {
                 affectedInsights.map(
                   item => ({
                     title:
+                      item?.versions?.ko?.title ||
+                      item?.versions?.other?.title ||
                       item.title || '',
                     slug:
                       item.slug || ''

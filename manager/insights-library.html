@@ -291,6 +291,28 @@
       color: #778391;
     }
 
+    .knowledge-version-heading {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      padding: 14px 16px;
+      border: 1px solid #dfe5ec;
+      border-radius: 8px;
+      background: #f6f8fa;
+      color: #17324d;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .knowledge-version-heading small {
+      display: block;
+      margin-top: 4px;
+      color: #6b7785;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
     .markdown-preview-tools {
       display: flex;
       align-items: center;
@@ -625,28 +647,34 @@
         </div>
 
 
-        <div class="insights-field full">
-
-          <label for="edit-title">
-            Title *
-          </label>
-
-          <input
-            type="text"
-            id="edit-title"
-          >
-
+        <div class="knowledge-version-heading">
+          KOREAN VERSION
+          <small>한국어 원본 또는 한국어 번역본</small>
         </div>
 
+        <div class="insights-field full">
+          <label for="edit-ko-title">Korean Title</label>
+          <input type="text" id="edit-ko-title">
+        </div>
 
         <div class="insights-field full">
+          <label for="edit-ko-summary">Korean Summary</label>
+          <textarea id="edit-ko-summary"></textarea>
+        </div>
 
-          <label for="edit-summary">
-            Summary *
-          </label>
+        <div class="knowledge-version-heading">
+          OTHER VERSION
+          <small>영어·일본어·스페인어 등 원본 또는 기타 언어 버전</small>
+        </div>
 
-          <textarea id="edit-summary"></textarea>
+        <div class="insights-field full">
+          <label for="edit-other-title">Other Title</label>
+          <input type="text" id="edit-other-title">
+        </div>
 
+        <div class="insights-field full">
+          <label for="edit-other-summary">Other Summary</label>
+          <textarea id="edit-other-summary"></textarea>
         </div>
 
 
@@ -700,37 +728,31 @@
 
 
         <div class="insights-field full">
-
-          <label for="edit-body">
-            Markdown Body
-          </label>
-
+          <label for="edit-ko-body">Korean Markdown Body</label>
           <textarea
-            id="edit-body"
+            id="edit-ko-body"
             rows="18"
-            placeholder="Write or paste Markdown content here..."
+            placeholder="한국어 본문을 Markdown으로 작성하거나 붙여넣으세요..."
           ></textarea>
-
-          <span class="insights-field-hint">
-            Main long-form Knowledge content. Markdown formatting is supported.
-          </span>
-
+          <span class="insights-field-hint">한국어 원본 또는 번역본의 전체 본문입니다.</span>
           <div class="markdown-preview-tools">
-            <button
-              type="button"
-              id="toggle-markdown-preview"
-              class="insights-btn"
-            >
-              Preview
-            </button>
+            <button type="button" id="toggle-ko-markdown-preview" class="insights-btn">Preview Korean</button>
           </div>
+          <div id="ko-markdown-preview" class="markdown-preview" aria-live="polite"></div>
+        </div>
 
-          <div
-            id="markdown-preview"
-            class="markdown-preview"
-            aria-live="polite"
-          ></div>
-
+        <div class="insights-field full">
+          <label for="edit-other-body">Other Markdown Body</label>
+          <textarea
+            id="edit-other-body"
+            rows="18"
+            placeholder="Write or paste the original / other-language Markdown content here..."
+          ></textarea>
+          <span class="insights-field-hint">영어·일본어·스페인어 등 Other 버전의 전체 본문입니다.</span>
+          <div class="markdown-preview-tools">
+            <button type="button" id="toggle-other-markdown-preview" class="insights-btn">Preview Other</button>
+          </div>
+          <div id="other-markdown-preview" class="markdown-preview" aria-live="polite"></div>
         </div>
 
 
@@ -810,75 +832,68 @@
         </div>
 
 
-        <div class="insights-field full">
-
-          <label for="edit-url">
-            External / Existing URL
-          </label>
-
-          <input
-            type="text"
-            id="edit-url"
-            placeholder="https://... or /path/file"
-          >
-
+        <div class="knowledge-version-heading">
+          REPRESENTATIVE MEDIA
+          <small>대표미디어는 하나이며, 종류는 공통이고 Korean / Other 파일 또는 URL만 다르게 연결합니다.</small>
         </div>
 
-
         <div class="insights-field full">
-
-        <label for="edit-file">
-            Upload PDF / Image / Video / File
-        </label>
-
-        <input
-            type="file"
-            id="edit-file"
-            accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm"
-        >
-
-        <span class="insights-field-hint">
-            <span class="insights-field-hint">
-                PDF, JPG, PNG, GIF, MP4 or WebM. Large files are uploaded directly to secure storage.
-            </span>
-        </span>
-
-        </div>
-
-
-        <div class="insights-field full">
-
-          <label for="edit-asset-key">
-            Asset Key
-          </label>
-
-          <select id="edit-asset-key">
-            <option value="">— No Asset Key —</option>
+          <label for="edit-media-type">Media Type</label>
+          <select id="edit-media-type">
+            <option value="none">None</option>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+            <option value="pdf">PDF</option>
+            <option value="external">External Link</option>
           </select>
-
-          <span class="insights-field-hint">
-            Select a registered Asset Key. The current Blob URL will be resolved from Asset Registry.
-          </span>
-
         </div>
 
+        <div class="knowledge-version-heading">
+          KOREAN MEDIA
+        </div>
 
         <div class="insights-field full">
+          <label for="edit-media-ko-url">Korean Media URL</label>
+          <input type="text" id="edit-media-ko-url" placeholder="https://... or /path/file">
+        </div>
 
-        <label for="edit-asset">
-            Asset Path
-        </label>
+        <div class="insights-field full">
+          <label for="edit-media-ko-file">Upload Korean PDF / Image / Video</label>
+          <input type="file" id="edit-media-ko-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm">
+        </div>
 
-        <input
-            type="text"
-            id="edit-asset"
-            placeholder="/insightscontent/uploads/file.pdf"
-        >
+        <div class="insights-field full">
+          <label for="edit-media-ko-asset-key">Korean Asset Key</label>
+          <select id="edit-media-ko-asset-key"><option value="">— No Asset Key —</option></select>
+        </div>
 
-        <span class="insights-field-hint">
-            Filled automatically after upload. An existing asset path can also be entered manually.
-        </span>
+        <div class="insights-field full">
+          <label for="edit-media-ko-asset">Korean Asset Path</label>
+          <input type="text" id="edit-media-ko-asset" placeholder="/insightscontent/uploads/file.pdf">
+        </div>
 
+        <div class="knowledge-version-heading">
+          OTHER MEDIA
+        </div>
+
+        <div class="insights-field full">
+          <label for="edit-media-other-url">Other Media URL</label>
+          <input type="text" id="edit-media-other-url" placeholder="https://... or /path/file">
+        </div>
+
+        <div class="insights-field full">
+          <label for="edit-media-other-file">Upload Other PDF / Image / Video</label>
+          <input type="file" id="edit-media-other-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm">
+        </div>
+
+        <div class="insights-field full">
+          <label for="edit-media-other-asset-key">Other Asset Key</label>
+          <select id="edit-media-other-asset-key"><option value="">— No Asset Key —</option></select>
+        </div>
+
+        <div class="insights-field full">
+          <label for="edit-media-other-asset">Other Asset Path</label>
+          <input type="text" id="edit-media-other-asset" placeholder="/insightscontent/uploads/file.pdf">
         </div>
 
 
@@ -1113,28 +1128,50 @@
     }
 
 
+    function getVersion(item, key) {
+      return item?.versions?.[key] || {};
+    }
+
+    function getDisplayTitle(item) {
+      return (
+        getVersion(item, 'ko').title ||
+        getVersion(item, 'other').title ||
+        item.title ||
+        'Untitled'
+      );
+    }
+
+    function legacyLooksKorean(item) {
+      return /[가-힣]/.test(
+        [item?.title, item?.summary, item?.body].join(' ')
+      );
+    }
+
     function getSearchText(item) {
+      const ko = getVersion(item, 'ko');
+      const other = getVersion(item, 'other');
+      const media = item?.representativeMedia || {};
+      const mediaKo = media.ko || {};
+      const mediaOther = media.other || {};
 
       return normalize([
-
         item.date,
         item.dateLabel,
         item.type,
         getKnowledgeTypeName(item.type),
-        item.title,
-        item.summary,
-        item.url,
-        item.asset,
-        item.assetKey,
+        ko.title, ko.summary, ko.body,
+        other.title, other.summary, other.body,
+        item.title, item.summary, item.body,
+        media.type,
+        mediaKo.url, mediaKo.asset, mediaKo.assetKey,
+        mediaOther.url, mediaOther.asset, mediaOther.assetKey,
+        item.url, item.asset, item.assetKey,
         item.access,
-
         ...(item.topics || []),
         ...(item.industries || []),
         ...(item.programs || []),
         ...(item.tags || [])
-
       ].join(' '));
-
     }
 
 
@@ -1380,108 +1417,50 @@
           ? data
           : [];
 
-      populateAssetKeySelect();
+      populateRepresentativeMediaAssetSelects();
 
     }
 
 
     function populateAssetKeySelect(
+      selectId,
       selectedKey = ''
     ) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
 
-      const select =
-        document.getElementById(
-          'edit-asset-key'
-        );
-
-      if (!select) {
-        return;
-      }
-
-      select.innerHTML =
-        '<option value="">— No Asset Key —</option>';
+      select.innerHTML = '<option value="">— No Asset Key —</option>';
 
       assetRegistry
         .slice()
-        .sort(
-          (a, b) =>
-            String(a.key || '')
-              .localeCompare(
-                String(b.key || '')
-              )
-        )
-        .forEach(
-          asset => {
+        .sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')))
+        .forEach(asset => {
+          const option = document.createElement('option');
+          option.value = asset.key || '';
+          option.textContent = `${asset.key || ''} — ${asset.fileName || asset.name || asset.pathname || ''}`;
+          select.appendChild(option);
+        });
 
-            const option =
-              document.createElement(
-                'option'
-              );
-
-            option.value =
-              asset.key || '';
-
-            option.textContent =
-              `${asset.key || ''} — ${asset.fileName || asset.name || asset.pathname || ''}`;
-
-            select.appendChild(
-              option
-            );
-
-          }
-        );
-
-      if (
-        selectedKey &&
-        assetRegistry.some(
-          item =>
-            item.key === selectedKey
-        )
-      ) {
-
-        select.value =
-          selectedKey;
-
+      if (selectedKey && assetRegistry.some(item => item.key === selectedKey)) {
+        select.value = selectedKey;
       }
-
     }
 
+    function populateRepresentativeMediaAssetSelects(koKey = '', otherKey = '') {
+      populateAssetKeySelect('edit-media-ko-asset-key', koKey);
+      populateAssetKeySelect('edit-media-other-asset-key', otherKey);
+    }
 
     function getAssetByKey(key) {
-
-      return assetRegistry.find(
-        item =>
-          item.key === key
-      ) || null;
-
+      return assetRegistry.find(item => item.key === key) || null;
     }
 
-
-    function syncAssetPathFromKey() {
-
-      const key =
-        document.getElementById(
-          'edit-asset-key'
-        ).value;
-
-      if (!key) {
-        return;
-      }
-
-      const asset =
-        getAssetByKey(key);
-
-      if (!asset) {
-        return;
-      }
-
-      document.getElementById(
-        'edit-asset'
-      ).value =
-        asset.url ||
-        asset.pathname ||
-        '';
-
+    function syncAssetPathFromKey(selectId, assetInputId) {
+      const key = document.getElementById(selectId).value;
+      if (!key) return;
+      const asset = getAssetByKey(key);
+      if (!asset) return;
+      document.getElementById(assetInputId).value = asset.url || asset.pathname || '';
     }
 
 
@@ -1645,9 +1624,9 @@
           if (sort === 'title-asc') {
 
             return String(
-              a.title || ''
+              getDisplayTitle(a)
             ).localeCompare(
-              String(b.title || ''),
+              String(getDisplayTitle(b)),
               'en',
               {
                 sensitivity: 'base'
@@ -1660,9 +1639,9 @@
           if (sort === 'title-desc') {
 
             return String(
-              b.title || ''
+              getDisplayTitle(b)
             ).localeCompare(
-              String(a.title || ''),
+              String(getDisplayTitle(a)),
               'en',
               {
                 sensitivity: 'base'
@@ -1755,7 +1734,7 @@
               </td>
 
               <td class="insights-title">
-                ${escapeHtml(item.title || 'Untitled')}
+                ${escapeHtml(getDisplayTitle(item))}
               </td>
 
               <td>
@@ -1805,206 +1784,65 @@
        EDITOR
        ========================================= */
 
-    function renderMarkdownPreview() {
-
-      const body =
-        document.getElementById(
-          'edit-body'
-        ).value;
-
-      const preview =
-        document.getElementById(
-          'markdown-preview'
-        );
-
+    function renderMarkdownPreview(bodyId, previewId) {
+      const body = document.getElementById(bodyId).value;
+      const preview = document.getElementById(previewId);
       if (!body.trim()) {
-        preview.innerHTML =
-          '<p class="markdown-preview-empty">Nothing to preview yet.</p>';
-
+        preview.innerHTML = '<p class="markdown-preview-empty">Nothing to preview yet.</p>';
         return;
       }
-
-      preview.innerHTML =
-        window.IXLMarkdown.render(body);
+      preview.innerHTML = window.IXLMarkdown.render(body);
     }
 
-
-    function closeMarkdownPreview() {
-
-      const preview =
-        document.getElementById(
-          'markdown-preview'
-        );
-
-      const button =
-        document.getElementById(
-          'toggle-markdown-preview'
-        );
-
-      preview.classList.remove(
-        'open'
-      );
-
+    function closeMarkdownPreview(previewId, buttonId, label) {
+      const preview = document.getElementById(previewId);
+      const button = document.getElementById(buttonId);
+      preview.classList.remove('open');
       preview.innerHTML = '';
-
-      button.textContent =
-        'Preview';
+      button.textContent = label;
     }
 
-
-    function toggleMarkdownPreview() {
-
-      const preview =
-        document.getElementById(
-          'markdown-preview'
-        );
-
-      const button =
-        document.getElementById(
-          'toggle-markdown-preview'
-        );
-
-      if (
-        preview.classList.contains(
-          'open'
-        )
-      ) {
-        closeMarkdownPreview();
+    function toggleMarkdownPreview(bodyId, previewId, buttonId, label) {
+      const preview = document.getElementById(previewId);
+      const button = document.getElementById(buttonId);
+      if (preview.classList.contains('open')) {
+        closeMarkdownPreview(previewId, buttonId, label);
         return;
       }
+      renderMarkdownPreview(bodyId, previewId);
+      preview.classList.add('open');
+      button.textContent = 'Close Preview';
+    }
 
-      renderMarkdownPreview();
-
-      preview.classList.add(
-        'open'
-      );
-
-      button.textContent =
-        'Close Preview';
+    function closeAllMarkdownPreviews() {
+      closeMarkdownPreview('ko-markdown-preview', 'toggle-ko-markdown-preview', 'Preview Korean');
+      closeMarkdownPreview('other-markdown-preview', 'toggle-other-markdown-preview', 'Preview Other');
     }
 
     function resetEditor() {
-
       editingIndex = null;
+      closeAllMarkdownPreviews();
 
-      closeMarkdownPreview();
+      document.getElementById('editor-title').textContent = 'Add Knowledge';
+      document.getElementById('edit-type').value = getDefaultKnowledgeTypeValue();
+      document.getElementById('edit-access').value = 'Public';
+      document.getElementById('edit-date').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('edit-date-label').value = '';
 
-      document.getElementById(
-        'editor-title'
-      ).textContent =
-        'Add Knowledge';
+      [
+        'edit-ko-title', 'edit-ko-summary', 'edit-ko-body',
+        'edit-other-title', 'edit-other-summary', 'edit-other-body',
+        'edit-slug', 'edit-author', 'edit-source',
+        'edit-topics', 'edit-industries', 'edit-programs', 'edit-tags',
+        'edit-media-ko-url', 'edit-media-ko-asset',
+        'edit-media-other-url', 'edit-media-other-asset'
+      ].forEach(id => { document.getElementById(id).value = ''; });
 
-
-      document.getElementById(
-        'edit-type'
-      ).value =
-        getDefaultKnowledgeTypeValue();
-
-
-      document.getElementById(
-        'edit-access'
-      ).value =
-        'Public';
-
-
-      document.getElementById(
-        'edit-date'
-      ).value =
-        new Date()
-          .toISOString()
-          .slice(0, 10);
-
-
-      document.getElementById(
-        'edit-date-label'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-title'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-summary'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-slug'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-author'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-source'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-body'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-topics'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-industries'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-programs'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-tags'
-      ).value =
-        '';
-
-
-      document.getElementById(
-        'edit-url'
-      ).value =
-        '';
-
-
-      populateAssetKeySelect('');
-
-      document.getElementById(
-        'edit-asset-key'
-      ).value =
-        '';
-
-      document.getElementById(
-        'edit-asset'
-      ).value =
-        '';
-
-      document.getElementById(
-        'edit-file'
-        ).value = '';
-
+      document.getElementById('edit-media-type').value = 'none';
+      populateRepresentativeMediaAssetSelects();
+      document.getElementById('edit-media-ko-file').value = '';
+      document.getElementById('edit-media-other-file').value = '';
       clearMessage();
-
     }
 
 
@@ -2024,175 +1862,65 @@
       );
 
 
-      editor.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-
     }
 
 
     function openEditEditor(index) {
+      const item = insightsItems.find(entry => entry._sourceIndex === index);
+      if (!item) return;
 
-      const item =
-        insightsItems.find(
-          entry =>
-            entry._sourceIndex === index
-        );
+      editingIndex = index;
+      document.getElementById('editor-title').textContent = 'Edit Knowledge';
+      document.getElementById('edit-type').value = item.type || getDefaultKnowledgeTypeValue();
+      document.getElementById('edit-access').value = item.access || 'Public';
+      document.getElementById('edit-date').value = item.date || '';
+      document.getElementById('edit-date-label').value = item.dateLabel || '';
+      document.getElementById('edit-slug').value = item.slug || '';
+      document.getElementById('edit-author').value = item.author || '';
+      document.getElementById('edit-source').value = item.source || '';
 
+      const hasVersions = Boolean(item.versions && (item.versions.ko || item.versions.other));
+      const legacyTarget = legacyLooksKorean(item) ? 'ko' : 'other';
+      const ko = hasVersions ? getVersion(item, 'ko') : (legacyTarget === 'ko' ? item : {});
+      const other = hasVersions ? getVersion(item, 'other') : (legacyTarget === 'other' ? item : {});
 
-      if (!item) {
-        return;
-      }
+      document.getElementById('edit-ko-title').value = ko.title || '';
+      document.getElementById('edit-ko-summary').value = ko.summary || '';
+      document.getElementById('edit-ko-body').value = ko.body || '';
+      document.getElementById('edit-other-title').value = other.title || '';
+      document.getElementById('edit-other-summary').value = other.summary || '';
+      document.getElementById('edit-other-body').value = other.body || '';
 
+      document.getElementById('edit-topics').value = arrayToInput(item.topics);
+      document.getElementById('edit-industries').value = arrayToInput(item.industries);
+      document.getElementById('edit-programs').value = arrayToInput(item.programs);
+      document.getElementById('edit-tags').value = arrayToInput(item.tags);
 
-      editingIndex =
-        index;
+      const representativeMedia = item.representativeMedia || {};
+      const legacyMedia = { url: item.url || '', asset: item.asset || '', assetKey: item.assetKey || '' };
+      const mediaKo = representativeMedia.ko || (!item.representativeMedia && legacyTarget === 'ko' ? legacyMedia : {});
+      const mediaOther = representativeMedia.other || (!item.representativeMedia && legacyTarget === 'other' ? legacyMedia : {});
 
-
-      document.getElementById(
-        'editor-title'
-      ).textContent =
-        'Edit Knowledge';
-
-
-      document.getElementById(
-        'edit-type'
-      ).value =
-        item.type ||
-        getDefaultKnowledgeTypeValue();
-
-
-      document.getElementById(
-        'edit-access'
-      ).value =
-        item.access || 'Public';
-
-
-      document.getElementById(
-        'edit-date'
-      ).value =
-        item.date || '';
-
-
-      document.getElementById(
-        'edit-date-label'
-      ).value =
-        item.dateLabel || '';
-
-
-      document.getElementById(
-        'edit-title'
-      ).value =
-        item.title || '';
-
-
-      document.getElementById(
-        'edit-summary'
-      ).value =
-        item.summary || '';
-
-
-      document.getElementById(
-        'edit-slug'
-      ).value =
-        item.slug || '';
-
-
-      document.getElementById(
-        'edit-author'
-      ).value =
-        item.author || '';
-
-
-      document.getElementById(
-        'edit-source'
-      ).value =
-        item.source || '';
-
-
-      document.getElementById(
-        'edit-body'
-      ).value =
-        item.body || '';
-
-
-      document.getElementById(
-        'edit-topics'
-      ).value =
-        arrayToInput(
-          item.topics
-        );
-
-
-      document.getElementById(
-        'edit-industries'
-      ).value =
-        arrayToInput(
-          item.industries
-        );
-
-
-      document.getElementById(
-        'edit-programs'
-      ).value =
-        arrayToInput(
-          item.programs
-        );
-
-
-      document.getElementById(
-        'edit-tags'
-      ).value =
-        arrayToInput(
-          item.tags
-        );
-
-
-      document.getElementById(
-        'edit-url'
-      ).value =
-        item.url || '';
-
-
-      populateAssetKeySelect(
-        item.assetKey || ''
-      );
-
-      document.getElementById(
-        'edit-asset-key'
-      ).value =
-        item.assetKey || '';
-
-      document.getElementById(
-        'edit-asset'
-      ).value =
-        item.asset || '';
-
-      document.getElementById(
-        'edit-file'
-        ).value = '';
-
+      document.getElementById('edit-media-type').value = representativeMedia.type || inferMediaType(legacyMedia);
+      document.getElementById('edit-media-ko-url').value = mediaKo.url || '';
+      document.getElementById('edit-media-ko-asset').value = mediaKo.asset || '';
+      document.getElementById('edit-media-other-url').value = mediaOther.url || '';
+      document.getElementById('edit-media-other-asset').value = mediaOther.asset || '';
+      populateRepresentativeMediaAssetSelects(mediaKo.assetKey || '', mediaOther.assetKey || '');
+      document.getElementById('edit-media-ko-file').value = '';
+      document.getElementById('edit-media-other-file').value = '';
 
       clearMessage();
+      document.getElementById('insights-editor').classList.add('open');
+    }
 
-
-      const editor =
-        document.getElementById(
-          'insights-editor'
-        );
-
-
-      editor.classList.add(
-        'open'
-      );
-
-
-      editor.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-
+    function inferMediaType(media = {}) {
+      const value = String(media.asset || media.url || '').toLowerCase();
+      if (!value) return 'none';
+      if (/\.pdf(?:$|[?#])/.test(value)) return 'pdf';
+      if (/\.(?:mp4|webm)(?:$|[?#])/.test(value) || /youtube|youtu\.be|vimeo/.test(value)) return 'video';
+      if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(value)) return 'image';
+      return 'external';
     }
 
 
@@ -2423,274 +2151,129 @@
        SAVE
        ========================================= */
 
-    async function saveInsight() {
-
-      clearMessage();
-
-      let assetPath;
-
-      const assetKey =
-        document.getElementById(
-          'edit-asset-key'
-        ).value.trim();
-
+    async function resolveRepresentativeMediaVersion(prefix) {
+      const assetKey = document.getElementById(`edit-media-${prefix}-asset-key`).value.trim();
       if (assetKey) {
-
-        const registeredAsset =
-          getAssetByKey(
-            assetKey
-          );
-
+        const registeredAsset = getAssetByKey(assetKey);
         if (!registeredAsset) {
-
-          showMessage(
-            'The selected Asset Key was not found in Asset Registry.',
-            'error'
-          );
-
-          return;
-
+          throw new Error(`The selected ${prefix.toUpperCase()} Asset Key was not found in Asset Registry.`);
         }
-
-        document.getElementById(
-          'edit-asset'
-        ).value =
-          registeredAsset.url ||
-          registeredAsset.pathname ||
-          '';
-
+        document.getElementById(`edit-media-${prefix}-asset`).value =
+          registeredAsset.url || registeredAsset.pathname || '';
       }
 
+      const asset = await uploadSelectedFile(
+        'insights',
+        `edit-media-${prefix}-file`,
+        `edit-media-${prefix}-asset`
+      );
+
+      return {
+        url: document.getElementById(`edit-media-${prefix}-url`).value.trim(),
+        asset,
+        assetKey
+      };
+    }
+
+    async function saveInsight() {
+      clearMessage();
+
+      let mediaKo;
+      let mediaOther;
 
       try {
-
-        assetPath =
-          await uploadSelectedFile();
-
+        mediaKo = await resolveRepresentativeMediaVersion('ko');
+        mediaOther = await resolveRepresentativeMediaVersion('other');
       } catch (error) {
-
-        showMessage(
-          error.message,
-          'error'
-        );
-
+        showMessage(error.message, 'error');
         return;
+      }
 
+      const versions = {
+        ko: {
+          title: document.getElementById('edit-ko-title').value.trim(),
+          summary: document.getElementById('edit-ko-summary').value.trim(),
+          body: document.getElementById('edit-ko-body').value
+        },
+        other: {
+          title: document.getElementById('edit-other-title').value.trim(),
+          summary: document.getElementById('edit-other-summary').value.trim(),
+          body: document.getElementById('edit-other-body').value
+        }
+      };
+
+      const koHasAny = Boolean(versions.ko.title || versions.ko.summary || versions.ko.body.trim());
+      const otherHasAny = Boolean(versions.other.title || versions.other.summary || versions.other.body.trim());
+
+      if (!document.getElementById('edit-date').value ||
+          !document.getElementById('edit-date-label').value.trim()) {
+        showMessage('Date and Display Label are required.', 'error');
+        return;
+      }
+
+      if (!koHasAny && !otherHasAny) {
+        showMessage('Enter at least one content version: Korean or Other.', 'error');
+        return;
+      }
+
+      if ((koHasAny && (!versions.ko.title || !versions.ko.summary)) ||
+          (otherHasAny && (!versions.other.title || !versions.other.summary))) {
+        showMessage('Each used version requires both Title and Summary.', 'error');
+        return;
       }
 
       const payload = {
-
-        type:
-          document.getElementById(
-            'edit-type'
-          ).value,
-
-        access:
-          document.getElementById(
-            'edit-access'
-          ).value,
-
-        date:
-          document.getElementById(
-            'edit-date'
-          ).value,
-
-        dateLabel:
-          document.getElementById(
-            'edit-date-label'
-          ).value.trim(),
-
-        title:
-          document.getElementById(
-            'edit-title'
-          ).value.trim(),
-
-        summary:
-          document.getElementById(
-            'edit-summary'
-          ).value.trim(),
-
-        slug:
-          document.getElementById(
-            'edit-slug'
-          ).value.trim(),
-
-        author:
-          document.getElementById(
-            'edit-author'
-          ).value.trim(),
-
-        source:
-          document.getElementById(
-            'edit-source'
-          ).value.trim(),
-
-        body:
-          document.getElementById(
-            'edit-body'
-          ).value,
-
-        topics:
-          inputToArray(
-            document.getElementById(
-              'edit-topics'
-            ).value
-          ),
-
-        industries:
-          inputToArray(
-            document.getElementById(
-              'edit-industries'
-            ).value
-          ),
-
-        programs:
-          inputToArray(
-            document.getElementById(
-              'edit-programs'
-            ).value
-          ),
-
-        tags:
-          inputToArray(
-            document.getElementById(
-              'edit-tags'
-            ).value
-          ),
-
-        url:
-          document.getElementById(
-            'edit-url'
-          ).value.trim(),
-
-        asset:
-            assetPath,
-
-        assetKey:
-            assetKey
-
+        type: document.getElementById('edit-type').value,
+        access: document.getElementById('edit-access').value,
+        date: document.getElementById('edit-date').value,
+        dateLabel: document.getElementById('edit-date-label').value.trim(),
+        slug: document.getElementById('edit-slug').value.trim(),
+        author: document.getElementById('edit-author').value.trim(),
+        source: document.getElementById('edit-source').value.trim(),
+        topics: inputToArray(document.getElementById('edit-topics').value),
+        industries: inputToArray(document.getElementById('edit-industries').value),
+        programs: inputToArray(document.getElementById('edit-programs').value),
+        tags: inputToArray(document.getElementById('edit-tags').value),
+        versions,
+        representativeMedia: {
+          type: document.getElementById('edit-media-type').value,
+          ko: mediaKo,
+          other: mediaOther
+        }
       };
 
+      const isEdit = editingIndex !== null;
+      if (isEdit) payload.index = editingIndex;
 
-      if (
-        !payload.date ||
-        !payload.dateLabel ||
-        !payload.title ||
-        !payload.summary
-      ) {
-
-        showMessage(
-          'Date, Display Label, Title and Summary are required.',
-          'error'
-        );
-
-        return;
-
-      }
-
-
-      const isEdit =
-        editingIndex !== null;
-
-
-      if (isEdit) {
-
-        payload.index =
-          editingIndex;
-
-      }
-
-
-      const saveButton =
-        document.getElementById(
-          'save-insight'
-        );
-
-
-      saveButton.disabled =
-        true;
-
-      saveButton.textContent =
-        'Saving...';
-
+      const saveButton = document.getElementById('save-insight');
+      saveButton.disabled = true;
+      saveButton.textContent = 'Saving...';
 
       try {
+        const response = await fetch(API_URL, {
+          method: isEdit ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-        const response =
-          await fetch(
-            API_URL,
-            {
-              method:
-                isEdit
-                  ? 'PATCH'
-                  : 'POST',
-
-              headers: {
-                'Content-Type':
-                  'application/json'
-              },
-
-              body:
-                JSON.stringify(
-                  payload
-                )
-            }
-          );
-
-
-        const result =
-          await response.json()
-            .catch(() => ({}));
-
-
+        const result = await response.json().catch(() => ({}));
         if (!response.ok) {
-
-          throw new Error(
-            result.error ||
-            'Knowledge Item could not be saved.'
-          );
-
+          throw new Error(result.error || 'Knowledge Item could not be saved.');
         }
 
-
         showMessage(
-          isEdit
-            ? 'Knowledge Item updated successfully.'
-            : 'Knowledge Item added successfully.',
+          isEdit ? 'Knowledge Item updated successfully.' : 'Knowledge Item added successfully.',
           'success'
         );
-
-
         await loadInsights();
-
-
-        setTimeout(
-          () => {
-            closeEditor();
-          },
-          700
-        );
-
-
+        setTimeout(() => closeEditor(), 700);
       } catch (error) {
-
         console.error(error);
-
-        showMessage(
-          error.message,
-          'error'
-        );
-
+        showMessage(error.message, 'error');
       } finally {
-
-        saveButton.disabled =
-          false;
-
-        saveButton.textContent =
-          'Save';
-
+        saveButton.disabled = false;
+        saveButton.textContent = 'Save';
       }
-
     }
 
 
@@ -2714,7 +2297,7 @@
 
       const confirmed =
         window.confirm(
-          `Delete this Knowledge Item?\n\n${item.title}\n\nThis action updates the production Knowledge data.`
+          `Delete this Knowledge Item?\n\n${getDisplayTitle(item)}\n\nThis action updates the production Knowledge data.`
         );
 
 
@@ -2799,38 +2382,27 @@
       );
 
 
-    document
-      .getElementById(
-        'toggle-markdown-preview'
-      )
-      .addEventListener(
-        'click',
-        toggleMarkdownPreview
-      );
+    document.getElementById('toggle-ko-markdown-preview').addEventListener(
+      'click',
+      () => toggleMarkdownPreview('edit-ko-body', 'ko-markdown-preview', 'toggle-ko-markdown-preview', 'Preview Korean')
+    );
 
+    document.getElementById('toggle-other-markdown-preview').addEventListener(
+      'click',
+      () => toggleMarkdownPreview('edit-other-body', 'other-markdown-preview', 'toggle-other-markdown-preview', 'Preview Other')
+    );
 
-    document
-      .getElementById(
-        'edit-body'
-      )
-      .addEventListener(
-        'input',
-        function () {
+    document.getElementById('edit-ko-body').addEventListener('input', () => {
+      if (document.getElementById('ko-markdown-preview').classList.contains('open')) {
+        renderMarkdownPreview('edit-ko-body', 'ko-markdown-preview');
+      }
+    });
 
-          const preview =
-            document.getElementById(
-              'markdown-preview'
-            );
-
-          if (
-            preview.classList.contains(
-              'open'
-            )
-          ) {
-            renderMarkdownPreview();
-          }
-        }
-      );
+    document.getElementById('edit-other-body').addEventListener('input', () => {
+      if (document.getElementById('other-markdown-preview').classList.contains('open')) {
+        renderMarkdownPreview('edit-other-body', 'other-markdown-preview');
+      }
+    });
 
     document
       .getElementById(
@@ -2958,14 +2530,15 @@
       );
 
 
-    document
-      .getElementById(
-        'edit-asset-key'
-      )
-      .addEventListener(
-        'change',
-        syncAssetPathFromKey
-      );
+    document.getElementById('edit-media-ko-asset-key').addEventListener(
+      'change',
+      () => syncAssetPathFromKey('edit-media-ko-asset-key', 'edit-media-ko-asset')
+    );
+
+    document.getElementById('edit-media-other-asset-key').addEventListener(
+      'change',
+      () => syncAssetPathFromKey('edit-media-other-asset-key', 'edit-media-other-asset')
+    );
 
 
     /* =========================================
