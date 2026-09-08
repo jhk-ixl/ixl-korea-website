@@ -1888,8 +1888,17 @@
       return 'file';
     }
 
+    function getAssetSourceUrl(asset) {
+      return String(
+        asset?.url ||
+        asset?.path ||
+        asset?.pathname ||
+        ''
+      ).trim();
+    }
+
     function getAssetPreviewMarkup(asset, mode = 'card') {
-      const path = getAssetPath(asset);
+      const path = getAssetSourceUrl(asset);
       const kind = getAssetPreviewKind(asset);
       const safePath = escapeHtml(path);
 
