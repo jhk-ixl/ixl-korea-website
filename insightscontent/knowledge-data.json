@@ -1,29 +1,60 @@
 {
   "items": [
     {
+      "knowledgeId": "kn_d20d3f3146e54fe58b029d1286703d56",
+      "type": "news",
       "topics": [
         "Certification",
         "Innovation Management"
       ],
-      "access": "Public",
-      "summary": "The Global Innovation Management Institute (GIMI) announced that its professional certification framework is accredited to ISO/IEC 17024 (IAS PCB-169), strengthening independent recognition of innovation-management professional competence and the global portability of the CIP credential.",
-      "dateLabel": "AUG 2026",
-      "date": "2026-08-01",
-      "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
-      "programs": [
-        "CIP Certification"
-      ],
-      "asset": "",
-      "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
-      "tags": [
-        "ISO ",
-        "CIP"
-      ],
-      "type": "news",
       "industries": [
         "Energy & Battery"
       ],
-      "knowledgeId": "kn_d20d3f3146e54fe58b029d1286703d56"
+      "programs": [
+        "CIP Certification"
+      ],
+      "tags": [
+        "ISO",
+        "CIP"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "date": "2026-08-01",
+      "dateLabel": "AUG 2026",
+      "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
+      "summary": "The Global Innovation Management Institute (GIMI) announced that its professional certification framework is accredited to ISO/IEC 17024 (IAS PCB-169), strengthening independent recognition of innovation-management professional competence and the global portability of the CIP credential.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
+      "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
+      "asset": "",
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
+          "summary": "The Global Innovation Management Institute (GIMI) announced that its professional certification framework is accredited to ISO/IEC 17024 (IAS PCB-169), strengthening independent recognition of innovation-management professional competence and the global portability of the CIP credential.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "pdf",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "insightscontent/GIMI_Leaflet_Alumni.pdf",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results.",
