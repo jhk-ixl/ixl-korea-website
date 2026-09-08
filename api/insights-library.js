@@ -42,15 +42,37 @@ export default async function handler(req, res) {
   };
 
 
+  function cleanAssetLayoutKey(value) {
+    return String(value ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/\\/g, '/')
+      .split('/')
+      .pop()
+      .replace(/\.[^.]+$/, '')
+      .normalize('NFKD')
+      .replace(/[^a-z0-9가-힣]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+
   /* =========================================
      REQUIRE MANAGER AUTHENTICATION
+     Asset Layout CSS is public read-only output.
      ========================================= */
 
-  const manager =
-    requireManager(req, res);
+  const isPublicAssetLayout =
+    req.method === 'GET' &&
+    resource === 'asset-layout';
 
-  if (!manager) {
-    return;
+  let manager = null;
+
+  if (!isPublicAssetLayout) {
+    manager = requireManager(req, res);
+
+    if (!manager) {
+      return;
+    }
   }
 
 
@@ -107,6 +129,119 @@ export default async function handler(req, res) {
     )
       .trim()
       .toLowerCase();
+
+
+  if (isPublicAssetLayout) {
+    try {
+      const loadPublicAssetData = async (relatedResource) => {
+        const config = DATA_FILES[relatedResource];
+        const url =
+          `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+          `/contents/${config.path}`;
+
+        const response = await fetch(
+          `${url}?ref=${GITHUB_BRANCH}`,
+          { headers: githubHeaders }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Could not load ${relatedResource} data for asset layout.`
+          );
+        }
+
+        const file = await response.json();
+        const data = JSON.parse(
+          Buffer.from(file.content, 'base64').toString('utf8')
+        );
+
+        return Array.isArray(data?.[config.arrayKey])
+          ? data[config.arrayKey]
+          : [];
+      };
+
+      const [assets, usages] = await Promise.all([
+        loadPublicAssetData('assets'),
+        loadPublicAssetData('usage')
+      ]);
+
+      const assetMap =
+        new Map(
+          assets.map(asset => [
+            cleanAssetLayoutKey(asset?.key),
+            asset
+          ])
+        );
+
+      const rules = [];
+
+      for (const usage of usages) {
+        const usageKey = cleanAssetLayoutKey(usage?.usageKey);
+        const assetKey = cleanAssetLayoutKey(usage?.assetKey);
+        const asset = assetMap.get(assetKey);
+
+        const width = Number(asset?.width);
+        const height = Number(asset?.height);
+
+        if (
+          !usageKey ||
+          !Number.isInteger(width) ||
+          width <= 0 ||
+          !Number.isInteger(height) ||
+          height <= 0
+        ) {
+          continue;
+        }
+
+        const escapedUsageKey =
+          usageKey.replace(/["\\]/g, '\\$&');
+
+        rules.push(
+          `img[data-asset-usage="${escapedUsageKey}"]{aspect-ratio:${width}/${height};}`
+        );
+      }
+
+      res.setHeader(
+        'Content-Type',
+        'text/css; charset=utf-8'
+      );
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=0, must-revalidate'
+      );
+
+      return res
+        .status(200)
+        .send(
+          [
+            '/* Generated from Asset Registry + Asset Usage. */',
+            ...rules,
+            ''
+          ].join('\n')
+        );
+
+    } catch (error) {
+      console.error(
+        'Asset layout CSS generation failed:',
+        error
+      );
+
+      res.setHeader(
+        'Content-Type',
+        'text/css; charset=utf-8'
+      );
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+      return res
+        .status(500)
+        .send(
+          '/* Asset layout CSS could not be generated. */\n'
+        );
+    }
+  }
 
 
   const resourceConfig =
