@@ -397,6 +397,118 @@
       word-break: break-all;
     }
 
+
+    .selected-asset-card {
+      display: none;
+      grid-template-columns: 170px minmax(0, 1fr) auto;
+      align-items: stretch;
+      gap: 16px;
+      padding: 14px;
+      min-height: 120px;
+    }
+
+    .selected-asset-card.open {
+      display: grid;
+    }
+
+    .selected-asset-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      border: 1px solid #dde4eb;
+      border-radius: 7px;
+      background: #f4f7fa;
+      overflow: hidden;
+      color: #48627c;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .selected-asset-preview img,
+    .selected-asset-preview video,
+    .selected-asset-preview iframe {
+      width: 100%;
+      height: 110px;
+      border: 0;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .selected-asset-info {
+      min-width: 0;
+      padding: 2px 0;
+    }
+
+    .selected-asset-label {
+      margin-bottom: 6px;
+      color: #526273;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .selected-asset-type {
+      display: inline-block;
+      margin-top: 7px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #edf3f8;
+      color: #34536f;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .selected-asset-key {
+      margin-top: 6px;
+      color: #7a8794;
+      font-size: 11px;
+      word-break: break-all;
+    }
+
+    .selected-asset-clear {
+      align-self: start;
+      margin-right: 0;
+    }
+
+    .asset-picker-preview-cell {
+      width: 48px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #f4f7fa;
+      color: #526273;
+      font-size: 10px;
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+
+    .asset-picker-preview-cell img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .asset-picker-name {
+      gap: 10px;
+    }
+
+    @media (max-width: 760px) {
+      .selected-asset-card {
+        grid-template-columns: 1fr;
+      }
+
+      .selected-asset-clear {
+        justify-self: start;
+      }
+    }
+
     .asset-picker-backdrop {
       display: none;
       position: fixed;
@@ -505,7 +617,7 @@
     .asset-picker-view-btn:last-child { border-right:0; }
     .asset-picker-view-btn.active { background:#17324d; color:#fff; }
     .asset-picker-list.details { padding:0; }
-    .asset-picker-details-head,.asset-picker-details-row { display:grid; grid-template-columns:minmax(220px,1.4fr) 120px minmax(260px,1fr); gap:12px; align-items:center; }
+    .asset-picker-details-head,.asset-picker-details-row { display:grid; grid-template-columns:minmax(320px,1.35fr) 140px minmax(360px,1.4fr); gap:12px; align-items:center; }
     .asset-picker-details-head { position:sticky; top:0; z-index:1; padding:9px 20px; background:#f4f7fa; border-bottom:1px solid #dfe5ec; color:#536170; font-size:12px; font-weight:800; }
     .asset-picker-details-row { width:100%; border:0; border-bottom:1px solid #edf1f5; padding:11px 20px; background:#fff; text-align:left; cursor:pointer; font:inherit; }
     .asset-picker-details-row:hover,.asset-picker-details-row:focus { background:#f4f7fa; outline:none; }
@@ -1049,11 +1161,15 @@
           <label><span id="media-version-label">Korean</span> Media Asset</label>
           <button type="button" class="insights-btn" id="open-asset-picker">Select from Asset Library</button>
           <div id="selected-asset-card" class="selected-asset-card">
-            <div>
+            <div id="selected-asset-preview" class="selected-asset-preview" aria-hidden="true"></div>
+            <div class="selected-asset-info">
+              <div class="selected-asset-label">Selected Asset</div>
               <div id="selected-asset-title" class="selected-asset-title"></div>
+              <div id="selected-asset-type" class="selected-asset-type"></div>
               <div id="selected-asset-path" class="selected-asset-path"></div>
+              <div id="selected-asset-key" class="selected-asset-key"></div>
             </div>
-            <button type="button" class="insights-small-btn" id="clear-selected-asset">Clear</button>
+            <button type="button" class="insights-small-btn selected-asset-clear" id="clear-selected-asset">Clear</button>
           </div>
         </div>
 
@@ -1728,6 +1844,50 @@
       return 'FILE';
     }
 
+
+    function getAssetPreviewKind(asset) {
+      const path = getAssetPath(asset);
+      const type = getAssetTypeLabel(asset).toLowerCase();
+      const h = `${type} ${path}`.toLowerCase();
+
+      if (/image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/.test(h)) return 'image';
+      if (/video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/.test(h)) return 'video';
+      if (/pdf|\.pdf(?:$|[?#])/.test(h)) return 'pdf';
+      if (/markdown|\.md(?:$|[?#])/.test(h)) return 'markdown';
+      if (/presentation|powerpoint|\.pptx?(?:$|[?#])/.test(h)) return 'presentation';
+      if (/document|word|\.docx?(?:$|[?#])|\.txt(?:$|[?#])/.test(h)) return 'document';
+      return 'file';
+    }
+
+    function getAssetPreviewMarkup(asset, mode = 'card') {
+      const path = getAssetPath(asset);
+      const kind = getAssetPreviewKind(asset);
+      const safePath = escapeHtml(path);
+
+      if (kind === 'image' && path) {
+        return `<img src="${safePath}" alt="">`;
+      }
+
+      if (kind === 'video' && path && mode === 'card') {
+        return `<video src="${safePath}" muted preload="metadata"></video>`;
+      }
+
+      if (kind === 'pdf' && path && mode === 'card') {
+        return `<iframe src="${safePath}#page=1&toolbar=0&navpanes=0&scrollbar=0" title="PDF preview"></iframe>`;
+      }
+
+      const labels = {
+        pdf: 'PDF',
+        video: 'VIDEO',
+        markdown: 'ARTICLE',
+        presentation: 'PPT',
+        document: 'DOC',
+        file: 'FILE'
+      };
+
+      return escapeHtml(labels[kind] || getAssetIconLabel(asset));
+    }
+
     function renderAssetPicker() {
       const list = document.getElementById('asset-picker-list');
       const query = normalize(document.getElementById('asset-picker-search').value);
@@ -1761,9 +1921,7 @@
           </button>`;
         }).join('');
         const fileHtml = files.map(asset => {
-          const preview = isImageAsset(asset) && getAssetPath(asset)
-            ? `<img src="${escapeHtml(getAssetPath(asset))}" alt="">`
-            : escapeHtml(getAssetIconLabel(asset));
+          const preview = getAssetPreviewMarkup(asset, 'icon');
           return `<button type="button" class="asset-picker-icon-item" data-asset-key="${escapeHtml(asset.key || '')}">
             <span class="asset-picker-thumb">${preview}</span>
             <span class="asset-picker-icon-label">${escapeHtml(getAssetDisplayName(asset))}</span>
@@ -1777,14 +1935,14 @@
       folders.forEach(folder => {
         const name = folder.split('/').pop();
         rows.push(`<button type="button" class="asset-picker-details-row" data-folder="${escapeHtml(folder)}">
-          <span class="asset-picker-name"><span class="asset-picker-folder-icon">▰</span><span class="asset-picker-name-text">${escapeHtml(name)}</span></span>
+          <span class="asset-picker-name"><span class="asset-picker-preview-cell asset-picker-folder-icon">▰</span><span class="asset-picker-name-text">${escapeHtml(name)}</span></span>
           <span class="asset-picker-type-text">Folder</span>
           <span class="asset-picker-path-text">${escapeHtml(folder)}</span>
         </button>`);
       });
       files.forEach(asset => {
         rows.push(`<button type="button" class="asset-picker-details-row" data-asset-key="${escapeHtml(asset.key || '')}">
-          <span class="asset-picker-name"><span>□</span><span class="asset-picker-name-text">${escapeHtml(getAssetDisplayName(asset))}</span></span>
+          <span class="asset-picker-name"><span class="asset-picker-preview-cell">${getAssetPreviewMarkup(asset, 'list')}</span><span class="asset-picker-name-text">${escapeHtml(getAssetDisplayName(asset))}</span></span>
           <span class="asset-picker-type-text">${escapeHtml(getAssetTypeLabel(asset))}</span>
           <span class="asset-picker-path-text">${escapeHtml(getAssetPath(asset) || asset.key || '')}</span>
         </button>`);
@@ -1829,14 +1987,38 @@
       const media = versionDrafts[activeVersion].media || {};
       const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
       const card = document.getElementById('selected-asset-card');
+      const preview = document.getElementById('selected-asset-preview');
+
       if (!media.assetKey && !media.asset) {
         card.classList.remove('open');
+        preview.innerHTML = '';
         document.getElementById('selected-asset-title').textContent = '';
+        document.getElementById('selected-asset-type').textContent = '';
         document.getElementById('selected-asset-path').textContent = '';
+        document.getElementById('selected-asset-key').textContent = '';
         return;
       }
-      document.getElementById('selected-asset-title').textContent = asset ? getAssetDisplayName(asset) : (media.assetKey || 'Selected Asset');
-      document.getElementById('selected-asset-path').textContent = media.asset || (asset ? getAssetPath(asset) : '');
+
+      const displayAsset = asset || {
+        key: media.assetKey || '',
+        path: media.asset || '',
+        url: media.asset || '',
+        title: media.assetKey || 'Selected Asset'
+      };
+
+      document.getElementById('selected-asset-title').textContent =
+        asset ? getAssetDisplayName(asset) : (media.assetKey || 'Selected Asset');
+
+      document.getElementById('selected-asset-type').textContent =
+        getAssetTypeLabel(displayAsset);
+
+      document.getElementById('selected-asset-path').textContent =
+        media.asset || (asset ? getAssetPath(asset) : '');
+
+      document.getElementById('selected-asset-key').textContent =
+        media.assetKey ? `assetKey: ${media.assetKey}` : '';
+
+      preview.innerHTML = getAssetPreviewMarkup(displayAsset, 'card');
       card.classList.add('open');
     }
 
