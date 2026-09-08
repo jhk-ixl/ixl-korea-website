@@ -57,19 +57,50 @@
       }
     },
     {
-      "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results.",
+      "knowledgeId": "kn_6ff530a3e8124b09ba87cca0edcad337",
+      "type": "article",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "How organizations can evaluate innovation potential, understand different innovation profiles and place people where they can contribute most effectively to innovation.",
-      "dateLabel": "MAY 2024",
-      "author": "IXL Korea",
-      "slug": "identifying-and-developing-innovation-talent",
       "date": "2024-05-01",
+      "dateLabel": "MAY 2024",
+      "title": "Identifying and Developing Innovation Talent",
+      "summary": "How organizations can evaluate innovation potential, understand different innovation profiles and place people where they can contribute most effectively to innovation.",
+      "slug": "identifying-and-developing-innovation-talent",
+      "author": "IXL Korea",
+      "source": "GIM Institute · Innovation Potential Assessment · May 2024",
+      "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results.",
       "url": "insightscontent/About-IPA-presentation.pdf",
       "asset": "",
-      "title": "Identifying and Developing Innovation Talent",
-      "type": "article",
-      "source": "GIM Institute · Innovation Potential Assessment · May 2024",
-      "knowledgeId": "kn_6ff530a3e8124b09ba87cca0edcad337"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "Identifying and Developing Innovation Talent",
+          "summary": "How organizations can evaluate innovation potential, understand different innovation profiles and place people where they can contribute most effectively to innovation.",
+          "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results."
+        }
+      },
+      "representativeMedia": {
+        "type": "pdf",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "insightscontent/About-IPA-presentation.pdf",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "knowledgeId": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c",
