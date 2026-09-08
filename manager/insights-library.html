@@ -313,6 +313,187 @@
       letter-spacing: 0;
     }
 
+
+
+    .knowledge-version-tabs {
+      grid-column: 1 / -1;
+      display: inline-flex;
+      width: fit-content;
+      border: 1px solid #cfd8e3;
+      border-radius: 7px;
+      overflow: hidden;
+      background: #f7f9fb;
+    }
+
+    .knowledge-version-tab {
+      border: 0;
+      border-right: 1px solid #cfd8e3;
+      padding: 9px 18px;
+      background: transparent;
+      color: #526273;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .knowledge-version-tab:last-child {
+      border-right: 0;
+    }
+
+    .knowledge-version-tab.active {
+      background: #15283d;
+      color: #fff;
+    }
+
+    .legacy-content-panel {
+      grid-column: 1 / -1;
+      display: none;
+      padding: 14px 16px;
+      border: 1px solid #e0c98b;
+      border-radius: 7px;
+      background: #fffaf0;
+      color: #5e5132;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .legacy-content-panel.open {
+      display: block;
+    }
+
+    .legacy-content-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .selected-asset-card {
+      display: none;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 12px 14px;
+      border: 1px solid #d9e1e9;
+      border-radius: 7px;
+      background: #f8fafc;
+    }
+
+    .selected-asset-card.open {
+      display: flex;
+    }
+
+    .selected-asset-title {
+      font-weight: 700;
+      color: #21354a;
+      word-break: break-word;
+    }
+
+    .selected-asset-path {
+      margin-top: 3px;
+      color: #6b7886;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .asset-picker-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      background: rgba(10, 24, 40, 0.45);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .asset-picker-backdrop.open {
+      display: flex;
+    }
+
+    .asset-picker-dialog {
+      width: min(760px, 100%);
+      max-height: min(760px, 86vh);
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 24px 70px rgba(7, 27, 51, 0.28);
+      overflow: hidden;
+    }
+
+    .asset-picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid #e2e7ed;
+    }
+
+    .asset-picker-header h4 {
+      margin: 0;
+      color: #15283d;
+    }
+
+    .asset-picker-search {
+      padding: 14px 20px;
+      border-bottom: 1px solid #e2e7ed;
+    }
+
+    .asset-picker-search input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: 1px solid #cfd8e3;
+      border-radius: 6px;
+      font: inherit;
+    }
+
+    .asset-picker-list {
+      overflow: auto;
+      padding: 8px 0;
+    }
+
+    .asset-picker-item {
+      width: 100%;
+      display: block;
+      border: 0;
+      border-bottom: 1px solid #edf1f5;
+      padding: 12px 20px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .asset-picker-item:hover,
+    .asset-picker-item:focus {
+      background: #f4f7fa;
+      outline: none;
+    }
+
+    .asset-picker-item strong {
+      display: block;
+      color: #20364c;
+      font-size: 13px;
+    }
+
+    .asset-picker-item span {
+      display: block;
+      margin-top: 3px;
+      color: #6c7986;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .asset-picker-empty {
+      padding: 28px 20px;
+      color: #72808d;
+      text-align: center;
+    }
+
     .markdown-preview-tools {
       display: flex;
       align-items: center;
@@ -648,35 +829,32 @@
 
 
         <div class="knowledge-version-heading">
-          KOREAN VERSION
-          <small>한국어 원본 또는 한국어 번역본</small>
+          CONTENT VERSION
+          <small>Korean 또는 Other를 선택해 같은 편집 영역에서 작성합니다.</small>
+        </div>
+
+        <div class="knowledge-version-tabs" role="tablist" aria-label="Knowledge content version">
+          <button type="button" class="knowledge-version-tab active" data-version="ko" aria-selected="true">Korean</button>
+          <button type="button" class="knowledge-version-tab" data-version="other" aria-selected="false">Other</button>
+        </div>
+
+        <div id="legacy-content-panel" class="legacy-content-panel">
+          이 항목은 이전 형식으로 저장된 Knowledge입니다. 기존 내용을 자동으로 Korean/Other에 배정하지 않습니다.
+          <div class="legacy-content-actions">
+            <button type="button" class="insights-btn" id="copy-legacy-ko">Copy Legacy to Korean</button>
+            <button type="button" class="insights-btn" id="copy-legacy-other">Copy Legacy to Other</button>
+          </div>
         </div>
 
         <div class="insights-field full">
-          <label for="edit-ko-title">Korean Title</label>
-          <input type="text" id="edit-ko-title">
+          <label for="edit-version-title"><span id="version-title-label">Korean</span> Title</label>
+          <input type="text" id="edit-version-title">
         </div>
 
         <div class="insights-field full">
-          <label for="edit-ko-summary">Korean Summary</label>
-          <textarea id="edit-ko-summary"></textarea>
+          <label for="edit-version-summary"><span id="version-summary-label">Korean</span> Summary</label>
+          <textarea id="edit-version-summary"></textarea>
         </div>
-
-        <div class="knowledge-version-heading">
-          OTHER VERSION
-          <small>영어·일본어·스페인어 등 원본 또는 기타 언어 버전</small>
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-other-title">Other Title</label>
-          <input type="text" id="edit-other-title">
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-other-summary">Other Summary</label>
-          <textarea id="edit-other-summary"></textarea>
-        </div>
-
 
         <div class="insights-field">
 
@@ -728,33 +906,18 @@
 
 
         <div class="insights-field full">
-          <label for="edit-ko-body">Korean Markdown Body</label>
+          <label for="edit-version-body"><span id="version-body-label">Korean</span> Markdown Body</label>
           <textarea
-            id="edit-ko-body"
+            id="edit-version-body"
             rows="18"
-            placeholder="한국어 본문을 Markdown으로 작성하거나 붙여넣으세요..."
+            placeholder="Write or paste Markdown content here..."
           ></textarea>
-          <span class="insights-field-hint">한국어 원본 또는 번역본의 전체 본문입니다.</span>
+          <span class="insights-field-hint">선택한 콘텐츠 버전의 전체 본문입니다.</span>
           <div class="markdown-preview-tools">
-            <button type="button" id="toggle-ko-markdown-preview" class="insights-btn">Preview Korean</button>
+            <button type="button" id="toggle-version-markdown-preview" class="insights-btn">Preview</button>
           </div>
-          <div id="ko-markdown-preview" class="markdown-preview" aria-live="polite"></div>
+          <div id="version-markdown-preview" class="markdown-preview" aria-live="polite"></div>
         </div>
-
-        <div class="insights-field full">
-          <label for="edit-other-body">Other Markdown Body</label>
-          <textarea
-            id="edit-other-body"
-            rows="18"
-            placeholder="Write or paste the original / other-language Markdown content here..."
-          ></textarea>
-          <span class="insights-field-hint">영어·일본어·스페인어 등 Other 버전의 전체 본문입니다.</span>
-          <div class="markdown-preview-tools">
-            <button type="button" id="toggle-other-markdown-preview" class="insights-btn">Preview Other</button>
-          </div>
-          <div id="other-markdown-preview" class="markdown-preview" aria-live="polite"></div>
-        </div>
-
 
         <div class="insights-field full">
 
@@ -832,9 +995,16 @@
         </div>
 
 
+        <div class="insights-field full">
+          <label for="edit-external-sources">External Sources</label>
+          <select id="edit-external-sources" multiple size="5"></select>
+          <span class="insights-field-hint">External Sources registry에서 연결할 참고 출처를 선택합니다. Ctrl/Cmd로 여러 개를 선택할 수 있습니다.</span>
+        </div>
+
+
         <div class="knowledge-version-heading">
-          REPRESENTATIVE MEDIA
-          <small>대표미디어는 하나이며, 종류는 공통이고 Korean / Other 파일 또는 URL만 다르게 연결합니다.</small>
+          MEDIA
+          <small>Media Type은 Knowledge 공통이며, Korean / Other별로 Asset Library의 자산을 연결할 수 있습니다.</small>
         </div>
 
         <div class="insights-field full">
@@ -844,105 +1014,30 @@
             <option value="image">Image</option>
             <option value="video">Video</option>
             <option value="pdf">PDF</option>
+            <option value="markdown">Markdown Article</option>
+            <option value="presentation">Presentation</option>
+            <option value="document">Document</option>
             <option value="external">External Link</option>
           </select>
         </div>
 
-        <div class="knowledge-version-heading">
-          KOREAN MEDIA
+        <div class="insights-field full" id="media-asset-field">
+          <label><span id="media-version-label">Korean</span> Media Asset</label>
+          <button type="button" class="insights-btn" id="open-asset-picker">Select from Asset Library</button>
+          <div id="selected-asset-card" class="selected-asset-card">
+            <div>
+              <div id="selected-asset-title" class="selected-asset-title"></div>
+              <div id="selected-asset-path" class="selected-asset-path"></div>
+            </div>
+            <button type="button" class="insights-small-btn" id="clear-selected-asset">Clear</button>
+          </div>
         </div>
 
-        <div class="insights-field full">
-          <label for="edit-media-ko-url">Korean Media URL</label>
-          <input type="text" id="edit-media-ko-url" placeholder="https://... or /path/file">
+        <div class="insights-field full" id="media-url-field">
+          <label for="edit-media-url"><span id="media-url-version-label">Korean</span> External URL</label>
+          <input type="text" id="edit-media-url" placeholder="https://...">
+          <span class="insights-field-hint">External Link 유형에서만 사용합니다.</span>
         </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-ko-file">Upload Korean PDF / Image / Video</label>
-          <input type="file" id="edit-media-ko-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm">
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-ko-asset-key">Korean Asset Key</label>
-          <select id="edit-media-ko-asset-key"><option value="">— No Asset Key —</option></select>
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-ko-asset">Korean Asset Path</label>
-          <input type="text" id="edit-media-ko-asset" placeholder="/insightscontent/uploads/file.pdf">
-        </div>
-
-        <div class="knowledge-version-heading">
-          OTHER MEDIA
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-other-url">Other Media URL</label>
-          <input type="text" id="edit-media-other-url" placeholder="https://... or /path/file">
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-other-file">Upload Other PDF / Image / Video</label>
-          <input type="file" id="edit-media-other-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm">
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-other-asset-key">Other Asset Key</label>
-          <select id="edit-media-other-asset-key"><option value="">— No Asset Key —</option></select>
-        </div>
-
-        <div class="insights-field full">
-          <label for="edit-media-other-asset">Other Asset Path</label>
-          <input type="text" id="edit-media-other-asset" placeholder="/insightscontent/uploads/file.pdf">
-        </div>
-
-
-            <!-- =========================================
-             COMMON ASSET UPLOAD
-             ========================================= -->
-
-        <div class="insights-field full">
-
-          <label for="asset-file">
-            Common Asset Upload
-          </label>
-
-          <input
-            type="file"
-            id="asset-file"
-            accept=".pdf,.jpg,.jpeg,.png,.gif,.mp4,.webm,.ppt,.pptx"
-          >
-
-          <span class="insights-field-hint">
-            Upload a website PDF, presentation, image or video directly to Vercel Blob.
-          </span>
-
-          <button
-            type="button"
-            id="asset-upload-button"
-            onclick="uploadCommonAsset()"
-          >
-            Upload Asset
-          </button>
-
-        </div>
-
-
-        <div class="insights-field full">
-
-          <label for="asset-url">
-            Uploaded Asset URL
-          </label>
-
-          <input
-            type="text"
-            id="asset-url"
-            readonly
-            placeholder="Blob URL will appear here after upload"
-          >
-
-        </div>
-
       </div>
 
 
@@ -1036,6 +1131,20 @@
   </main>
 
 
+  <div id="asset-picker-backdrop" class="asset-picker-backdrop" aria-hidden="true">
+    <div class="asset-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="asset-picker-title">
+      <div class="asset-picker-header">
+        <h4 id="asset-picker-title">Select from Asset Library</h4>
+        <button type="button" class="insights-small-btn" id="close-asset-picker">Close</button>
+      </div>
+      <div class="asset-picker-search">
+        <input type="search" id="asset-picker-search" placeholder="Search Asset Library...">
+      </div>
+      <div id="asset-picker-list" class="asset-picker-list"></div>
+    </div>
+  </div>
+
+
   <script>
 
     /* =========================================
@@ -1050,7 +1159,18 @@
 
     let assetRegistry = [];
 
+    let externalSourceRegistry = [];
+
     let editingIndex = null;
+
+    let activeVersion = 'ko';
+
+    let versionDrafts = {
+      ko: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } },
+      other: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } }
+    };
+
+    let legacyDraft = null;
 
 
     /* =========================================
@@ -1141,11 +1261,6 @@
       );
     }
 
-    function legacyLooksKorean(item) {
-      return /[가-힣]/.test(
-        [item?.title, item?.summary, item?.body].join(' ')
-      );
-    }
 
     function getSearchText(item) {
       const ko = getVersion(item, 'ko');
@@ -1391,6 +1506,52 @@
        LOAD
        ========================================= */
 
+    async function loadExternalSources() {
+      const select = document.getElementById('edit-external-sources');
+      if (!select) return [];
+
+      try {
+        const response = await fetch('/api/insights-library?resource=externalsources', {
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+        if (!response.ok) throw new Error('External Sources could not be loaded.');
+        const data = await response.json();
+        externalSourceRegistry = Array.isArray(data) ? data : [];
+        select.innerHTML = externalSourceRegistry.map(source => {
+          const id = escapeHtml(source.sourceId || '');
+          const label = escapeHtml(source.title || source.url || source.sourceId || 'Untitled source');
+          const org = source.sourceName ? ` — ${escapeHtml(source.sourceName)}` : '';
+          return `<option value="${id}">${label}${org}</option>`;
+        }).join('');
+        return externalSourceRegistry;
+      } catch (error) {
+        console.error(error);
+        externalSourceRegistry = [];
+        select.innerHTML = '';
+        return [];
+      }
+    }
+
+
+    function getSelectedExternalSourceIds() {
+      const select = document.getElementById('edit-external-sources');
+      return select
+        ? Array.from(select.selectedOptions).map(option => option.value).filter(Boolean)
+        : [];
+    }
+
+
+    function setSelectedExternalSourceIds(ids) {
+      const wanted = new Set(Array.isArray(ids) ? ids : []);
+      const select = document.getElementById('edit-external-sources');
+      if (!select) return;
+      Array.from(select.options).forEach(option => {
+        option.selected = wanted.has(option.value);
+      });
+    }
+
+
     async function loadAssetRegistry() {
 
       const response =
@@ -1417,50 +1578,152 @@
           ? data
           : [];
 
-      populateRepresentativeMediaAssetSelects();
 
     }
 
-
-    function populateAssetKeySelect(
-      selectId,
-      selectedKey = ''
-    ) {
-      const select = document.getElementById(selectId);
-      if (!select) return;
-
-      select.innerHTML = '<option value="">— No Asset Key —</option>';
-
-      assetRegistry
-        .slice()
-        .sort((a, b) => String(a.key || '').localeCompare(String(b.key || '')))
-        .forEach(asset => {
-          const option = document.createElement('option');
-          option.value = asset.key || '';
-          option.textContent = `${asset.key || ''} — ${asset.fileName || asset.name || asset.pathname || ''}`;
-          select.appendChild(option);
-        });
-
-      if (selectedKey && assetRegistry.some(item => item.key === selectedKey)) {
-        select.value = selectedKey;
-      }
-    }
-
-    function populateRepresentativeMediaAssetSelects(koKey = '', otherKey = '') {
-      populateAssetKeySelect('edit-media-ko-asset-key', koKey);
-      populateAssetKeySelect('edit-media-other-asset-key', otherKey);
-    }
 
     function getAssetByKey(key) {
       return assetRegistry.find(item => item.key === key) || null;
     }
 
-    function syncAssetPathFromKey(selectId, assetInputId) {
-      const key = document.getElementById(selectId).value;
-      if (!key) return;
-      const asset = getAssetByKey(key);
+    function getAssetDisplayName(asset) {
+      return String(
+        asset?.title ||
+        asset?.label ||
+        asset?.fileName ||
+        asset?.name ||
+        asset?.pathname ||
+        asset?.url ||
+        asset?.key ||
+        'Untitled Asset'
+      );
+    }
+
+    function getAssetPath(asset) {
+      return String(asset?.url || asset?.pathname || asset?.path || '');
+    }
+
+    function assetMatchesMediaType(asset, mediaType) {
+      if (!asset || mediaType === 'none' || mediaType === 'external') return false;
+      const haystack = `${asset.type || ''} ${asset.mimeType || ''} ${asset.fileName || ''} ${asset.pathname || ''} ${asset.url || ''}`.toLowerCase();
+      if (mediaType === 'pdf') return haystack.includes('pdf') || /\.pdf(?:$|[?#])/i.test(haystack);
+      if (mediaType === 'video') return /video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/i.test(haystack);
+      if (mediaType === 'image') return /image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/i.test(haystack);
+      return true;
+    }
+
+    function renderAssetPicker() {
+      const list = document.getElementById('asset-picker-list');
+      const query = normalize(document.getElementById('asset-picker-search').value);
+      const mediaType = document.getElementById('edit-media-type').value;
+      const matches = assetRegistry
+        .filter(asset => assetMatchesMediaType(asset, mediaType))
+        .filter(asset => {
+          if (!query) return true;
+          return normalize(`${asset.key || ''} ${getAssetDisplayName(asset)} ${getAssetPath(asset)}`).includes(query);
+        })
+        .sort((a, b) => getAssetDisplayName(a).localeCompare(getAssetDisplayName(b)));
+
+      if (!matches.length) {
+        list.innerHTML = '<div class="asset-picker-empty">No matching assets in Asset Library.</div>';
+        return;
+      }
+
+      list.innerHTML = matches.map(asset => `
+        <button type="button" class="asset-picker-item" data-asset-key="${escapeHtml(asset.key || '')}">
+          <strong>${escapeHtml(getAssetDisplayName(asset))}</strong>
+          <span>${escapeHtml(getAssetPath(asset) || asset.key || '')}</span>
+        </button>
+      `).join('');
+    }
+
+    function openAssetPicker() {
+      const mediaType = document.getElementById('edit-media-type').value;
+      if (!['image', 'video', 'pdf', 'markdown', 'presentation', 'document'].includes(mediaType)) {
+        showMessage('Select Image, Video, or PDF before choosing an Asset.', 'error');
+        return;
+      }
+      document.getElementById('asset-picker-search').value = '';
+      renderAssetPicker();
+      const backdrop = document.getElementById('asset-picker-backdrop');
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+      document.getElementById('asset-picker-search').focus();
+    }
+
+    function closeAssetPicker() {
+      const backdrop = document.getElementById('asset-picker-backdrop');
+      backdrop.classList.remove('open');
+      backdrop.setAttribute('aria-hidden', 'true');
+    }
+
+    function chooseAsset(assetKey) {
+      const asset = getAssetByKey(assetKey);
       if (!asset) return;
-      document.getElementById(assetInputId).value = asset.url || asset.pathname || '';
+      versionDrafts[activeVersion].media = {
+        url: '',
+        asset: getAssetPath(asset),
+        assetKey: asset.key || ''
+      };
+      renderSelectedAsset();
+      closeAssetPicker();
+    }
+
+    function renderSelectedAsset() {
+      const media = versionDrafts[activeVersion].media || {};
+      const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
+      const card = document.getElementById('selected-asset-card');
+      if (!media.assetKey && !media.asset) {
+        card.classList.remove('open');
+        document.getElementById('selected-asset-title').textContent = '';
+        document.getElementById('selected-asset-path').textContent = '';
+        return;
+      }
+      document.getElementById('selected-asset-title').textContent = asset ? getAssetDisplayName(asset) : (media.assetKey || 'Selected Asset');
+      document.getElementById('selected-asset-path').textContent = media.asset || (asset ? getAssetPath(asset) : '');
+      card.classList.add('open');
+    }
+
+    function syncEditorToActiveVersion() {
+      const draft = versionDrafts[activeVersion];
+      draft.title = document.getElementById('edit-version-title').value.trim();
+      draft.summary = document.getElementById('edit-version-summary').value.trim();
+      draft.body = document.getElementById('edit-version-body').value;
+      draft.media.url = document.getElementById('edit-media-url').value.trim();
+    }
+
+    function loadActiveVersionIntoEditor() {
+      const draft = versionDrafts[activeVersion];
+      const label = activeVersion === 'ko' ? 'Korean' : 'Other';
+      document.getElementById('edit-version-title').value = draft.title || '';
+      document.getElementById('edit-version-summary').value = draft.summary || '';
+      document.getElementById('edit-version-body').value = draft.body || '';
+      document.getElementById('edit-media-url').value = draft.media?.url || '';
+      ['version-title-label', 'version-summary-label', 'version-body-label', 'media-version-label', 'media-url-version-label']
+        .forEach(id => { document.getElementById(id).textContent = label; });
+      document.querySelectorAll('.knowledge-version-tab').forEach(button => {
+        const isActive = button.dataset.version === activeVersion;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      const preview = document.getElementById('version-markdown-preview');
+      preview.classList.remove('open');
+      preview.innerHTML = '';
+      renderSelectedAsset();
+      updateMediaEditorVisibility();
+    }
+
+    function switchVersion(nextVersion) {
+      if (!['ko', 'other'].includes(nextVersion) || nextVersion === activeVersion) return;
+      syncEditorToActiveVersion();
+      activeVersion = nextVersion;
+      loadActiveVersionIntoEditor();
+    }
+
+    function updateMediaEditorVisibility() {
+      const mediaType = document.getElementById('edit-media-type').value;
+      document.getElementById('media-asset-field').style.display = ['image', 'video', 'pdf', 'markdown', 'presentation', 'document'].includes(mediaType) ? '' : 'none';
+      document.getElementById('media-url-field').style.display = mediaType === 'external' ? '' : 'none';
     }
 
 
@@ -1471,6 +1734,8 @@
         await loadKnowledgeMasterData();
 
         await loadAssetRegistry();
+
+        await loadExternalSources();
 
         const response =
           await fetch(
@@ -1802,7 +2067,7 @@
       button.textContent = label;
     }
 
-    function toggleMarkdownPreview(bodyId, previewId, buttonId, label) {
+    function toggleMarkdownPreview(bodyId, previewId, buttonId, label = 'Preview') {
       const preview = document.getElementById(previewId);
       const button = document.getElementById(buttonId);
       if (preview.classList.contains('open')) {
@@ -1815,33 +2080,34 @@
     }
 
     function closeAllMarkdownPreviews() {
-      closeMarkdownPreview('ko-markdown-preview', 'toggle-ko-markdown-preview', 'Preview Korean');
-      closeMarkdownPreview('other-markdown-preview', 'toggle-other-markdown-preview', 'Preview Other');
+      closeMarkdownPreview('version-markdown-preview', 'toggle-version-markdown-preview', 'Preview');
     }
 
     function resetEditor() {
       editingIndex = null;
-      closeAllMarkdownPreviews();
+      activeVersion = 'ko';
+      legacyDraft = null;
+      versionDrafts = {
+        ko: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } },
+        other: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } }
+      };
 
       document.getElementById('editor-title').textContent = 'Add Knowledge';
       document.getElementById('edit-type').value = getDefaultKnowledgeTypeValue();
       document.getElementById('edit-access').value = 'Public';
-      document.getElementById('edit-date').value = new Date().toISOString().slice(0, 10);
+      document.getElementById('edit-date').value = '';
       document.getElementById('edit-date-label').value = '';
-
-      [
-        'edit-ko-title', 'edit-ko-summary', 'edit-ko-body',
-        'edit-other-title', 'edit-other-summary', 'edit-other-body',
-        'edit-slug', 'edit-author', 'edit-source',
-        'edit-topics', 'edit-industries', 'edit-programs', 'edit-tags',
-        'edit-media-ko-url', 'edit-media-ko-asset',
-        'edit-media-other-url', 'edit-media-other-asset'
-      ].forEach(id => { document.getElementById(id).value = ''; });
-
+      document.getElementById('edit-slug').value = '';
+      document.getElementById('edit-author').value = '';
+      document.getElementById('edit-source').value = '';
+      document.getElementById('edit-topics').value = '';
+      document.getElementById('edit-industries').value = '';
+      document.getElementById('edit-programs').value = '';
+      document.getElementById('edit-tags').value = '';
+      setSelectedExternalSourceIds([]);
       document.getElementById('edit-media-type').value = 'none';
-      populateRepresentativeMediaAssetSelects();
-      document.getElementById('edit-media-ko-file').value = '';
-      document.getElementById('edit-media-other-file').value = '';
+      document.getElementById('legacy-content-panel').classList.remove('open');
+      loadActiveVersionIntoEditor();
       clearMessage();
     }
 
@@ -1869,6 +2135,7 @@
       const item = insightsItems.find(entry => entry._sourceIndex === index);
       if (!item) return;
 
+      resetEditor();
       editingIndex = index;
       document.getElementById('editor-title').textContent = 'Edit Knowledge';
       document.getElementById('edit-type').value = item.type || getDefaultKnowledgeTypeValue();
@@ -1878,49 +2145,72 @@
       document.getElementById('edit-slug').value = item.slug || '';
       document.getElementById('edit-author').value = item.author || '';
       document.getElementById('edit-source').value = item.source || '';
-
-      const hasVersions = Boolean(item.versions && (item.versions.ko || item.versions.other));
-      const legacyTarget = legacyLooksKorean(item) ? 'ko' : 'other';
-      const ko = hasVersions ? getVersion(item, 'ko') : (legacyTarget === 'ko' ? item : {});
-      const other = hasVersions ? getVersion(item, 'other') : (legacyTarget === 'other' ? item : {});
-
-      document.getElementById('edit-ko-title').value = ko.title || '';
-      document.getElementById('edit-ko-summary').value = ko.summary || '';
-      document.getElementById('edit-ko-body').value = ko.body || '';
-      document.getElementById('edit-other-title').value = other.title || '';
-      document.getElementById('edit-other-summary').value = other.summary || '';
-      document.getElementById('edit-other-body').value = other.body || '';
-
       document.getElementById('edit-topics').value = arrayToInput(item.topics);
       document.getElementById('edit-industries').value = arrayToInput(item.industries);
       document.getElementById('edit-programs').value = arrayToInput(item.programs);
       document.getElementById('edit-tags').value = arrayToInput(item.tags);
+      setSelectedExternalSourceIds(item.externalSources);
 
       const representativeMedia = item.representativeMedia || {};
-      const legacyMedia = { url: item.url || '', asset: item.asset || '', assetKey: item.assetKey || '' };
-      const mediaKo = representativeMedia.ko || (!item.representativeMedia && legacyTarget === 'ko' ? legacyMedia : {});
-      const mediaOther = representativeMedia.other || (!item.representativeMedia && legacyTarget === 'other' ? legacyMedia : {});
+      ['ko', 'other'].forEach(versionKey => {
+        const version = getVersion(item, versionKey);
+        const media = representativeMedia[versionKey] || {};
+        versionDrafts[versionKey] = {
+          title: version.title || '',
+          summary: version.summary || '',
+          body: version.body || '',
+          media: {
+            url: media.url || '',
+            asset: media.asset || '',
+            assetKey: media.assetKey || ''
+          }
+        };
+      });
 
-      document.getElementById('edit-media-type').value = representativeMedia.type || inferMediaType(legacyMedia);
-      document.getElementById('edit-media-ko-url').value = mediaKo.url || '';
-      document.getElementById('edit-media-ko-asset').value = mediaKo.asset || '';
-      document.getElementById('edit-media-other-url').value = mediaOther.url || '';
-      document.getElementById('edit-media-other-asset').value = mediaOther.asset || '';
-      populateRepresentativeMediaAssetSelects(mediaKo.assetKey || '', mediaOther.assetKey || '');
-      document.getElementById('edit-media-ko-file').value = '';
-      document.getElementById('edit-media-other-file').value = '';
+      const hasVersions = Boolean(item.versions && (item.versions.ko || item.versions.other));
+      if (!hasVersions && (item.title || item.summary || item.body || item.url || item.asset || item.assetKey)) {
+        legacyDraft = {
+          title: item.title || '',
+          summary: item.summary || '',
+          body: item.body || '',
+          media: { url: item.url || '', asset: item.asset || '', assetKey: item.assetKey || '' }
+        };
+        document.getElementById('legacy-content-panel').classList.add('open');
+      }
 
+      document.getElementById('edit-media-type').value = representativeMedia.type || inferMediaType(legacyDraft?.media || {});
+      activeVersion = 'ko';
+      loadActiveVersionIntoEditor();
       clearMessage();
       document.getElementById('insights-editor').classList.add('open');
     }
+
 
     function inferMediaType(media = {}) {
       const value = String(media.asset || media.url || '').toLowerCase();
       if (!value) return 'none';
       if (/\.pdf(?:$|[?#])/.test(value)) return 'pdf';
+      if (/\.md(?:$|[?#])/.test(value)) return 'markdown';
+      if (/\.(?:ppt|pptx)(?:$|[?#])/.test(value)) return 'presentation';
+      if (/\.(?:doc|docx|txt)(?:$|[?#])/.test(value)) return 'document';
       if (/\.(?:mp4|webm)(?:$|[?#])/.test(value) || /youtube|youtu\.be|vimeo/.test(value)) return 'video';
       if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(value)) return 'image';
       return 'external';
+    }
+
+
+    function copyLegacyToVersion(targetVersion) {
+      if (!legacyDraft || !['ko', 'other'].includes(targetVersion)) return;
+      syncEditorToActiveVersion();
+      versionDrafts[targetVersion] = {
+        title: legacyDraft.title || '',
+        summary: legacyDraft.summary || '',
+        body: legacyDraft.body || '',
+        media: { ...(legacyDraft.media || { url: '', asset: '', assetKey: '' }) }
+      };
+      activeVersion = targetVersion;
+      loadActiveVersionIntoEditor();
+      showMessage(`Legacy content copied to ${targetVersion === 'ko' ? 'Korean' : 'Other'}. Save to apply.`, 'success');
     }
 
 
@@ -1985,220 +2275,29 @@
        DIRECT TO VERCEL BLOB
        ========================================= */
 
-    async function uploadSelectedFile(
-      folder = 'insights',
-      fileInputId = 'edit-file',
-      assetInputId = 'edit-asset'
-    ) {
-
-      const fileInput =
-        document.getElementById(
-          fileInputId
-        );
 
 
-      const file =
-        fileInput.files[0];
 
-
-      /* -----------------------------------------
-         NO NEW FILE SELECTED
-         KEEP EXISTING ASSET
-         ----------------------------------------- */
-
-      if (!file) {
-
-        return document.getElementById(
-          assetInputId
-        ).value.trim();
-
-      }
-
-
-      /* -----------------------------------------
-         CHECK BLOB CLIENT
-         ----------------------------------------- */
-
-      if (
-        typeof window.vercelBlobUpload !==
-        'function'
-      ) {
-
-        throw new Error(
-          'Upload service is not ready. Please refresh the page and try again.'
-        );
-
-      }
-
-
-      /* -----------------------------------------
-         SAFE FILE NAME
-         ----------------------------------------- */
-
-      const safeFileName =
-        file.name
-          .replace(
-            /[^a-zA-Z0-9._-]/g,
-            '-'
-          );
-
-
-      const pathname =
-        `${folder}/${safeFileName}`;
-
-
-      /* -----------------------------------------
-         DIRECT CLIENT UPLOAD
-         Browser → Vercel Blob
-         ----------------------------------------- */
-
-      const blob =
-        await window.vercelBlobUpload(
-          pathname,
-          file,
-          {
-            access:
-              'public',
-
-            handleUploadUrl:
-              '/api/insights-upload',
-
-            multipart:
-              true,
-
-            clientPayload:
-              JSON.stringify({
-                originalFileName:
-                  file.name
-              })
-          }
-        );
-
-
-      /* -----------------------------------------
-         SAVE RETURNED BLOB URL
-         ----------------------------------------- */
-
-      document.getElementById(
-        assetInputId
-      ).value =
-        blob.url;
-
-
-      return blob.url;
-
-    }
-
-    async function uploadCommonAsset() {
-
-      const button =
-        document.getElementById(
-          'asset-upload-button'
-        );
-
-      const fileInput =
-        document.getElementById(
-          'asset-file'
-        );
-
-      const file =
-        fileInput.files[0];
-
-      if (!file) {
-        alert('Please select a file first.');
-        return;
-      }
-
-      try {
-
-        button.disabled = true;
-        button.textContent = 'Uploading...';
-
-        const blobUrl =
-          await uploadSelectedFile(
-            'companyprofile',
-            'asset-file',
-            'asset-url'
-          );
-
-        document.getElementById(
-          'asset-url'
-        ).value =
-          blobUrl;
-
-        alert('Upload completed.');
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          error.message ||
-          'Upload failed.'
-        );
-
-      } finally {
-
-        button.disabled = false;
-        button.textContent = 'Upload Asset';
-
-      }
-
-    }
 
 
     /* =========================================
        SAVE
        ========================================= */
 
-    async function resolveRepresentativeMediaVersion(prefix) {
-      const assetKey = document.getElementById(`edit-media-${prefix}-asset-key`).value.trim();
-      if (assetKey) {
-        const registeredAsset = getAssetByKey(assetKey);
-        if (!registeredAsset) {
-          throw new Error(`The selected ${prefix.toUpperCase()} Asset Key was not found in Asset Registry.`);
-        }
-        document.getElementById(`edit-media-${prefix}-asset`).value =
-          registeredAsset.url || registeredAsset.pathname || '';
-      }
-
-      const asset = await uploadSelectedFile(
-        'insights',
-        `edit-media-${prefix}-file`,
-        `edit-media-${prefix}-asset`
-      );
-
-      return {
-        url: document.getElementById(`edit-media-${prefix}-url`).value.trim(),
-        asset,
-        assetKey
-      };
-    }
-
     async function saveInsight() {
       clearMessage();
-
-      let mediaKo;
-      let mediaOther;
-
-      try {
-        mediaKo = await resolveRepresentativeMediaVersion('ko');
-        mediaOther = await resolveRepresentativeMediaVersion('other');
-      } catch (error) {
-        showMessage(error.message, 'error');
-        return;
-      }
+      syncEditorToActiveVersion();
 
       const versions = {
         ko: {
-          title: document.getElementById('edit-ko-title').value.trim(),
-          summary: document.getElementById('edit-ko-summary').value.trim(),
-          body: document.getElementById('edit-ko-body').value
+          title: versionDrafts.ko.title.trim(),
+          summary: versionDrafts.ko.summary.trim(),
+          body: versionDrafts.ko.body
         },
         other: {
-          title: document.getElementById('edit-other-title').value.trim(),
-          summary: document.getElementById('edit-other-summary').value.trim(),
-          body: document.getElementById('edit-other-body').value
+          title: versionDrafts.other.title.trim(),
+          summary: versionDrafts.other.summary.trim(),
+          body: versionDrafts.other.body
         }
       };
 
@@ -2234,11 +2333,12 @@
         industries: inputToArray(document.getElementById('edit-industries').value),
         programs: inputToArray(document.getElementById('edit-programs').value),
         tags: inputToArray(document.getElementById('edit-tags').value),
+        externalSources: getSelectedExternalSourceIds(),
         versions,
         representativeMedia: {
           type: document.getElementById('edit-media-type').value,
-          ko: mediaKo,
-          other: mediaOther
+          ko: { ...versionDrafts.ko.media },
+          other: { ...versionDrafts.other.media }
         }
       };
 
@@ -2382,25 +2482,10 @@
       );
 
 
-    document.getElementById('toggle-ko-markdown-preview').addEventListener(
-      'click',
-      () => toggleMarkdownPreview('edit-ko-body', 'ko-markdown-preview', 'toggle-ko-markdown-preview', 'Preview Korean')
-    );
 
-    document.getElementById('toggle-other-markdown-preview').addEventListener(
-      'click',
-      () => toggleMarkdownPreview('edit-other-body', 'other-markdown-preview', 'toggle-other-markdown-preview', 'Preview Other')
-    );
-
-    document.getElementById('edit-ko-body').addEventListener('input', () => {
-      if (document.getElementById('ko-markdown-preview').classList.contains('open')) {
-        renderMarkdownPreview('edit-ko-body', 'ko-markdown-preview');
-      }
-    });
-
-    document.getElementById('edit-other-body').addEventListener('input', () => {
-      if (document.getElementById('other-markdown-preview').classList.contains('open')) {
-        renderMarkdownPreview('edit-other-body', 'other-markdown-preview');
+    document.getElementById('edit-version-body').addEventListener('input', () => {
+      if (document.getElementById('version-markdown-preview').classList.contains('open')) {
+        renderMarkdownPreview('edit-version-body', 'version-markdown-preview');
       }
     });
 
@@ -2530,15 +2615,38 @@
       );
 
 
-    document.getElementById('edit-media-ko-asset-key').addEventListener(
-      'change',
-      () => syncAssetPathFromKey('edit-media-ko-asset-key', 'edit-media-ko-asset')
+
+
+    document.querySelectorAll('.knowledge-version-tab').forEach(button => {
+      button.addEventListener('click', () => switchVersion(button.dataset.version));
+    });
+
+    document.getElementById('toggle-version-markdown-preview').addEventListener(
+      'click',
+      () => toggleMarkdownPreview('edit-version-body', 'version-markdown-preview', 'toggle-version-markdown-preview')
     );
 
-    document.getElementById('edit-media-other-asset-key').addEventListener(
-      'change',
-      () => syncAssetPathFromKey('edit-media-other-asset-key', 'edit-media-other-asset')
-    );
+    document.getElementById('edit-media-type').addEventListener('change', () => {
+      syncEditorToActiveVersion();
+      updateMediaEditorVisibility();
+    });
+
+    document.getElementById('open-asset-picker').addEventListener('click', openAssetPicker);
+    document.getElementById('close-asset-picker').addEventListener('click', closeAssetPicker);
+    document.getElementById('asset-picker-search').addEventListener('input', renderAssetPicker);
+    document.getElementById('asset-picker-list').addEventListener('click', event => {
+      const item = event.target.closest('.asset-picker-item');
+      if (item) chooseAsset(item.dataset.assetKey);
+    });
+    document.getElementById('asset-picker-backdrop').addEventListener('click', event => {
+      if (event.target.id === 'asset-picker-backdrop') closeAssetPicker();
+    });
+    document.getElementById('clear-selected-asset').addEventListener('click', () => {
+      versionDrafts[activeVersion].media = { url: '', asset: '', assetKey: '' };
+      renderSelectedAsset();
+    });
+    document.getElementById('copy-legacy-ko').addEventListener('click', () => copyLegacyToVersion('ko'));
+    document.getElementById('copy-legacy-other').addEventListener('click', () => copyLegacyToVersion('other'));
 
 
     /* =========================================

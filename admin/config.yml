@@ -1,5 +1,4 @@
-# IXL KOREA CMS — GitHub production backend
-
+# IXL KOREA CMS — dedicated Markdown Article authoring
 backend:
   name: github
   repo: jhk-ixl/ixl-korea-website
@@ -7,368 +6,39 @@ backend:
   base_url: https://ixlkorea.co.kr
   auth_endpoint: auth
   site_domain: https://ixlkorea.co.kr
-  
-media_folder: "insightscontent/uploads"
-public_folder: "/insightscontent/uploads"
+
+media_folder: "insightscontent/articles/media"
+public_folder: "/insightscontent/articles/media"
 
 collections:
-
-  - name: "insights"
-    label: "Insights"
-
-    files:
-      - name: "insights_content"
-        label: "Insights Content"
-        file: "insightscontent/insights-data.json"
-        format: "json"
-
-        fields:
-          - label: "Items"
-            name: "items"
-            widget: "list"
-            summary: "{{fields.date}} · {{fields.type}} · {{fields.title}}"
-
-            fields:
-              - label: "Type"
-                name: "type"
-                widget: "select"
-                options:
-                  - { label: "News", value: "news" }
-                  - { label: "Article", value: "article" }
-                  - { label: "Video", value: "video" }
-                  - { label: "External Link", value: "external" }
-
-              - label: "Topics"
-                name: "topics"
-                widget: "list"
-                required: false
-                allow_add: true
-                field:
-                  label: "Topic"
-                  name: "topic"
-                  widget: "string"
-                hint: "Add one or more topics. Topic master data is managed in Knowledge Management > Topics."
-
-              - label: "Industries"
-                name: "industries"
-                widget: "list"
-                required: false
-                allow_add: true
-                field:
-                  label: "Industry"
-                  name: "industry"
-                  widget: "string"
-                hint: "Add one or more industries. Industry master data is managed in Knowledge Management > Industries."  
-              
-              
-              - label: "Programs"
-                name: "programs"
-                widget: "list"
-                required: false
-                allow_add: true
-                field:
-                  label: "Program"
-                  name: "program"
-                  widget: "string"
-                hint: "Add one or more programs. Program master data is managed in Knowledge Management > Programs."              
-
-              - label: "Tags"
-                name: "tags"
-                widget: "list"
-                required: false
-                allow_add: true
-                field:
-                  label: "Tag"
-                  name: "tag"
-                  widget: "string"
-                hint: "Add one or more tags. Tag master data is managed in Knowledge Management > Tags."
-
-                
-              - label: "Access Level"
-                name: "access"
-                widget: "select"
-                options:
-                  - { label: "Public", value: "Public" }
-                  - { label: "Members", value: "Members" }
-                  - { label: "Professionals", value: "Professionals" }
-                  - { label: "Clients", value: "Clients" }
-                  - { label: "Internal", value: "Internal" }
-                default: "Public"
-
-              - label: "Date"
-                name: "date"
-                widget: "datetime"
-                date_format: "YYYY-MM-DD"
-                time_format: false
-                format: "YYYY-MM-DD"
-
-              - label: "Display Label"
-                name: "dateLabel"
-                widget: "string"
-                hint: "Examples: AUG 2026, MAY 2024, AKAIO 1.0"
-
-              - label: "Title"
-                name: "title"
-                widget: "string"
-
-              - label: "Summary"
-                name: "summary"
-                widget: "text"
-
-              - label: "Slug"
-                name: "slug"
-                widget: "string"
-                required: false
-                hint: "Unique URL name for the detail page. Example: innovation-management-5-0"
-
-              - label: "Author"
-                name: "author"
-                widget: "string"
-                required: false
-
-              - label: "Full Body"
-                name: "body"
-                widget: "markdown"
-                required: false
-                hint: "Full article content. When entered, the Article Read button is shown on the website."
-
-              - label: "Source"
-                name: "source"
-                widget: "string"
-                required: false
-                hint: "Original source or reference information."
-
-
-              - label: "External / Existing URL"
-                name: "url"
-                widget: "string"
-                required: false
-                hint: "Use for YouTube, external websites, or an existing file path."
-
-              - label: "Upload PDF / Video / File"
-                name: "asset"
-                widget: "file"
-                required: false
-                hint: "If both Upload and URL are entered, the uploaded file is used."
-
-              - label: "Featured"
-                name: "featured"
-                widget: "boolean"
-                default: false
-
-
-  - name: "knowledge_types"
-    label: "Knowledge Types"
-
-    files:
-      - name: "knowledge_types_data"
-        label: "Knowledge Types"
-        file: "insightscontent/knowledge-types.json"
-        format: "json"
-
-        fields:
-          - label: "Types"
-            name: "types"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"
-
-
-  - name: "topics"
-    label: "Topics"
-
-    files:
-      - name: "topics_data"
-        label: "Topics"
-        file: "insightscontent/topics.json"
-        format: "json"
-
-        fields:
-          - label: "Topics"
-            name: "topics"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"
-
-
-  - name: "access_levels"
-    label: "Access Levels"
-
-    files:
-      - name: "access_levels_data"
-        label: "Access Levels"
-        file: "insightscontent/access-levels.json"
-        format: "json"
-
-        fields:
-          - label: "Access Levels"
-            name: "accessLevels"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"
-
-  - name: "industries"
-    label: "Industries"
-
-    files:
-      - name: "industries_data"
-        label: "Industries"
-        file: "insightscontent/industries.json"
-        format: "json"
-
-        fields:
-          - label: "Industries"
-            name: "industries"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"                
-
-  - name: "programs"
-    label: "Programs"
-
-    files:
-      - name: "programs_data"
-        label: "Programs"
-        file: "insightscontent/programs.json"
-        format: "json"
-
-        fields:
-          - label: "Programs"
-            name: "programs"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"   
-
-
-  - name: "tags"
-    label: "Tags"
-
-    files:
-      - name: "tags_data"
-        label: "Tags"
-        file: "insightscontent/tags.json"
-        format: "json"
-
-        fields:
-          - label: "Tags"
-            name: "tags"
-            widget: "list"
-            summary: "{{fields.name}}"
-
-            fields:
-              - label: "Name"
-                name: "name"
-                widget: "string"
-
-              - label: "Description"
-                name: "description"
-                widget: "text"
-
-  - name: "distribution_queue"
-    label: "Distribution Queue"
-    label_singular: "Distribution Item"
-
-    folder: "insightscontent/distributionqueue"
+  - name: "markdown_articles"
+    label: "Markdown Articles"
+    label_singular: "Markdown Article"
+    folder: "insightscontent/articles"
     create: true
-    extension: "json"
-    format: "json"
-
+    extension: "md"
+    format: "frontmatter"
+    identifier_field: "title"
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
-
-    summary: "{{createdDate}} · {{channel}} · {{title}}"
-
+    summary: "{{date}} · {{title}}"
     fields:
-
-      - label: "Created Date"
-        name: "createdDate"
+      - label: "Title"
+        name: "title"
+        widget: "string"
+      - label: "Date"
+        name: "date"
         widget: "datetime"
         date_format: "YYYY-MM-DD"
         time_format: false
         format: "YYYY-MM-DD"
-
-      - label: "Channel"
-        name: "channel"
-        widget: "select"
-        options:
-          - { label: "LinkedIn", value: "LinkedIn" }
-          - { label: "Facebook", value: "Facebook" }
-          - { label: "X", value: "X" }
-
-      - label: "Title"
-        name: "title"
+      - label: "Author"
+        name: "author"
         widget: "string"
-
-      - label: "Post Text"
-        name: "postText"
+        required: false
+      - label: "Summary"
+        name: "summary"
         widget: "text"
-
-      - label: "Link"
-        name: "link"
-        widget: "string"
         required: false
-
-      - label: "Status"
-        name: "status"
-        widget: "select"
-        options:
-          - { label: "Draft", value: "Draft" }
-          - { label: "Ready", value: "Ready" }
-          - { label: "Scheduled", value: "Scheduled" }
-          - { label: "Published", value: "Published" }
-        default: "Draft"
-
-      - label: "Scheduled Date"
-        name: "scheduledDate"
-        widget: "datetime"
-        required: false
-        date_format: "YYYY-MM-DD"
-        time_format: "HH:mm"
-        format: "YYYY-MM-DD HH:mm"
-
-      - label: "Published Date"
-        name: "publishedDate"
-        widget: "datetime"
-        required: false
-        date_format: "YYYY-MM-DD"
-        time_format: "HH:mm"
-        format: "YYYY-MM-DD HH:mm"
+      - label: "Article Body"
+        name: "body"
+        widget: "markdown"

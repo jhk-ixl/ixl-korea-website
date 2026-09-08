@@ -38,6 +38,11 @@ export default async function handler(req, res) {
     usage: {
       path: 'insightscontent/asset-usage.json',
       arrayKey: 'usages'
+    },
+
+    externalsources: {
+      path: 'insightscontent/external-sources.json',
+      arrayKey: 'sources'
     }
   };
 
@@ -270,7 +275,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, knowledge, assets, usage or knowledgetypes.'
+          'Invalid resource. Use insights, knowledge, assets, usage, knowledgetypes or externalsources.'
       });
   }
 
@@ -896,7 +901,7 @@ export default async function handler(req, res) {
 
       const media = body.representativeMedia || {};
       const mediaType = cleanString(media.type || 'none').toLowerCase();
-      const allowedMediaTypes = ['none', 'image', 'video', 'pdf', 'external'];
+      const allowedMediaTypes = ['none', 'image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'];
 
       if (!allowedMediaTypes.includes(mediaType)) {
         const error = new Error('Invalid Representative Media Type.');
@@ -926,6 +931,7 @@ export default async function handler(req, res) {
         industries: normalizeStringArray(body.industries),
         programs: normalizeStringArray(body.programs),
         tags: normalizeStringArray(body.tags),
+        externalSources: normalizeStringArray(body.externalSources),
         access,
         date,
         dateLabel,
@@ -959,6 +965,7 @@ export default async function handler(req, res) {
       industries: normalizeStringArray(body.industries),
       programs: normalizeStringArray(body.programs),
       tags: normalizeStringArray(body.tags),
+      externalSources: normalizeStringArray(body.externalSources),
       access,
       date,
       dateLabel,
@@ -1298,6 +1305,54 @@ export default async function handler(req, res) {
   }
 
 
+  function createExternalSourceId() {
+    return (
+      'src_' +
+      crypto.randomUUID()
+        .replace(/-/g, '')
+        .toLowerCase()
+    );
+  }
+
+
+  function normalizeExternalSource(body, existingItem = null) {
+    const sourceId =
+      cleanString(existingItem?.sourceId) ||
+      cleanString(body.sourceId) ||
+      createExternalSourceId();
+
+    const title = cleanString(body.title);
+    const url = cleanString(body.url);
+    const sourceName = cleanString(body.sourceName || body.source);
+    const reference = cleanString(body.reference);
+    const notes = cleanString(body.notes);
+    const sourceType = cleanString(body.sourceType || body.type || 'website').toLowerCase();
+
+    if (!title || !url) {
+      const error = new Error('External Source Title and URL are required.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (!/^https?:\/\//i.test(url)) {
+      const error = new Error('External Source URL must begin with http:// or https://.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    return {
+      sourceId,
+      title,
+      sourceType,
+      url,
+      sourceName,
+      reference,
+      notes,
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+
   function normalizeByResource(
     body,
     validation = {},
@@ -1352,6 +1407,16 @@ export default async function handler(req, res) {
     }
 
 
+    if (
+      resource === 'externalsources'
+    ) {
+      return normalizeExternalSource(
+        body,
+        existingItem
+      );
+    }
+
+
     return normalizeUsage(
       body
     );
@@ -1395,6 +1460,17 @@ export default async function handler(req, res) {
         item.key ||
         item.name ||
         `Asset ${index}`
+      );
+    }
+
+
+    if (
+      resource === 'externalsources'
+    ) {
+      return (
+        item.title ||
+        item.url ||
+        `External Source ${index}`
       );
     }
 

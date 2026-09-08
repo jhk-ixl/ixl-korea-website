@@ -7,7 +7,6 @@
   <title>Asset Library | IXL Korea Manager</title>
   <link rel="stylesheet" href="manager.css">
 
-  <script src="manager-common.js"></script>
   <script src="manager-guard.js"></script>
 
 
@@ -15,6 +14,7 @@
     import { upload } from 'https://esm.sh/@vercel/blob/client';
     window.vercelBlobUpload = upload;
   </script>
+
 </head>
 
 <body>
@@ -44,13 +44,13 @@
 
   <main class="manager-main">
 
-    <section id="asset-library-section">
-
     <section class="manager-intro">
 
       <span class="section-eyebrow">
         KNOWLEDGE MANAGEMENT
       </span>
+
+      <h2>Asset Library</h2>
 
       <p>
         Manage website assets stored in Vercel Blob, including PDFs,
@@ -58,22 +58,6 @@
       </p>
 
     </section>
-
-
-    <div
-      id="asset-library-sticky-header"
-      style="
-        position:relative;
-        z-index:1200;
-        background:#fff;
-        padding:10px 0 8px;
-      "
-    >
-      <h2 style="margin-top:0;margin-bottom:8px;">
-        Asset Library
-      </h2>
-
-    </div>
 
 
     <section class="library-toolbar">
@@ -94,14 +78,6 @@
           class="library-button primary"
         >
           Upload Asset
-        </button>
-
-        <button
-          type="button"
-          id="asset-dimensions-sync"
-          class="library-button"
-        >
-          Sync Image Dimensions
         </button>
 
         <a href="knowledge.html" class="library-button">
@@ -128,7 +104,7 @@
         <input
           type="file"
           id="asset-upload-file"
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx"
+          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt"
         >
 
       </div>
@@ -143,6 +119,9 @@
         <select id="asset-upload-folder">
           <option value="companyprofile">companyprofile</option>
           <option value="insights">insights</option>
+          <option value="articles">articles</option>
+          <option value="documents">documents</option>
+          <option value="presentations">presentations</option>
           <option value="images">images</option>
         </select>
 
@@ -166,6 +145,29 @@
       </div>
 
     </section>
+
+    <section class="library-filters" id="repository-asset-panel">
+      <div class="library-search">
+        <label for="repository-asset-path">Existing Repository Asset Path</label>
+        <input type="text" id="repository-asset-path" placeholder="insightscontent/articles/example.md">
+      </div>
+      <div class="library-filter">
+        <label for="repository-asset-type">Type</label>
+        <select id="repository-asset-type">
+          <option value="markdown">Markdown</option>
+          <option value="pdf">PDF</option>
+          <option value="presentation">Presentation</option>
+          <option value="document">Document</option>
+          <option value="image">Image</option>
+          <option value="video">Video</option>
+        </select>
+      </div>
+      <div class="library-filter">
+        <label>Action</label>
+        <button type="button" id="repository-asset-register" class="library-button">Register Repository Asset</button>
+      </div>
+    </section>
+
 
     <section class="library-filters">
 
@@ -199,26 +201,10 @@
     </section>
 
 
-    <section
-      class="library-table-wrap manager-scroll-table-wrap"
-      id="asset-table-scroll-wrap"
-    >
+    <section class="library-table-wrap">
 
-      <div
-        id="asset-table-top-scroll"
-        class="manager-table-top-scroll"
-        aria-label="Asset table horizontal scroll"
-      >
-        <div
-          id="asset-table-top-scroll-inner"
-          class="manager-table-top-scroll-inner"
-        ></div>
-      </div>
+      <table class="library-table">
 
-      <table
-        class="library-table manager-scroll-table"
-        id="asset-library-table"
-      >
         <thead>
           <tr>
             <th>File</th>
@@ -226,7 +212,6 @@
             <th>Folder</th>
             <th>Type</th>
             <th>Size</th>
-            <th>Dimensions</th>
             <th>Uploaded</th>
             <th>View</th>
             <th>Registry</th>
@@ -246,8 +231,6 @@
       <div id="library-empty" class="library-empty">
         Loading assets...
       </div>
-
-    </section>
 
     </section>
 
@@ -451,108 +434,6 @@
     return parts.slice(0, -1).join('/');
   }
 
-  function isImageAsset(value) {
-    const extension =
-      getFileType(
-        typeof value === 'string'
-          ? value
-          : value?.pathname || value?.fileName || ''
-      ).toLowerCase();
-
-    return [
-      'jpg',
-      'jpeg',
-      'png',
-      'gif',
-      'webp'
-    ].includes(extension);
-  }
-
-  function getImageDimensions(file) {
-    return new Promise((resolve, reject) => {
-      if (
-        !file ||
-        !String(file.type || '').startsWith('image/')
-      ) {
-        resolve({
-          width: null,
-          height: null
-        });
-        return;
-      }
-
-      const objectUrl =
-        URL.createObjectURL(file);
-
-      const image =
-        new Image();
-
-      image.onload = () => {
-        const dimensions = {
-          width: image.naturalWidth,
-          height: image.naturalHeight
-        };
-
-        URL.revokeObjectURL(objectUrl);
-        resolve(dimensions);
-      };
-
-      image.onerror = () => {
-        URL.revokeObjectURL(objectUrl);
-        reject(
-          new Error(
-            'Could not read image dimensions.'
-          )
-        );
-      };
-
-      image.src = objectUrl;
-    });
-  }
-
-  function getRemoteImageDimensions(url) {
-    return new Promise((resolve, reject) => {
-      if (!url) {
-        resolve({ width: null, height: null });
-        return;
-      }
-
-      const image = new Image();
-
-      image.onload = () => {
-        resolve({
-          width: image.naturalWidth,
-          height: image.naturalHeight
-        });
-      };
-
-      image.onerror = () => {
-        reject(
-          new Error(
-            `Could not read image dimensions: ${url}`
-          )
-        );
-      };
-
-      image.src = url;
-    });
-  }
-
-  async function resolveAssetDimensions(asset) {
-    const width = Number(asset?.width || 0);
-    const height = Number(asset?.height || 0);
-
-    if (width > 0 && height > 0) {
-      return { width, height };
-    }
-
-    if (!isImageAsset(asset)) {
-      return { width: null, height: null };
-    }
-
-    return getRemoteImageDimensions(asset?.url || '');
-  }
-
   function getFileType(pathname) {
     const fileName = getFileName(pathname);
     const dot = fileName.lastIndexOf('.');
@@ -699,11 +580,6 @@
         <td>${escapeHtml(folderName)}</td>
         <td>${escapeHtml(getFileType(pathname))}</td>
         <td>${escapeHtml(formatFileSize(asset.size))}</td>
-        <td>${
-          registryItem?.width && registryItem?.height
-            ? `${escapeHtml(registryItem.width)} × ${escapeHtml(registryItem.height)}`
-            : '—'
-        }</td>
         <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
         <td>
           ${viewUrl
@@ -733,13 +609,6 @@
 
     empty.style.display = filtered.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
-
-    IXLManager.syncScrollTable({
-      topScrollId: 'asset-table-top-scroll',
-      topInnerId: 'asset-table-top-scroll-inner',
-      wrapId: 'asset-table-scroll-wrap',
-      tableId: 'asset-library-table'
-    });
   }
 
   async function copyAssetUrl(url) {
@@ -1090,8 +959,6 @@
   async function registerAsset(asset) {
     const fileName = getFileName(asset.pathname);
     const defaultKey = createAssetKey(fileName);
-    const dimensions =
-      await resolveAssetDimensions(asset);
 
     const enteredKey = prompt(
       'Asset Key',
@@ -1117,8 +984,6 @@
       downloadUrl: asset.downloadUrl || asset.url || '',
       type: getFileType(asset.pathname).toLowerCase(),
       size: Number(asset.size || 0),
-      width: dimensions.width,
-      height: dimensions.height,
       uploadedAt: asset.uploadedAt || ''
     };
 
@@ -1322,108 +1187,6 @@
     await loadAssets();
   }
 
-
-  async function syncMissingImageDimensions() {
-    const button =
-      document.getElementById(
-        'asset-dimensions-sync'
-      );
-
-    const candidates =
-      registryAssets.filter(
-        item =>
-          isImageAsset(item) &&
-          item.url &&
-          !(
-            Number(item.width || 0) > 0 &&
-            Number(item.height || 0) > 0
-          )
-      );
-
-    if (!candidates.length) {
-      alert(
-        'All registered images already have dimensions.'
-      );
-      return;
-    }
-
-    const confirmed = confirm(
-      `Read and save dimensions for ${candidates.length} registered image(s)?`
-    );
-
-    if (!confirmed) return;
-
-    const updates = [];
-    const failed = [];
-
-    try {
-      button.disabled = true;
-      button.textContent = 'Syncing...';
-
-      for (const item of candidates) {
-        try {
-          const dimensions =
-            await getRemoteImageDimensions(
-              item.url
-            );
-
-          if (
-            dimensions.width > 0 &&
-            dimensions.height > 0
-          ) {
-            updates.push({
-              key: item.key,
-              width: dimensions.width,
-              height: dimensions.height
-            });
-          }
-        } catch (error) {
-          console.error(error);
-          failed.push(item.key);
-        }
-      }
-
-      if (updates.length) {
-        const response = await fetch(
-          '/api/insights-library?resource=assets',
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-              action: 'syncDimensions',
-              items: updates
-            })
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ||
-            'Failed to save image dimensions.'
-          );
-        }
-      }
-
-      await loadAssets();
-
-      alert(
-        `Image dimensions synchronized: ${updates.length}` +
-        (failed.length
-          ? `\nFailed: ${failed.length}`
-          : '')
-      );
-
-    } finally {
-      button.disabled = false;
-      button.textContent =
-        'Sync Image Dimensions';
-    }
-  }
 
   function closeDuplicateModal() {
     const modal =
@@ -1791,45 +1554,15 @@
       const url = deleteButton.dataset.deleteUrl;
       const fileName = deleteButton.dataset.deleteName;
 
-      const assetRow =
-        allAssets.find(
-          item =>
-            item.url === url
-        );
-
-      const registryIndex =
-        assetRow
-          ? getRegistryIndex(assetRow)
-          : registryAssets.findIndex(
-              item =>
-                item.url === url
-            );
+      const registryIndex = registryAssets.findIndex(
+        item =>
+          item.url === url
+      );
 
       if (registryIndex >= 0) {
-        const registryItem =
-          registryAssets[registryIndex];
-
-        const affectedUsages =
-          usageMappings.filter(
-            usage =>
-              usage.assetKey === registryItem?.key
-          );
-
-        const usageMessage =
-          affectedUsages.length
-            ? `\n\nThis Asset Key is also used by ${affectedUsages.length} Usage mapping(s):\n` +
-              affectedUsages
-                .map(
-                  usage =>
-                    `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`
-                )
-                .join('\n')
-            : `\n\nAsset Key: ${registryItem?.key || ''}\nNo Usage mappings are currently connected to this Asset Key.`;
-
         alert(
           'This file is registered in Asset Registry.\n\n' +
-          'Update or remove the Registry reference before deleting the Blob file.' +
-          usageMessage
+          'Update or remove the Registry reference before deleting the Blob file.'
         );
         return;
       }
@@ -1870,23 +1603,6 @@
         alert(error.message || 'Failed to delete asset.');
         deleteButton.disabled = false;
         deleteButton.textContent = 'Delete';
-      }
-    }
-  );
-
-  document.getElementById(
-    'asset-dimensions-sync'
-  ).addEventListener(
-    'click',
-    async () => {
-      try {
-        await syncMissingImageDimensions();
-      } catch (error) {
-        console.error(error);
-        alert(
-          error.message ||
-          'Failed to synchronize image dimensions.'
-        );
       }
     }
   );
@@ -1934,9 +1650,6 @@
         const pathname =
           `${folderSelect.value}/${safeFileName}`;
 
-        const imageDimensions =
-          await getImageDimensions(file);
-
         const uploaded =
           await window.vercelBlobUpload(
             pathname,
@@ -1965,11 +1678,7 @@
             allAssets.find(item => item.pathname === uploaded.pathname);
 
           if (uploadedAsset) {
-            await registerAsset({
-              ...uploadedAsset,
-              width: imageDimensions.width,
-              height: imageDimensions.height
-            });
+            await registerAsset(uploadedAsset);
           } else {
             alert(
               'Upload succeeded, but the uploaded asset could not be found in the refreshed Blob list. You can register it from the table.'
@@ -1988,6 +1697,52 @@
       }
     }
   );
+
+
+  document.getElementById('repository-asset-register').addEventListener('click', async () => {
+    const pathInput = document.getElementById('repository-asset-path');
+    const typeSelect = document.getElementById('repository-asset-type');
+    const button = document.getElementById('repository-asset-register');
+    const pathname = String(pathInput.value || '').trim().replace(/^\/+/, '');
+
+    if (!pathname) {
+      alert('Repository asset path is required.');
+      return;
+    }
+
+    const fileName = pathname.split('/').pop() || pathname;
+    const url = '/' + pathname;
+
+    try {
+      button.disabled = true;
+      const response = await fetch('/api/insights-library?resource=assets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          key: createAssetKey(fileName),
+          name: fileName,
+          fileName,
+          folder: pathname.includes('/') ? pathname.split('/').slice(0, -1).join('/') : '',
+          pathname,
+          url,
+          type: typeSelect.value,
+          uploadedAt: new Date().toISOString()
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Repository asset could not be registered.');
+      alert(`Repository asset registered.\n\nKey: ${data.item?.key || createAssetKey(fileName)}`);
+      pathInput.value = '';
+      await loadAssets();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Repository asset registration failed.');
+    } finally {
+      button.disabled = false;
+    }
+  });
+
   loadAssets();
 
 </script>

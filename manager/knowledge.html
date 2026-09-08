@@ -138,10 +138,7 @@
 
         <!-- KNOWLEDGE BUILDER -->
 
-        <a
-          class="manager-action-card manager-action-card-primary"
-          href="insights-library.html"
-        >
+        <div class="manager-action-card manager-action-card-primary">
 
           <div class="manager-action-card-top">
 
@@ -149,8 +146,8 @@
               CORE WORKSPACE
             </span>
 
-            <span class="manager-status-badge active">
-              ACTIVE
+            <span class="manager-status-badge developing">
+              NEXT
             </span>
 
           </div>
@@ -160,21 +157,23 @@
           </h4>
 
           <p>
-            Create and edit complete Knowledge Items with Markdown,
-            classifications, governance, assets and external sources.
+            Assemble title, summary, classifications, CMS article,
+            Asset Keys and external sources into one complete
+            Knowledge Item.
           </p>
 
           <div class="manager-action-meta">
-            Content · Classification · Resources · Governance
+            Title · Summary · Sources · Metadata
           </div>
 
-          <span class="manager-action-link">
-            Open Knowledge Builder →
+          <span class="manager-action-link muted">
+            Builder workspace →
           </span>
 
-        </a>
+        </div>
 
-<!-- CMS MARKDOWN -->
+
+        <!-- CMS MARKDOWN -->
 
         <a
           class="manager-action-card"
@@ -184,7 +183,7 @@
           <div class="manager-action-card-top">
 
             <span class="manager-action-kicker">
-              ARTICLE SOURCE
+              CONTENT SOURCE
             </span>
 
             <span class="manager-status-badge active">
@@ -223,7 +222,7 @@
           <div class="manager-action-card-top">
 
             <span class="manager-action-kicker">
-              ASSET SOURCE
+              MANAGED SOURCE
             </span>
 
             <span class="manager-status-badge active">
@@ -237,8 +236,8 @@
           </h4>
 
           <p>
-            Manage PDFs, images, presentations and videos through
-            Blob storage, Asset Registry and reusable Asset Keys.
+            Manage Markdown, PDFs, documents, presentations, images and videos through
+            Asset Registry and reusable Asset Keys.
           </p>
 
           <div class="manager-action-meta">
@@ -254,7 +253,7 @@
 
         <!-- EXTERNAL -->
 
-        <div class="manager-action-card">
+        <a class="manager-action-card" href="external-sources.html">
 
           <div class="manager-action-card-top">
 
@@ -262,8 +261,8 @@
               EXTERNAL SOURCE
             </span>
 
-            <span class="manager-status-badge developing">
-              NEXT
+            <span class="manager-status-badge active">
+              ACTIVE
             </span>
 
           </div>
@@ -281,11 +280,11 @@
             URL · Source · Reference · Notes
           </div>
 
-          <span class="manager-action-link muted">
-            Source registry →
+          <span class="manager-action-link">
+            Open Source Registry →
           </span>
 
-        </div>
+        </a>
 
       </div>
 
@@ -484,11 +483,14 @@
 
       <div class="manager-utilization-grid">
 
-        <div class="manager-utilization-item disabled">
+        <a
+          class="manager-utilization-item"
+          href="insights-library.html"
+        >
           <span>PUBLICATION</span>
           <strong>Public Insights</strong>
-          <small>Publication management · Next</small>
-        </div>
+          <small>Current Insights workspace</small>
+        </a>
 
 
         <a
@@ -522,3 +524,4 @@
 
 </body>
 </html>
+
