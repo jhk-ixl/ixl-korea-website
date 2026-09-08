@@ -881,6 +881,17 @@ export default async function handler(req, res) {
      NORMALIZE ASSET
      ========================================= */
 
+  function normalizePositiveInteger(value) {
+    const number = Number(value);
+
+    return (
+      Number.isInteger(number) &&
+      number > 0
+    )
+      ? number
+      : null;
+  }
+
   function normalizeAsset(body) {
 
     const fileName =
@@ -972,6 +983,16 @@ export default async function handler(req, res) {
               body.size
             )
           : null,
+
+      width:
+        normalizePositiveInteger(
+          body.width
+        ),
+
+      height:
+        normalizePositiveInteger(
+          body.height
+        ),
 
       uploadedAt:
         cleanString(
@@ -1534,6 +1555,117 @@ export default async function handler(req, res) {
 
       const body =
         req.body || {};
+
+
+      if (
+        resource === 'assets' &&
+        body.action === 'syncDimensions'
+      ) {
+        const updates =
+          Array.isArray(body.items)
+            ? body.items
+            : [];
+
+        if (!updates.length) {
+          return res
+            .status(400)
+            .json({
+              error:
+                'At least one image dimension update is required.'
+            });
+        }
+
+        const current =
+          await loadDataFile();
+
+        const list =
+          current.data[
+            resourceConfig.arrayKey
+          ];
+
+        const updateMap =
+          new Map(
+            updates
+              .map(item => [
+                slugifyKey(item?.key),
+                {
+                  width:
+                    normalizePositiveInteger(
+                      item?.width
+                    ),
+                  height:
+                    normalizePositiveInteger(
+                      item?.height
+                    )
+                }
+              ])
+              .filter(
+                ([key, dimensions]) =>
+                  key &&
+                  dimensions.width &&
+                  dimensions.height
+              )
+          );
+
+        let affectedCount = 0;
+        const changedAt =
+          new Date().toISOString();
+
+        current.data[
+          resourceConfig.arrayKey
+        ] = list.map(item => {
+          const dimensions =
+            updateMap.get(
+              item.key
+            );
+
+          if (!dimensions) {
+            return item;
+          }
+
+          affectedCount += 1;
+
+          return {
+            ...item,
+            width: dimensions.width,
+            height: dimensions.height,
+            updatedAt: changedAt
+          };
+        });
+
+        if (!affectedCount) {
+          return res
+            .status(400)
+            .json({
+              error:
+                'No matching Asset Registry items were found.'
+            });
+        }
+
+        const result =
+          await writeDataFile(
+            current.data,
+            current.sha,
+            `Sync image dimensions: ${affectedCount} asset(s)`
+          );
+
+        res.setHeader(
+          'Cache-Control',
+          'no-store, max-age=0'
+        );
+
+        return res
+          .status(200)
+          .json({
+            success: true,
+            resource,
+            affectedCount,
+            commit:
+              result?.commit?.sha || null,
+            updatedBy:
+              manager.login
+          });
+      }
 
 
       const index =
