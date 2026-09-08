@@ -111,14 +111,50 @@
       "knowledgeId": "kn_d724cca8aae44b5481994d87f3a3150f"
     },
     {
+      "knowledgeId": "kn_7c6166e08e874f1c9a4b116d4dcd2fff",
       "type": "news",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
+      "access": "Public",
       "date": "2026-08-11",
       "dateLabel": "August 11, 2026",
       "title": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024​",
       "summary": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024 CAMBRIDGE, Mass. — August 11, 2026 — The Global Innovation",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "https://www.giminstitute.org/global-innovation-management-institute-becomes-worlds-first-and-only-innovation-management-body-accredited-to-iso-iec-17024/",
-      "access": "Public",
-      "knowledgeId": "kn_7c6166e08e874f1c9a4b116d4dcd2fff"
+      "asset": "",
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024​",
+          "summary": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024 CAMBRIDGE, Mass. — August 11, 2026 — The Global Innovation",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "external",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "https://www.giminstitute.org/global-innovation-management-institute-becomes-worlds-first-and-only-innovation-management-body-accredited-to-iso-iec-17024/",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "knowledgeId": "kn_96f04055c8244be78524c09b516e8da6",
