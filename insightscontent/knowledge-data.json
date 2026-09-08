@@ -121,30 +121,60 @@
       "knowledgeId": "kn_7c6166e08e874f1c9a4b116d4dcd2fff"
     },
     {
+      "knowledgeId": "kn_96f04055c8244be78524c09b516e8da6",
+      "type": "article",
       "topics": [
         "Innovation management",
         "AKAIO",
         "ISO/CIP certification",
         "Innoavtion Olympics"
       ],
-      "access": "Public",
-      "summary": "IXL Korea는 실질적인 성과창출와 조직의 혁신역량 내재화 두가지 목표를 동시에 지원하고 있습니다. 이를 구현하기 위한 7개 개별프로그램과 통합프로그램과정을 제공합니다.",
-      "dateLabel": "IXL CENTER",
-      "date": "2026-09-01",
-      "assetKey": "ixl-korea-company-7offerings",
-      "url": "",
+      "industries": [],
       "programs": [],
-      "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
-      "title": "IXL Korea 7대 프로그램",
       "tags": [
         "Innovation management",
         "AKAIO",
         "ISO/CIP certification",
         "Innoavtion Olympics"
       ],
-      "type": "article",
-      "industries": [],
-      "knowledgeId": "kn_96f04055c8244be78524c09b516e8da6"
+      "externalSources": [],
+      "access": "Public",
+      "date": "2026-09-01",
+      "dateLabel": "IXL CENTER",
+      "title": "IXL Korea 7대 프로그램",
+      "summary": "IXL Korea는 실질적인 성과창출와 조직의 혁신역량 내재화 두가지 목표를 동시에 지원하고 있습니다. 이를 구현하기 위한 7개 개별프로그램과 통합프로그램과정을 제공합니다.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
+      "url": "",
+      "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+      "assetKey": "ixl-korea-company-7offerings",
+      "versions": {
+        "ko": {
+          "title": "IXL Korea 7대 프로그램",
+          "summary": "IXL Korea는 실질적인 성과창출와 조직의 혁신역량 내재화 두가지 목표를 동시에 지원하고 있습니다. 이를 구현하기 위한 7개 개별프로그램과 통합프로그램과정을 제공합니다.",
+          "body": ""
+        },
+        "other": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "pdf",
+        "ko": {
+          "url": "",
+          "asset": "https://zb7wiys011uzcpiu.public.blob.vercel-storage.com/companyprofile/IXL-Korea-Company-7offerings-ocqkV58msHmM6vPHlF9WaGUWOKWz4T.pdf",
+          "assetKey": "ixl-korea-company-7offerings"
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "knowledgeId": "kn_9d571095803a44678757d705cdf7df3b",
