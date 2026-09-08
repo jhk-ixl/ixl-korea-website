@@ -164,15 +164,50 @@
       }
     },
     {
+      "knowledgeId": "kn_adc433cb264a4be9919f2f0a1d1f053f",
+      "type": "external",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "Explore innovation-management standards, professional certification and capability-building resources from GIMI.",
-      "dateLabel": "GIMI",
       "date": "2026-08-01",
+      "dateLabel": "GIMI",
+      "title": "Innovation Management & Professional Certification Resources",
+      "summary": "Explore innovation-management standards, professional certification and capability-building resources from GIMI.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "https://www.giminstitute.org/",
       "asset": "",
-      "title": "Innovation Management & Professional Certification Resources",
-      "type": "external",
-      "knowledgeId": "kn_adc433cb264a4be9919f2f0a1d1f053f"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "Innovation Management & Professional Certification Resources",
+          "summary": "Explore innovation-management standards, professional certification and capability-building resources from GIMI.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "external",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "https://www.giminstitute.org/",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "access": "Public",
