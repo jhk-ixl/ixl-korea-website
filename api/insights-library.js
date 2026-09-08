@@ -1,4 +1,4 @@
-﻿import crypto from 'node:crypto';
+import crypto from 'node:crypto';
 
 import {
   requireManager
@@ -161,7 +161,7 @@ export default async function handler(req, res) {
           .replace(/\.[^.]+$/, '')
           .normalize('NFKD')
           .toLowerCase()
-          .replace(/[^a-z0-9媛-??+/g, '-')
+          .replace(/[^a-z0-9가-힣]+/g, '-')
           .replace(/^-+|-+$/g, '');
 
       const [assets, usages] = await Promise.all([
@@ -265,6 +265,7 @@ export default async function handler(req, res) {
   }
 
 
+
   /* =========================================
      ASSET PROXY
      Same-origin PDF thumbnail source
@@ -298,8 +299,7 @@ export default async function handler(req, res) {
     let parsedUrl;
 
     try {
-      parsedUrl =
-        new URL(assetUrl);
+      parsedUrl = new URL(assetUrl);
     } catch {
       return res
         .status(400)
@@ -322,9 +322,7 @@ export default async function handler(req, res) {
     }
 
     const upstream =
-      await fetch(
-        parsedUrl.toString()
-      );
+      await fetch(parsedUrl.toString());
 
     if (!upstream.ok) {
       return res
@@ -334,15 +332,13 @@ export default async function handler(req, res) {
         });
     }
 
-    const buffer =
-      Buffer.from(
-        await upstream.arrayBuffer()
-      );
+    const buffer = Buffer.from(
+      await upstream.arrayBuffer()
+    );
 
     res.setHeader(
       'Content-Type',
-      upstream.headers.get('content-type') ||
-        'application/pdf'
+      upstream.headers.get('content-type') || 'application/pdf'
     );
 
     res.setHeader(
@@ -350,9 +346,7 @@ export default async function handler(req, res) {
       'public, max-age=3600, s-maxage=3600'
     );
 
-    return res
-      .status(200)
-      .send(buffer);
+    return res.status(200).send(buffer);
   }
 
   const resourceConfig =
@@ -719,7 +713,7 @@ export default async function handler(req, res) {
       )
       .toLowerCase()
       .replace(
-        /[^a-z0-9媛-??+/g,
+        /[^a-z0-9가-힣]+/g,
         '-'
       )
       .replace(
