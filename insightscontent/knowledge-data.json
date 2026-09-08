@@ -210,15 +210,50 @@
       }
     },
     {
+      "knowledgeId": "kn_8bb9fc5a7db84a62a057bcebad65ce30",
+      "type": "external",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "Explore AKAIO's AI-enabled innovation platform and structured innovation methodology.",
-      "dateLabel": "AKAIO",
       "date": "2026-08-01",
+      "dateLabel": "AKAIO",
+      "title": "AI-Powered Innovation Platform",
+      "summary": "Explore AKAIO's AI-enabled innovation platform and structured innovation methodology.",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "https://www.akaio.ai/",
       "asset": "",
-      "title": "AI-Powered Innovation Platform",
-      "type": "external",
-      "knowledgeId": "kn_8bb9fc5a7db84a62a057bcebad65ce30"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "AI-Powered Innovation Platform",
+          "summary": "Explore AKAIO's AI-enabled innovation platform and structured innovation methodology.",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "external",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "https://www.akaio.ai/",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "access": "Public",
