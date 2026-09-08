@@ -287,15 +287,50 @@
       }
     },
     {
+      "knowledgeId": "kn_c74a76d20003459aac06e7a5d505cda3",
+      "type": "video",
+      "topics": [],
+      "industries": [],
+      "programs": [],
+      "tags": [],
+      "externalSources": [],
       "access": "Public",
-      "summary": "GIMI is the world's largest Innovation Professional Organization accredited by ISO",
-      "dateLabel": "GIMI홍보",
       "date": "2023-07-08",
+      "dateLabel": "GIMI홍보",
+      "title": "Who is GIMI?",
+      "summary": "GIMI is the world's largest Innovation Professional Organization accredited by ISO",
+      "slug": "",
+      "author": "",
+      "source": "",
+      "body": "",
       "url": "insightscontent/GIMI-홍보영상-ver4.0.mp4",
       "asset": "",
-      "title": "Who is GIMI?",
-      "type": "video",
-      "knowledgeId": "kn_c74a76d20003459aac06e7a5d505cda3"
+      "assetKey": "",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": ""
+        },
+        "other": {
+          "title": "Who is GIMI?",
+          "summary": "GIMI is the world's largest Innovation Professional Organization accredited by ISO",
+          "body": ""
+        }
+      },
+      "representativeMedia": {
+        "type": "video",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "insightscontent/GIMI-홍보영상-ver4.0.mp4",
+          "asset": "",
+          "assetKey": ""
+        }
+      }
     },
     {
       "knowledgeId": "kn_d724cca8aae44b5481994d87f3a3150f",
