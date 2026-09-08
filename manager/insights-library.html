@@ -494,6 +494,33 @@
       text-align: center;
     }
 
+    .media-section-heading { grid-column:1/-1; margin:8px 0 0; color:#17324d; font-size:14px; font-weight:800; letter-spacing:.03em; }
+    .asset-picker-dialog { width:min(980px,100%); }
+    .asset-picker-toolbar { display:flex; gap:10px; align-items:center; padding:12px 20px; border-bottom:1px solid #e2e7ed; background:#f8fafc; }
+    .asset-picker-breadcrumb { flex:1; display:flex; align-items:center; gap:4px; min-width:0; overflow-x:auto; white-space:nowrap; }
+    .asset-picker-crumb { border:0; background:transparent; color:#24527c; font:inherit; font-size:13px; font-weight:700; cursor:pointer; padding:5px 6px; border-radius:4px; }
+    .asset-picker-crumb:hover { background:#eaf0f6; }
+    .asset-picker-view-toggle { display:inline-flex; border:1px solid #cfd8e3; border-radius:6px; overflow:hidden; flex:0 0 auto; }
+    .asset-picker-view-btn { border:0; border-right:1px solid #cfd8e3; padding:7px 10px; background:#fff; color:#44515f; font:inherit; font-size:12px; font-weight:700; cursor:pointer; }
+    .asset-picker-view-btn:last-child { border-right:0; }
+    .asset-picker-view-btn.active { background:#17324d; color:#fff; }
+    .asset-picker-list.details { padding:0; }
+    .asset-picker-details-head,.asset-picker-details-row { display:grid; grid-template-columns:minmax(220px,1.4fr) 120px minmax(260px,1fr); gap:12px; align-items:center; }
+    .asset-picker-details-head { position:sticky; top:0; z-index:1; padding:9px 20px; background:#f4f7fa; border-bottom:1px solid #dfe5ec; color:#536170; font-size:12px; font-weight:800; }
+    .asset-picker-details-row { width:100%; border:0; border-bottom:1px solid #edf1f5; padding:11px 20px; background:#fff; text-align:left; cursor:pointer; font:inherit; }
+    .asset-picker-details-row:hover,.asset-picker-details-row:focus { background:#f4f7fa; outline:none; }
+    .asset-picker-name { display:flex; align-items:center; gap:9px; min-width:0; color:#20364c; font-size:13px; font-weight:700; }
+    .asset-picker-name-text,.asset-picker-path-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .asset-picker-path-text { color:#6c7986; font-size:12px; }
+    .asset-picker-type-text { color:#526273; font-size:12px; text-transform:uppercase; }
+    .asset-picker-list.icons { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; padding:16px 20px 20px; }
+    .asset-picker-icon-item { min-height:150px; border:1px solid #dfe5ec; border-radius:8px; padding:10px; background:#fff; cursor:pointer; font:inherit; text-align:center; }
+    .asset-picker-icon-item:hover,.asset-picker-icon-item:focus { background:#f4f7fa; outline:none; }
+    .asset-picker-thumb { height:88px; display:flex; align-items:center; justify-content:center; margin-bottom:8px; border-radius:6px; background:#f5f7f9; overflow:hidden; color:#48627c; font-size:28px; font-weight:800; }
+    .asset-picker-thumb img { width:100%; height:100%; object-fit:contain; }
+    .asset-picker-icon-label { display:block; color:#20364c; font-size:12px; font-weight:700; line-height:1.35; word-break:break-word; }
+    .asset-picker-folder-icon { font-size:18px; line-height:1; }
+
     .markdown-preview-tools {
       display: flex;
       align-items: center;
@@ -1002,10 +1029,7 @@
         </div>
 
 
-        <div class="knowledge-version-heading">
-          MEDIA
-          <small>Media Type은 Knowledge 공통이며, Korean / Other별로 Asset Library의 자산을 연결할 수 있습니다.</small>
-        </div>
+        <div class="media-section-heading">MEDIA</div>
 
         <div class="insights-field full">
           <label for="edit-media-type">Media Type</label>
@@ -1137,10 +1161,17 @@
         <h4 id="asset-picker-title">Select from Asset Library</h4>
         <button type="button" class="insights-small-btn" id="close-asset-picker">Close</button>
       </div>
-      <div class="asset-picker-search">
-        <input type="search" id="asset-picker-search" placeholder="Search Asset Library...">
+      <div class="asset-picker-toolbar">
+        <div id="asset-picker-breadcrumb" class="asset-picker-breadcrumb" aria-label="Asset folder path"></div>
+        <div class="asset-picker-view-toggle" aria-label="Asset view">
+          <button type="button" class="asset-picker-view-btn active" data-asset-view="details">Details</button>
+          <button type="button" class="asset-picker-view-btn" data-asset-view="icons">Large Icons</button>
+        </div>
       </div>
-      <div id="asset-picker-list" class="asset-picker-list"></div>
+      <div class="asset-picker-search">
+        <input type="search" id="asset-picker-search" placeholder="Search current folder...">
+      </div>
+      <div id="asset-picker-list" class="asset-picker-list details"></div>
     </div>
   </div>
 
@@ -1171,6 +1202,8 @@
     };
 
     let legacyDraft = null;
+    let assetPickerFolder = '';
+    let assetPickerView = 'details';
 
 
     /* =========================================
@@ -1250,6 +1283,22 @@
 
     function getVersion(item, key) {
       return item?.versions?.[key] || {};
+    }
+
+    function hasKnowledgeVersionContent(version) {
+      return Boolean(
+        String(version?.title || '').trim() ||
+        String(version?.summary || '').trim() ||
+        String(version?.body || '').trim()
+      );
+    }
+
+    function chooseInitialKnowledgeVersion(item) {
+      const hasKo = hasKnowledgeVersionContent(getVersion(item, 'ko'));
+      const hasOther = hasKnowledgeVersionContent(getVersion(item, 'other'));
+      if (hasKo && !hasOther) return 'ko';
+      if (!hasKo && hasOther) return 'other';
+      return 'ko';
     }
 
     function getDisplayTitle(item) {
@@ -1600,49 +1649,156 @@
     }
 
     function getAssetPath(asset) {
-      return String(asset?.url || asset?.pathname || asset?.path || '');
+      return String(asset?.path || asset?.pathname || asset?.url || '');
+    }
+
+    function getAssetLogicalPath(asset) {
+      let value = getAssetPath(asset).trim();
+      if (!value) return '';
+      try {
+        if (/^https?:\/\//i.test(value)) value = new URL(value).pathname;
+      } catch (error) {}
+      try { value = decodeURIComponent(value); } catch (error) {}
+      return value.replace(/\\/g, '/').replace(/^\/+/, '').replace(/\/+/g, '/');
+    }
+
+    function getAssetFolder(asset) {
+      const path = getAssetLogicalPath(asset);
+      const i = path.lastIndexOf('/');
+      return i >= 0 ? path.slice(0, i) : '';
+    }
+
+    function getAssetTypeLabel(asset) {
+      const value = String(asset?.type || asset?.mimeType || '').trim();
+      if (value) return value;
+      const path = getAssetLogicalPath(asset);
+      return path.includes('.') ? path.split('.').pop() : 'asset';
     }
 
     function assetMatchesMediaType(asset, mediaType) {
       if (!asset || mediaType === 'none' || mediaType === 'external') return false;
-      const haystack = `${asset.type || ''} ${asset.mimeType || ''} ${asset.fileName || ''} ${asset.pathname || ''} ${asset.url || ''}`.toLowerCase();
-      if (mediaType === 'pdf') return haystack.includes('pdf') || /\.pdf(?:$|[?#])/i.test(haystack);
-      if (mediaType === 'video') return /video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/i.test(haystack);
-      if (mediaType === 'image') return /image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/i.test(haystack);
+      const h = `${asset.type || ''} ${asset.mimeType || ''} ${asset.fileName || ''} ${asset.pathname || ''} ${asset.path || ''} ${asset.url || ''}`.toLowerCase();
+      if (mediaType === 'pdf') return /pdf|\.pdf(?:$|[?#])/.test(h);
+      if (mediaType === 'video') return /video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/.test(h);
+      if (mediaType === 'image') return /image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/.test(h);
+      if (mediaType === 'markdown') return /markdown|\.md(?:$|[?#])/.test(h);
+      if (mediaType === 'presentation') return /presentation|powerpoint|\.pptx?(?:$|[?#])/.test(h);
+      if (mediaType === 'document') return /document|word|\.docx?(?:$|[?#])|\.txt(?:$|[?#])/.test(h);
       return true;
+    }
+
+    function getChildFolders(assets, folder) {
+      const prefix = folder ? `${folder}/` : '';
+      const found = new Set();
+      assets.forEach(asset => {
+        const f = getAssetFolder(asset);
+        if (folder && f !== folder && !f.startsWith(prefix)) return;
+        if (!folder && !f) return;
+        const remainder = folder ? f.slice(prefix.length) : f;
+        const child = remainder.split('/').filter(Boolean)[0];
+        if (child) found.add(folder ? `${folder}/${child}` : child);
+      });
+      return [...found].sort((x,y) => x.localeCompare(y));
+    }
+
+    function renderAssetPickerBreadcrumb() {
+      const el = document.getElementById('asset-picker-breadcrumb');
+      const parts = assetPickerFolder.split('/').filter(Boolean);
+      let path = '';
+      const html = ['<button type="button" class="asset-picker-crumb" data-folder="">Asset Library</button>'];
+      parts.forEach(part => {
+        path = path ? `${path}/${part}` : part;
+        html.push('<span aria-hidden="true">›</span>');
+        html.push(`<button type="button" class="asset-picker-crumb" data-folder="${escapeHtml(path)}">${escapeHtml(part)}</button>`);
+      });
+      el.innerHTML = html.join('');
+    }
+
+    function isImageAsset(asset) {
+      return /image|\.jpe?g$|\.png$|\.gif$|\.webp$|\.svg$/i.test(`${asset?.type || ''} ${asset?.mimeType || ''} ${getAssetLogicalPath(asset)}`);
+    }
+
+    function getAssetIconLabel(asset) {
+      const t = getAssetTypeLabel(asset).toLowerCase();
+      if (t.includes('pdf')) return 'PDF';
+      if (t.includes('markdown') || t === 'md') return 'MD';
+      if (t.includes('presentation') || t.includes('ppt')) return 'PPT';
+      if (t.includes('document') || t.includes('doc')) return 'DOC';
+      if (t.includes('video')) return 'VID';
+      return 'FILE';
     }
 
     function renderAssetPicker() {
       const list = document.getElementById('asset-picker-list');
       const query = normalize(document.getElementById('asset-picker-search').value);
       const mediaType = document.getElementById('edit-media-type').value;
-      const matches = assetRegistry
-        .filter(asset => assetMatchesMediaType(asset, mediaType))
-        .filter(asset => {
-          if (!query) return true;
-          return normalize(`${asset.key || ''} ${getAssetDisplayName(asset)} ${getAssetPath(asset)}`).includes(query);
-        })
-        .sort((a, b) => getAssetDisplayName(a).localeCompare(getAssetDisplayName(b)));
+      const assets = assetRegistry.filter(asset => assetMatchesMediaType(asset, mediaType));
+      const folders = getChildFolders(assets, assetPickerFolder).filter(folder =>
+        !query || normalize(folder.split('/').pop()).includes(query)
+      );
+      const files = assets
+        .filter(asset => getAssetFolder(asset) === assetPickerFolder)
+        .filter(asset => !query || normalize(`${asset.key || ''} ${getAssetDisplayName(asset)} ${getAssetPath(asset)}`).includes(query))
+        .sort((x,y) => getAssetDisplayName(x).localeCompare(getAssetDisplayName(y)));
 
-      if (!matches.length) {
-        list.innerHTML = '<div class="asset-picker-empty">No matching assets in Asset Library.</div>';
+      renderAssetPickerBreadcrumb();
+      document.querySelectorAll('.asset-picker-view-btn').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.assetView === assetPickerView)
+      );
+      list.className = `asset-picker-list ${assetPickerView === 'icons' ? 'icons' : 'details'}`;
+
+      if (!folders.length && !files.length) {
+        list.innerHTML = '<div class="asset-picker-empty">No matching assets in this folder.</div>';
         return;
       }
 
-      list.innerHTML = matches.map(asset => `
-        <button type="button" class="asset-picker-item" data-asset-key="${escapeHtml(asset.key || '')}">
-          <strong>${escapeHtml(getAssetDisplayName(asset))}</strong>
-          <span>${escapeHtml(getAssetPath(asset) || asset.key || '')}</span>
-        </button>
-      `).join('');
+      if (assetPickerView === 'icons') {
+        const folderHtml = folders.map(folder => {
+          const name = folder.split('/').pop();
+          return `<button type="button" class="asset-picker-icon-item" data-folder="${escapeHtml(folder)}">
+            <span class="asset-picker-thumb asset-picker-folder-icon">▰</span>
+            <span class="asset-picker-icon-label">${escapeHtml(name)}</span>
+          </button>`;
+        }).join('');
+        const fileHtml = files.map(asset => {
+          const preview = isImageAsset(asset) && getAssetPath(asset)
+            ? `<img src="${escapeHtml(getAssetPath(asset))}" alt="">`
+            : escapeHtml(getAssetIconLabel(asset));
+          return `<button type="button" class="asset-picker-icon-item" data-asset-key="${escapeHtml(asset.key || '')}">
+            <span class="asset-picker-thumb">${preview}</span>
+            <span class="asset-picker-icon-label">${escapeHtml(getAssetDisplayName(asset))}</span>
+          </button>`;
+        }).join('');
+        list.innerHTML = folderHtml + fileHtml;
+        return;
+      }
+
+      const rows = [];
+      folders.forEach(folder => {
+        const name = folder.split('/').pop();
+        rows.push(`<button type="button" class="asset-picker-details-row" data-folder="${escapeHtml(folder)}">
+          <span class="asset-picker-name"><span class="asset-picker-folder-icon">▰</span><span class="asset-picker-name-text">${escapeHtml(name)}</span></span>
+          <span class="asset-picker-type-text">Folder</span>
+          <span class="asset-picker-path-text">${escapeHtml(folder)}</span>
+        </button>`);
+      });
+      files.forEach(asset => {
+        rows.push(`<button type="button" class="asset-picker-details-row" data-asset-key="${escapeHtml(asset.key || '')}">
+          <span class="asset-picker-name"><span>□</span><span class="asset-picker-name-text">${escapeHtml(getAssetDisplayName(asset))}</span></span>
+          <span class="asset-picker-type-text">${escapeHtml(getAssetTypeLabel(asset))}</span>
+          <span class="asset-picker-path-text">${escapeHtml(getAssetPath(asset) || asset.key || '')}</span>
+        </button>`);
+      });
+      list.innerHTML = `<div class="asset-picker-details-head"><span>Name</span><span>Type</span><span>Path</span></div>${rows.join('')}`;
     }
 
     function openAssetPicker() {
       const mediaType = document.getElementById('edit-media-type').value;
-      if (!['image', 'video', 'pdf', 'markdown', 'presentation', 'document'].includes(mediaType)) {
-        showMessage('Select Image, Video, or PDF before choosing an Asset.', 'error');
+      if (!['image','video','pdf','markdown','presentation','document'].includes(mediaType)) {
+        showMessage('Select a library-based Media Type before choosing an Asset.', 'error');
         return;
       }
+      assetPickerFolder = '';
       document.getElementById('asset-picker-search').value = '';
       renderAssetPicker();
       const backdrop = document.getElementById('asset-picker-backdrop');
@@ -2012,13 +2168,13 @@
 
               <td class="insights-actions">
 
-                <button
-                  type="button"
+                <a
+                  href="#insights-editor"
                   class="insights-small-btn edit-insight"
                   data-index="${item._sourceIndex}"
                 >
                   Edit
-                </button>
+                </a>
 
                 <button
                   type="button"
@@ -2179,7 +2335,7 @@
       }
 
       document.getElementById('edit-media-type').value = representativeMedia.type || inferMediaType(legacyDraft?.media || {});
-      activeVersion = 'ko';
+      activeVersion = chooseInitialKnowledgeVersion(item);
       loadActiveVersionIntoEditor();
       clearMessage();
       document.getElementById('insights-editor').classList.add('open');
@@ -2635,9 +2791,33 @@
     document.getElementById('close-asset-picker').addEventListener('click', closeAssetPicker);
     document.getElementById('asset-picker-search').addEventListener('input', renderAssetPicker);
     document.getElementById('asset-picker-list').addEventListener('click', event => {
-      const item = event.target.closest('.asset-picker-item');
-      if (item) chooseAsset(item.dataset.assetKey);
+      const folderButton = event.target.closest('[data-folder]');
+      if (folderButton) {
+        assetPickerFolder = folderButton.dataset.folder || '';
+        document.getElementById('asset-picker-search').value = '';
+        renderAssetPicker();
+        return;
+      }
+      const assetButton = event.target.closest('[data-asset-key]');
+      if (!assetButton) return;
+      chooseAsset(assetButton.dataset.assetKey);
     });
+
+    document.getElementById('asset-picker-breadcrumb').addEventListener('click', event => {
+      const button = event.target.closest('[data-folder]');
+      if (!button) return;
+      assetPickerFolder = button.dataset.folder || '';
+      document.getElementById('asset-picker-search').value = '';
+      renderAssetPicker();
+    });
+
+    document.querySelectorAll('.asset-picker-view-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        assetPickerView = button.dataset.assetView === 'icons' ? 'icons' : 'details';
+        renderAssetPicker();
+      });
+    });
+
     document.getElementById('asset-picker-backdrop').addEventListener('click', event => {
       if (event.target.id === 'asset-picker-backdrop') closeAssetPicker();
     });
