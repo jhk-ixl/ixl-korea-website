@@ -42,28 +42,28 @@ export default async function handler(req, res) {
   };
 
 
-  function cleanAssetLayoutKey(value) {
-    return String(value ?? '')
+  /* =========================================
+     RESOURCE SELECT
+     default = insights
+     ========================================= */
+
+  const resource =
+    String(
+      req.query?.resource || 'insights'
+    )
       .trim()
-      .toLowerCase()
-      .replace(/\\/g, '/')
-      .split('/')
-      .pop()
-      .replace(/\.[^.]+$/, '')
-      .normalize('NFKD')
-      .replace(/[^a-z0-9가-힣]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
+      .toLowerCase();
+
+
+  const isPublicAssetLayout =
+    req.method === 'GET' &&
+    resource === 'asset-layout';
 
 
   /* =========================================
      REQUIRE MANAGER AUTHENTICATION
      Asset Layout CSS is public read-only output.
      ========================================= */
-
-  const isPublicAssetLayout =
-    req.method === 'GET' &&
-    resource === 'asset-layout';
 
   let manager = null;
 
@@ -118,19 +118,6 @@ export default async function handler(req, res) {
   };
 
 
-  /* =========================================
-     RESOURCE SELECT
-     default = insights
-     ========================================= */
-
-  const resource =
-    String(
-      req.query?.resource || 'insights'
-    )
-      .trim()
-      .toLowerCase();
-
-
   if (isPublicAssetLayout) {
     try {
       const loadPublicAssetData = async (relatedResource) => {
@@ -160,6 +147,18 @@ export default async function handler(req, res) {
           : [];
       };
 
+      const normalizeLayoutKey = (value) =>
+        String(value ?? '')
+          .trim()
+          .replace(/\\/g, '/')
+          .split('/')
+          .pop()
+          .replace(/\.[^.]+$/, '')
+          .normalize('NFKD')
+          .toLowerCase()
+          .replace(/[^a-z0-9가-힣]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
       const [assets, usages] = await Promise.all([
         loadPublicAssetData('assets'),
         loadPublicAssetData('usage')
@@ -168,7 +167,7 @@ export default async function handler(req, res) {
       const assetMap =
         new Map(
           assets.map(asset => [
-            cleanAssetLayoutKey(asset?.key),
+            normalizeLayoutKey(asset?.key),
             asset
           ])
         );
@@ -176,12 +175,24 @@ export default async function handler(req, res) {
       const rules = [];
 
       for (const usage of usages) {
-        const usageKey = cleanAssetLayoutKey(usage?.usageKey);
-        const assetKey = cleanAssetLayoutKey(usage?.assetKey);
-        const asset = assetMap.get(assetKey);
+        const usageKey =
+          normalizeLayoutKey(
+            usage?.usageKey
+          );
 
-        const width = Number(asset?.width);
-        const height = Number(asset?.height);
+        const assetKey =
+          normalizeLayoutKey(
+            usage?.assetKey
+          );
+
+        const asset =
+          assetMap.get(assetKey);
+
+        const width =
+          Number(asset?.width);
+
+        const height =
+          Number(asset?.height);
 
         if (
           !usageKey ||
@@ -194,7 +205,10 @@ export default async function handler(req, res) {
         }
 
         const escapedUsageKey =
-          usageKey.replace(/["\\]/g, '\\$&');
+          usageKey.replace(
+            /["\\]/g,
+            '\\$&'
+          );
 
         rules.push(
           `img[data-asset-usage="${escapedUsageKey}"]{aspect-ratio:${width}/${height};}`
@@ -205,6 +219,7 @@ export default async function handler(req, res) {
         'Content-Type',
         'text/css; charset=utf-8'
       );
+
       res.setHeader(
         'Cache-Control',
         'public, max-age=0, must-revalidate'
@@ -230,6 +245,7 @@ export default async function handler(req, res) {
         'Content-Type',
         'text/css; charset=utf-8'
       );
+
       res.setHeader(
         'Cache-Control',
         'no-store, max-age=0'
