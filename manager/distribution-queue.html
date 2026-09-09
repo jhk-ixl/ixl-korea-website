@@ -19,13 +19,7 @@
     href="manager.css"
   >
 
-  <script src="manager-guard.js">
-    const queueEditBackButton = document.getElementById('queue-edit-back');
-    if (queueEditBackButton) {
-      queueEditBackButton.addEventListener('click', closeQueueEditor);
-    }
-
-  </script>
+  <script src="manager-guard.js"></script>
   <script src="manager-common.js"></script>
 
 
@@ -1893,6 +1887,14 @@ async function publishToLinkedIn() {
       }
 
     }
+
+    document.addEventListener('click', event => {
+      const backButton = event.target.closest('#queue-edit-back');
+      if (!backButton) return;
+      event.preventDefault();
+      closeQueueEditor();
+    });
+
     /* =========================================
        START
        ========================================= */
