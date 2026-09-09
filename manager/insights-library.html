@@ -897,6 +897,51 @@
     </section>
 
 
+
+    <!-- =========================================
+         EDIT REVIEW / DEEP-DOWN
+         Edit always passes through this read-only summary first.
+         ========================================= -->
+    <section id="knowledge-detail-panel" class="knowledge-detail-panel manager-form-card">
+      <div class="knowledge-detail-head">
+        <div>
+          <span class="section-eyebrow">KNOWLEDGE REVIEW</span>
+          <h3 id="knowledge-detail-title">Knowledge Detail</h3>
+          <p id="knowledge-detail-subtitle">Review the current item and media before editing details.</p>
+        </div>
+        <div class="knowledge-detail-actions">
+          <button type="button" id="knowledge-detail-edit" class="library-button primary">Edit Details</button>
+          <button type="button" id="knowledge-detail-back" class="library-button">Back to List</button>
+        </div>
+      </div>
+
+      <div class="knowledge-detail-grid">
+        <div class="knowledge-detail-preview">
+          <div class="asset-preview-label">Media / Preview</div>
+          <div id="knowledge-detail-preview" class="knowledge-detail-preview-stage">
+            <div class="knowledge-detail-empty">No media attached.</div>
+          </div>
+        </div>
+        <div class="knowledge-detail-info">
+          <dl class="knowledge-detail-meta">
+            <dt>Type</dt><dd id="knowledge-detail-type">—</dd>
+            <dt>Date</dt><dd id="knowledge-detail-date">—</dd>
+            <dt>Access</dt><dd id="knowledge-detail-access">—</dd>
+            <dt>Author</dt><dd id="knowledge-detail-author">—</dd>
+            <dt>Source</dt><dd id="knowledge-detail-source">—</dd>
+            <dt>Topics</dt><dd id="knowledge-detail-topics">—</dd>
+            <dt>Industries</dt><dd id="knowledge-detail-industries">—</dd>
+            <dt>Programs</dt><dd id="knowledge-detail-programs">—</dd>
+            <dt>Tags</dt><dd id="knowledge-detail-tags">—</dd>
+          </dl>
+          <div class="knowledge-detail-summary">
+            <h4>Summary</h4>
+            <p id="knowledge-detail-summary">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- =========================================
          EDITOR
          ========================================= -->
@@ -2409,7 +2454,7 @@
               <td class="insights-actions">
 
                 <a
-                  href="#insights-editor"
+                  href="#knowledge-detail-panel"
                   class="insights-small-btn edit-insight"
                   data-index="${item._sourceIndex}"
                 >
@@ -2479,6 +2524,106 @@
       closeMarkdownPreview('version-markdown-preview', 'toggle-version-markdown-preview', 'Preview');
     }
 
+
+    let pendingEditIndex = null;
+
+    function setBuilderFocus(active) {
+      document.querySelector('main.manager-main')?.classList.toggle('builder-focus-mode', Boolean(active));
+    }
+
+    function getDetailSummary(item) {
+      return (
+        getVersion(item, 'ko').summary ||
+        getVersion(item, 'other').summary ||
+        item.summary ||
+        '—'
+      );
+    }
+
+    function getDetailMedia(item) {
+      const representative = item?.representativeMedia || {};
+      const preferredVersion = chooseInitialKnowledgeVersion(item);
+      const media = representative[preferredVersion] ||
+                    representative.ko ||
+                    representative.other ||
+                    {};
+      return {
+        type: representative.type || inferMediaType(media),
+        url: media.url || '',
+        asset: media.asset || '',
+        assetKey: media.assetKey || ''
+      };
+    }
+
+    function renderDetailMedia(item) {
+      const host = document.getElementById('knowledge-detail-preview');
+      const media = getDetailMedia(item);
+      const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
+      const source = media.asset || media.url || (asset ? getAssetSourceUrl(asset) : '');
+      const type = media.type || inferMediaType(media);
+
+      if (!source && !asset) {
+        host.innerHTML = '<div class="knowledge-detail-empty">No media attached.</div>';
+        return;
+      }
+
+      const safe = escapeHtml(source || getAssetSourceUrl(asset));
+      if (type === 'video') {
+        host.innerHTML = `<video src="${safe}" controls preload="metadata">Your browser does not support video playback.</video>`;
+        return;
+      }
+      if (type === 'image') {
+        host.innerHTML = `<img src="${safe}" alt="">`;
+        return;
+      }
+      if (type === 'pdf') {
+        host.innerHTML = `<iframe src="${safe}" title="PDF preview"></iframe>`;
+        return;
+      }
+      if (type === 'external') {
+        host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open external media ↗</a></div>`;
+        return;
+      }
+      if (asset) {
+        host.innerHTML = getAssetPreviewMarkup(asset, 'card');
+        hydrateAssetPreviews(host);
+        return;
+      }
+      host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open media ↗</a></div>`;
+    }
+
+    function openKnowledgeDetail(index) {
+      const item = insightsItems.find(entry => entry._sourceIndex === index);
+      if (!item) return;
+
+      pendingEditIndex = index;
+      closeAllMarkdownPreviews();
+      document.getElementById('insights-editor').classList.remove('open');
+
+      document.getElementById('knowledge-detail-title').textContent = getDisplayTitle(item);
+      document.getElementById('knowledge-detail-type').textContent = getKnowledgeTypeName(item.type);
+      document.getElementById('knowledge-detail-date').textContent = item.dateLabel || item.date || '—';
+      document.getElementById('knowledge-detail-access').textContent = item.access || 'Public';
+      document.getElementById('knowledge-detail-author').textContent = item.author || '—';
+      document.getElementById('knowledge-detail-source').textContent = item.source || '—';
+      document.getElementById('knowledge-detail-topics').textContent = (item.topics || []).join(', ') || '—';
+      document.getElementById('knowledge-detail-industries').textContent = (item.industries || []).join(', ') || '—';
+      document.getElementById('knowledge-detail-programs').textContent = (item.programs || []).join(', ') || '—';
+      document.getElementById('knowledge-detail-tags').textContent = (item.tags || []).join(', ') || '—';
+      document.getElementById('knowledge-detail-summary').textContent = getDetailSummary(item);
+
+      renderDetailMedia(item);
+      document.getElementById('knowledge-detail-panel').classList.add('open');
+      setBuilderFocus(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeKnowledgeDetail() {
+      pendingEditIndex = null;
+      document.getElementById('knowledge-detail-panel').classList.remove('open');
+      setBuilderFocus(false);
+    }
+
     function resetEditor() {
       editingIndex = null;
       activeVersion = 'ko';
@@ -2510,6 +2655,9 @@
 
     function openAddEditor() {
 
+      document.getElementById('knowledge-detail-panel').classList.remove('open');
+      pendingEditIndex = null;
+      setBuilderFocus(true);
       resetEditor();
 
 
@@ -2528,6 +2676,8 @@
 
 
     function openEditEditor(index) {
+      document.getElementById('knowledge-detail-panel').classList.remove('open');
+      setBuilderFocus(true);
       const item = insightsItems.find(entry => entry._sourceIndex === index);
       if (!item) return;
 
@@ -2620,6 +2770,7 @@
 
 
       resetEditor();
+      setBuilderFocus(false);
 
     }
 
@@ -2864,9 +3015,28 @@
     }
 
 
+
+    function openRequestedKnowledgeEdit() {
+      const requested = new URLSearchParams(window.location.search).get('edit');
+      if (!requested) return;
+      const item = insightsItems.find(entry =>
+        String(entry.knowledgeId || '') === requested ||
+        String(entry.slug || '') === requested ||
+        String(entry._sourceIndex) === requested
+      );
+      if (item) openKnowledgeDetail(item._sourceIndex);
+    }
+
     /* =========================================
        EVENTS
        ========================================= */
+
+
+    document.getElementById('knowledge-detail-edit').addEventListener('click', () => {
+      if (pendingEditIndex !== null) openEditEditor(pendingEditIndex);
+    });
+
+    document.getElementById('knowledge-detail-back').addEventListener('click', closeKnowledgeDetail);
 
     document
       .getElementById(
@@ -2965,7 +3135,7 @@
 
           if (editButton) {
 
-            openEditEditor(
+            openKnowledgeDetail(
               Number(
                 editButton.dataset.index
               )
@@ -3063,6 +3233,10 @@
       loadInsights
     );
 
+  
+    window.addEventListener('load', () => {
+      setTimeout(openRequestedKnowledgeEdit, 250);
+    });
   </script>
 
 </body>

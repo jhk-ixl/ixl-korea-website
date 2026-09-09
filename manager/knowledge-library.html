@@ -97,7 +97,7 @@
       <div class="library-actions">
 
         <a href="insights-library.html" class="library-button primary">
-          Add / Edit Knowledge
+          + Add Knowledge
         </a>
 
         <a href="knowledge.html" class="library-button">
@@ -141,18 +141,45 @@
     </section>
 
 
-    <section class="library-table-wrap manager-scroll-table-wrap manager-canonical-table-wrap" id="knowledge-table-scroll-wrap">
 
-      <div
-        id="knowledge-table-top-scroll"
-        class="manager-table-top-scroll"
-        aria-label="Knowledge table horizontal scroll"
-      >
-        <div
-          id="knowledge-table-top-scroll-inner"
-          class="manager-table-top-scroll-inner"
-        ></div>
+    <section id="library-knowledge-detail" class="knowledge-detail-panel manager-form-card">
+      <div class="knowledge-detail-head">
+        <div>
+          <span class="section-eyebrow">KNOWLEDGE DEEP-DOWN</span>
+          <h3 id="library-detail-title">Knowledge Detail</h3>
+          <p>Review the selected Knowledge Item, its classifications and media.</p>
+        </div>
+        <div class="knowledge-detail-actions">
+          <a id="library-detail-edit" href="insights-library.html" class="library-button primary">Edit Knowledge</a>
+          <button type="button" id="library-detail-back" class="library-button">Back to Library</button>
+        </div>
       </div>
+      <div class="knowledge-detail-grid">
+        <div class="knowledge-detail-preview">
+          <div class="asset-preview-label">Media / Play</div>
+          <div id="library-detail-preview" class="knowledge-detail-preview-stage">
+            <div class="knowledge-detail-empty">No media attached.</div>
+          </div>
+        </div>
+        <div class="knowledge-detail-info">
+          <dl class="knowledge-detail-meta">
+            <dt>Type</dt><dd id="library-detail-type">—</dd>
+            <dt>Date</dt><dd id="library-detail-date">—</dd>
+            <dt>Access</dt><dd id="library-detail-access">—</dd>
+            <dt>Topics</dt><dd id="library-detail-topics">—</dd>
+            <dt>Industries</dt><dd id="library-detail-industries">—</dd>
+            <dt>Programs</dt><dd id="library-detail-programs">—</dd>
+            <dt>Tags</dt><dd id="library-detail-tags">—</dd>
+          </dl>
+          <div class="knowledge-detail-summary">
+            <h4>Summary</h4>
+            <p id="library-detail-summary">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="library-table-wrap manager-canonical-table-wrap" id="knowledge-table-scroll-wrap">
 
       <table class="library-table manager-scroll-table manager-canonical-table" id="knowledge-library-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
 
@@ -166,7 +193,7 @@
             <th><button type="button" class="manager-sort-button" data-sort-key="programs">Programs <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="tags">Tags <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
-            <th>Open</th>
+            <th>Detail</th>
           </tr>
         </thead>
 
@@ -314,25 +341,9 @@
                 .join('')
             : '—';
 
-      let openLink = '—';
-
-
-      if (url) {
-
-        const isExternal =
-          url.startsWith('http://') ||
-          url.startsWith('https://');
-
-
-        const finalUrl =
-          isExternal
-            ? url
-            : '../' + url.replace(/^\/+/, '');
-
-
-        openLink =
-          `<a href="${finalUrl}" target="_blank" rel="noopener noreferrer">Open ↗</a>`;
-      }
+      const sourceIndex = allKnowledgeItems.indexOf(item);
+      const openLink =
+        `<button type="button" class="library-button knowledge-deep-button" data-knowledge-index="${sourceIndex}">View</button>`;
 
 
       return `
@@ -387,6 +398,93 @@
     }
 
 
+
+    function getKnowledgeDisplayTitle(item) {
+      return item?.versions?.ko?.title || item?.versions?.other?.title || item.title || 'Untitled';
+    }
+
+    function getKnowledgeDisplaySummary(item) {
+      return item?.versions?.ko?.summary || item?.versions?.other?.summary || item.summary || '—';
+    }
+
+    function getKnowledgeMedia(item) {
+      const rep = item?.representativeMedia || {};
+      const media = rep.ko || rep.other || {};
+      return {
+        type: rep.type || '',
+        url: media.url || item.url || '',
+        asset: media.asset || item.asset || '',
+        assetKey: media.assetKey || item.assetKey || ''
+      };
+    }
+
+    function inferLibraryMediaType(media) {
+      const value = String(media.asset || media.url || '').toLowerCase();
+      if (/\.pdf(?:$|[?#])/.test(value)) return 'pdf';
+      if (/\.(?:mp4|webm|mov)(?:$|[?#])/.test(value) || /youtube|youtu\.be|vimeo/.test(value)) return 'video';
+      if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(value)) return 'image';
+      if (/^https?:\/\//.test(value)) return 'external';
+      return media.type || 'file';
+    }
+
+    function renderLibraryMedia(item) {
+      const host = document.getElementById('library-detail-preview');
+      const media = getKnowledgeMedia(item);
+      const source = media.asset || media.url || '';
+      const type = media.type || inferLibraryMediaType(media);
+      if (!source) {
+        host.innerHTML = '<div class="knowledge-detail-empty">No media attached.</div>';
+        return;
+      }
+      const finalUrl = /^https?:\/\//.test(source) ? source : '../' + source.replace(/^\/+/, '');
+      const safe = finalUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      if (type === 'video') {
+        host.innerHTML = `<video src="${safe}" controls preload="metadata">Your browser does not support video playback.</video>`;
+      } else if (type === 'image') {
+        host.innerHTML = `<img src="${safe}" alt="">`;
+      } else if (type === 'pdf') {
+        host.innerHTML = `<iframe src="${safe}" title="PDF preview"></iframe>`;
+      } else {
+        host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open media ↗</a></div>`;
+      }
+    }
+
+    function openLibraryDetail(index) {
+      const item = allKnowledgeItems[index];
+      if (!item) return;
+      document.getElementById('library-detail-title').textContent = getKnowledgeDisplayTitle(item);
+      document.getElementById('library-detail-type').textContent = getKnowledgeTypeName(item.type);
+      document.getElementById('library-detail-date').textContent = item.dateLabel || item.date || '—';
+      document.getElementById('library-detail-access').textContent = item.access || 'Public';
+      document.getElementById('library-detail-topics').textContent = getKnowledgeTopics(item).join(', ') || '—';
+      document.getElementById('library-detail-industries').textContent = getKnowledgeIndustries(item).join(', ') || '—';
+      document.getElementById('library-detail-programs').textContent = getKnowledgePrograms(item).join(', ') || '—';
+      document.getElementById('library-detail-tags').textContent = getKnowledgeTags(item).join(', ') || '—';
+      document.getElementById('library-detail-summary').textContent = getKnowledgeDisplaySummary(item);
+      document.getElementById('library-detail-edit').href =
+        `insights-library.html?edit=${encodeURIComponent(item.knowledgeId || item.slug || index)}`;
+      renderLibraryMedia(item);
+
+      document.querySelector('.manager-library-overview').hidden = true;
+      document.querySelector('.library-toolbar').hidden = true;
+      document.querySelector('.library-filters').hidden = true;
+      document.getElementById('knowledge-table-scroll-wrap').hidden = true;
+      const autoTop = document.getElementById('knowledge-table-scroll-wrap').previousElementSibling;
+      if (autoTop?.classList.contains('manager-auto-top-scroll')) autoTop.hidden = true;
+      document.getElementById('library-knowledge-detail').classList.add('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeLibraryDetail() {
+      document.getElementById('library-knowledge-detail').classList.remove('open');
+      document.querySelector('.manager-library-overview').hidden = false;
+      document.querySelector('.library-toolbar').hidden = false;
+      document.querySelector('.library-filters').hidden = false;
+      document.getElementById('knowledge-table-scroll-wrap').hidden = false;
+      const autoTop = document.getElementById('knowledge-table-scroll-wrap').previousElementSibling;
+      if (autoTop?.classList.contains('manager-auto-top-scroll')) autoTop.hidden = false;
+    }
+
     function renderKnowledge(items) {
 
       const tableBody =
@@ -421,13 +519,6 @@
         empty.style.display =
           'block';
 
-        IXLManager.syncScrollTable({
-          topScrollId: 'knowledge-table-top-scroll',
-          topInnerId: 'knowledge-table-top-scroll-inner',
-          wrapId: 'knowledge-table-scroll-wrap',
-          tableId: 'knowledge-library-table'
-        });
-
         return;
       }
 
@@ -440,13 +531,6 @@
 
       empty.style.display =
         'none';
-
-      IXLManager.syncScrollTable({
-        topScrollId: 'knowledge-table-top-scroll',
-        topInnerId: 'knowledge-table-top-scroll-inner',
-        wrapId: 'knowledge-table-scroll-wrap',
-        tableId: 'knowledge-library-table'
-      });
     }
 
 

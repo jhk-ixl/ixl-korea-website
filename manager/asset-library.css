@@ -617,3 +617,46 @@
     top: 0;
   }
 }
+
+
+/* Usage Mapping editor follows the Asset detail/edit screen instead of a small popup. */
+#usage-modal.asset-modal {
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 26px max(18px, calc((100vw - 1180px) / 2));
+  background: #f4f7fa;
+}
+
+#usage-modal .asset-modal-card {
+  width: 100%;
+  max-width: 1180px;
+  max-height: none;
+  overflow: visible;
+  padding: 24px 26px;
+  border: 1px solid var(--asset-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 26px rgba(7,27,51,.08);
+}
+
+#usage-modal .asset-modal-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+#usage-modal .asset-field {
+  min-width: 0;
+}
+
+#usage-modal .asset-field input,
+#usage-modal .asset-field select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#usage-modal .asset-modal-actions {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 760px) {
+  #usage-modal .asset-modal-form { grid-template-columns: 1fr; }
+}

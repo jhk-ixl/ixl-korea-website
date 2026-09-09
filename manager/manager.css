@@ -2488,3 +2488,142 @@ a.manager-utilization-item:hover {
 }
 
 /* END MANAGER FINAL VISUAL NORMALIZATION */
+
+
+/* =========================================
+   MANAGER ASSET STANDARD — PAGE SCROLL FINAL
+   One browser vertical scrollbar; top horizontal scrollbar only.
+   ========================================= */
+.manager-scroll-table-wrap,
+.manager-canonical-table-wrap,
+.manager-master-list.manager-canonical-table-wrap,
+.library-table-wrap.manager-canonical-table-wrap {
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  scrollbar-gutter: auto !important;
+}
+
+.manager-canonical-table-wrap::-webkit-scrollbar,
+.manager-scroll-table-wrap::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.manager-canonical-table {
+  margin-bottom: 0 !important;
+}
+
+.manager-auto-top-scroll,
+.manager-table-top-scroll,
+.manager-top-scroll {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+}
+
+/* Long values must never run through adjacent Usage Mapping columns. */
+.asset-usage-table th,
+.asset-usage-table td {
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.asset-usage-table td code {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.45;
+}
+
+/* Knowledge Builder focus screens */
+.builder-focus-mode .insights-toolbar,
+.builder-focus-mode .insights-result-summary,
+.builder-focus-mode #insights-table-wrap,
+.builder-focus-mode #insights-empty,
+.builder-focus-mode > .manager-auto-top-scroll {
+  display: none !important;
+}
+
+.knowledge-detail-panel {
+  display: none;
+  margin-top: 22px;
+}
+.knowledge-detail-panel.open { display: block; }
+
+.knowledge-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.knowledge-detail-head h3 { margin: 4px 0 6px; font-size: 24px; color: #071b33; }
+.knowledge-detail-head p { margin: 0; color: #5f6f82; line-height: 1.55; }
+
+.knowledge-detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.knowledge-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, .85fr) minmax(0, 1.15fr);
+  gap: 22px;
+}
+.knowledge-detail-preview,
+.knowledge-detail-info {
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+  background: #fff;
+  padding: 16px;
+}
+.knowledge-detail-preview-stage {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  background: #f6f8fb;
+}
+.knowledge-detail-preview-stage img,
+.knowledge-detail-preview-stage video,
+.knowledge-detail-preview-stage iframe {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+}
+.knowledge-detail-preview-stage video { background: #000; }
+.knowledge-detail-preview-stage .pdf-thumbnail { max-width: 100%; height: auto; }
+.knowledge-detail-empty { padding: 36px; color: #667085; text-align: center; }
+
+.knowledge-detail-meta {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+}
+.knowledge-detail-meta dt,
+.knowledge-detail-meta dd {
+  margin: 0;
+  padding: 11px 0;
+  border-bottom: 1px solid #edf0f4;
+}
+.knowledge-detail-meta dt { font-weight: 700; color: #5f6f82; }
+.knowledge-detail-meta dd { color: #17283b; overflow-wrap: anywhere; }
+.knowledge-detail-summary {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #dbe3ec;
+}
+.knowledge-detail-summary h4 { margin: 0 0 8px; color: #071b33; }
+.knowledge-detail-summary p { margin: 0; white-space: pre-wrap; line-height: 1.65; color: #44515f; }
+
+@media (max-width: 900px) {
+  .knowledge-detail-grid { grid-template-columns: 1fr; }
+  .knowledge-detail-meta { grid-template-columns: 120px minmax(0, 1fr); }
+}
