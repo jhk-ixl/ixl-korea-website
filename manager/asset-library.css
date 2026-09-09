@@ -11,20 +11,11 @@
   --asset-edit-bg: #fff9df;
   --asset-edit-border: #d3a91f;
   --asset-navy: #071b33;
-  --asset-sticky-top: 0px;
+  --asset-green: #00843d;
 }
 
 .asset-manager {
   padding-top: 26px;
-}
-
-.asset-sticky-shell {
-  position: sticky;
-  top: 0;
-  z-index: 1800;
-  background: #fff;
-  padding-top: 12px;
-  border-bottom: 1px solid var(--asset-border);
 }
 
 .asset-page-head,
@@ -89,6 +80,68 @@
   flex-wrap: wrap;
 }
 
+/* Manager work navigation: this is the Asset Management reference pattern. */
+.asset-mode-nav {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 4px 0 26px;
+}
+
+.asset-mode-card {
+  display: grid;
+  gap: 6px;
+  min-height: 104px;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  border: 1px solid var(--asset-border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--asset-navy);
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(7, 27, 51, 0.05);
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.asset-mode-card:hover {
+  border-color: #a8bacd;
+  box-shadow: 0 10px 24px rgba(7, 27, 51, 0.09);
+  transform: translateY(-1px);
+}
+
+.asset-mode-card.active {
+  border-color: var(--asset-navy);
+  box-shadow: inset 0 0 0 1px var(--asset-navy), 0 8px 22px rgba(7, 27, 51, 0.08);
+}
+
+.asset-mode-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  color: var(--asset-green);
+}
+
+.asset-mode-card strong {
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.asset-mode-card > span:last-child {
+  color: var(--asset-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.asset-library-head,
+.asset-usage-head {
+  margin-bottom: 18px;
+}
+
+.asset-panel-head h3,
+.asset-section-head h3 {
+  margin: 5px 0 6px;
+}
+
 .asset-filter-bar {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(170px, 240px);
@@ -139,20 +192,8 @@
   min-width: 0;
 }
 
-.asset-top-scroll {
-  overflow-x: auto;
-  overflow-y: hidden;
-  height: 16px;
-  background: #fff;
-  border-top: 1px solid var(--asset-border);
-}
-
-.asset-top-scroll > div {
-  height: 1px;
-}
-
 .asset-work-panel {
-  margin: 20px 0;
+  margin: 0 0 22px;
   padding: 20px;
   border: 1px solid var(--asset-border);
   border-radius: 12px;
@@ -163,13 +204,9 @@
 .asset-work-panel[hidden],
 .asset-modal[hidden],
 #asset-list-mode[hidden],
+#asset-usage-mode[hidden],
 #asset-edit-mode[hidden] {
   display: none !important;
-}
-
-.asset-panel-head h3,
-.asset-section-head h3 {
-  margin: 5px 0 6px;
 }
 
 .asset-upload-grid,
@@ -276,15 +313,50 @@
   grid-column: 1 / -1;
 }
 
+/*
+   Table architecture:
+   - the horizontal scrollbar and header are one sticky unit
+   - the data table is a separate scrolling surface
+   - the header is never overlaid on the first row
+*/
+.asset-grid-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1800;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--asset-border);
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 5px 14px rgba(7, 27, 51, 0.06);
+}
+
+.asset-top-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 18px;
+  background: #fff;
+  border-bottom: 1px solid var(--asset-border);
+}
+
+.asset-top-scroll > div {
+  height: 1px;
+}
+
+.asset-header-viewport {
+  overflow: hidden;
+  background: var(--asset-bg-soft);
+}
+
 .asset-table-section {
-  margin-top: 18px;
+  margin-top: 0;
 }
 
 .asset-table-wrap {
   overflow-x: auto;
   scrollbar-width: none;
   border: 1px solid var(--asset-border);
-  border-radius: 10px;
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
 }
 
 .asset-table-wrap::-webkit-scrollbar {
@@ -292,24 +364,41 @@
 }
 
 .asset-table {
-  min-width: 1320px;
+  width: 1530px;
+  min-width: 1530px;
+  table-layout: fixed;
 }
 
-.asset-table thead th {
-  position: sticky;
-  top: var(--asset-table-head-top, 186px);
-  z-index: 1700;
-  background: #fff;
+.asset-table col.asset-col-file { width: 300px; }
+.asset-table col.asset-col-key { width: 295px; }
+.asset-table col.asset-col-folder { width: 125px; }
+.asset-table col.asset-col-type { width: 70px; }
+.asset-table col.asset-col-size { width: 90px; }
+.asset-table col.asset-col-uploaded { width: 175px; }
+.asset-table col.asset-col-view { width: 80px; }
+.asset-table col.asset-col-registry { width: 110px; }
+.asset-table col.asset-col-download { width: 100px; }
+.asset-table col.asset-col-url { width: 95px; }
+.asset-table col.asset-col-delete { width: 90px; }
+
+.asset-header-table thead th {
+  position: static;
+  z-index: auto;
+  background: var(--asset-bg-soft);
   box-shadow: inset 0 -1px 0 var(--asset-border);
+}
+
+.asset-body-table {
+  margin-top: 0;
 }
 
 .asset-table td,
 .asset-table th {
+  box-sizing: border-box;
   white-space: nowrap;
 }
 
 .asset-table td:first-child {
-  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -326,9 +415,40 @@
   white-space: nowrap;
 }
 
-.asset-usage-section {
-  margin-top: 34px;
-  padding-top: 10px;
+.asset-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.asset-sort-button:hover,
+.asset-sort-button:focus-visible {
+  color: #0059b3;
+}
+
+.asset-sort-indicator {
+  min-width: 12px;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.asset-sort-button[data-sort-direction="asc"] .asset-sort-indicator::before {
+  content: "▲";
+}
+
+.asset-sort-button[data-sort-direction="desc"] .asset-sort-indicator::before {
+  content: "▼";
 }
 
 .asset-secondary-table-wrap {
@@ -462,6 +582,7 @@
     justify-content: flex-start;
   }
 
+  .asset-mode-nav,
   .asset-filter-bar,
   .asset-upload-grid,
   .asset-editor-grid,
@@ -478,7 +599,7 @@
     grid-column: auto;
   }
 
-  .asset-table thead th {
-    top: var(--asset-table-head-top-mobile, 250px);
+  .asset-grid-sticky {
+    top: 0;
   }
 }

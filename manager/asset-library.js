@@ -10,6 +10,8 @@
   let usageMappings = [];
   let uploadObjectUrl = '';
   let syncingScroll = false;
+  let assetSortKey = 'uploaded';
+  let assetSortDirection = 'desc';
 
   const $ = id => document.getElementById(id);
 
@@ -233,67 +235,115 @@
   function updateTopScroller() {
     const wrap = $('asset-table-wrap');
     const table = $('asset-table');
+    const headerTable = $('asset-header-table');
     const content = $('asset-top-scroll-content');
-    if (!wrap || !table || !content) return;
-    content.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
+    if (!wrap || !table || !headerTable || !content) return;
+
+    const width = Math.max(table.scrollWidth, headerTable.scrollWidth, wrap.clientWidth);
+    content.style.width = `${width}px`;
   }
 
   function setupScrollSync() {
     const top = $('asset-top-scroll');
+    const header = $('asset-header-viewport');
     const wrap = $('asset-table-wrap');
-    if (!top || !wrap) return;
+    if (!top || !header || !wrap) return;
 
-    top.addEventListener('scroll', () => {
+    const syncTo = source => {
       if (syncingScroll) return;
       syncingScroll = true;
-      wrap.scrollLeft = top.scrollLeft;
+      const left = source.scrollLeft;
+      if (source !== top) top.scrollLeft = left;
+      if (source !== header) header.scrollLeft = left;
+      if (source !== wrap) wrap.scrollLeft = left;
       syncingScroll = false;
-    });
+    };
 
-    wrap.addEventListener('scroll', () => {
-      if (syncingScroll) return;
-      syncingScroll = true;
-      top.scrollLeft = wrap.scrollLeft;
-      syncingScroll = false;
-    });
-
+    top.addEventListener('scroll', () => syncTo(top));
+    wrap.addEventListener('scroll', () => syncTo(wrap));
     window.addEventListener('resize', updateTopScroller);
   }
 
-  function updateStickyHeaderOffset() {
-    const shell = $('asset-sticky-shell');
-    if (!shell) return;
-    const height = Math.ceil(shell.getBoundingClientRect().height);
-    document.documentElement.style.setProperty('--asset-table-head-top', `${height}px`);
-    document.documentElement.style.setProperty('--asset-table-head-top-mobile', `${height}px`);
+  function getAssetSortValue(asset, key) {
+    const pathname = String(asset?.pathname || '');
+    const registryItem = getRegistryItem(asset);
+    const fileName = getFileName(pathname);
+    const assetKey = registryItem?.key || createAssetKey(fileName);
+
+    switch (key) {
+      case 'file': return fileName.toLowerCase();
+      case 'key': return String(assetKey || '').toLowerCase();
+      case 'folder': return getFolder(pathname).toLowerCase();
+      case 'type': return getFileType(pathname).toLowerCase();
+      case 'size': return Number(asset?.size || 0);
+      case 'uploaded': {
+        const value = new Date(asset?.uploadedAt || 0).getTime();
+        return Number.isFinite(value) ? value : 0;
+      }
+      default: return '';
+    }
+  }
+
+  function compareAssetValues(a, b) {
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll('.asset-sort-button').forEach(button => {
+      const active = button.dataset.sortKey === assetSortKey;
+      button.dataset.sortDirection = active ? assetSortDirection : '';
+      const th = button.closest('th');
+      if (th) th.setAttribute('aria-sort', active ? (assetSortDirection === 'asc' ? 'ascending' : 'descending') : 'none');
+    });
+  }
+
+  function setAssetSort(key) {
+    if (!['file', 'key', 'folder', 'type', 'size', 'uploaded'].includes(key)) return;
+
+    if (assetSortKey === key) {
+      assetSortDirection = assetSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      assetSortKey = key;
+      assetSortDirection = key === 'uploaded' ? 'desc' : 'asc';
+    }
+
+    renderAssets();
   }
 
   function renderAssets() {
     const tbody = $('asset-table-body');
     const empty = $('library-empty');
-    const search = $('asset-search').value.trim().toLowerCase();
-    const folder = $('asset-folder-filter').value;
+    if (!tbody || !empty) return;
 
-    const filtered = allAssets.filter(asset => {
-      const pathname = String(asset.pathname || '');
-      const registryItem = getRegistryItem(asset);
-      const key = registryItem?.key || createAssetKey(getFileName(pathname));
-      const description = String(registryItem?.description || '');
+    const search = String($('asset-search')?.value || '').trim().toLowerCase();
+    const folder = String($('asset-folder-filter')?.value || 'all');
 
-      const matchesSearch =
-        !search ||
-        pathname.toLowerCase().includes(search) ||
-        key.toLowerCase().includes(search) ||
-        description.toLowerCase().includes(search);
+    const filtered = allAssets
+      .filter(asset => {
+        const pathname = String(asset.pathname || '');
+        const registryItem = getRegistryItem(asset);
+        const key = registryItem?.key || createAssetKey(getFileName(pathname));
+        const description = String(registryItem?.description || '');
 
-      const matchesFolder =
-        folder === 'all' ||
-        getFolder(pathname) === folder;
+        const matchesSearch =
+          !search ||
+          pathname.toLowerCase().includes(search) ||
+          key.toLowerCase().includes(search) ||
+          description.toLowerCase().includes(search);
 
-      return matchesSearch && matchesFolder;
-    });
+        const matchesFolder = folder === 'all' || getFolder(pathname) === folder;
+        return matchesSearch && matchesFolder;
+      })
+      .sort((a, b) => {
+        const result = compareAssetValues(
+          getAssetSortValue(a, assetSortKey),
+          getAssetSortValue(b, assetSortKey)
+        );
+        return assetSortDirection === 'asc' ? result : -result;
+      });
 
-    $('asset-count').textContent = filtered.length;
+    if ($('asset-count')) $('asset-count').textContent = filtered.length;
     tbody.innerHTML = '';
 
     filtered.forEach(asset => {
@@ -304,7 +354,6 @@
       const viewUrl = asset.url || '';
       const downloadUrl = asset.downloadUrl || asset.url || '';
       const registryItem = getRegistryItem(asset);
-      const registryIndex = getRegistryIndex(asset);
       const assetKey = registryItem?.key || createAssetKey(fileName);
 
       const duplicateBlobAssets = allAssets.filter(otherAsset => {
@@ -319,7 +368,7 @@
       const registryButton = registryItem
         ? `<a class="library-button" href="asset-library.html?edit=${encodeURIComponent(registryItem.key)}">Edit</a>`
         : hasBlobKeyDuplicate
-          ? `<button type="button" class="library-button" data-duplicate-key="${escapeHtml(assetKey)}">⚠ Duplicate Key</button>`
+          ? `<button type="button" class="library-button" data-duplicate-key="${escapeHtml(assetKey)}">Duplicate Key</button>`
           : `<button type="button" class="library-button primary" data-register-path="${escapeHtml(pathname)}">Register</button>`;
 
       row.innerHTML = `
@@ -341,11 +390,9 @@
 
     empty.style.display = filtered.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
+    updateSortIndicators();
 
-    requestAnimationFrame(() => {
-      updateTopScroller();
-      updateStickyHeaderOffset();
-    });
+    requestAnimationFrame(updateTopScroller);
   }
 
   async function copyAssetUrl(url) {
@@ -427,7 +474,7 @@
       .forEach(asset => {
         const option = document.createElement('option');
         option.value = asset.key;
-        option.textContent = `${asset.key} — ${asset.fileName || asset.name || asset.pathname || ''}`;
+        option.textContent = `${asset.key} ??${asset.fileName || asset.name || asset.pathname || ''}`;
         select.appendChild(option);
       });
 
@@ -595,41 +642,34 @@
   }
 
   function getNextAvailableAssetKey(baseKey) {
-    const used = new Set(registryAssets.map(item => String(item.key || '')));
-
-    if (!used.has(baseKey)) return baseKey;
+    const cleanBase = createAssetKey(baseKey) || 'asset';
+    const used = new Set(registryAssets.map(item => String(item.key || '').trim()).filter(Boolean));
+    if (!used.has(cleanBase)) return cleanBase;
 
     let number = 2;
-
-    while (used.has(`${baseKey}-${number}`)) {
-      number += 1;
-    }
-
-    return `${baseKey}-${number}`;
+    while (used.has(`${cleanBase}-${number}`)) number += 1;
+    return `${cleanBase}-${number}`;
   }
 
   function chooseDuplicateRegistryAction(key) {
     return new Promise(resolve => {
       const overlay = document.createElement('div');
       overlay.className = 'asset-modal';
-
       overlay.innerHTML = `
         <div class="asset-modal-card">
           <div class="asset-panel-head">
             <div>
               <span class="section-eyebrow">DUPLICATE ASSET KEY</span>
-              <h3>${escapeHtml(key)}</h3>
-              <p>Choose how this file should be registered.</p>
+              <h3 style="margin:6px 0 0;">${escapeHtml(key)}</h3>
+              <p style="margin-top:8px;">Choose how this file should be registered.</p>
             </div>
           </div>
-
-          <div class="asset-form-actions" style="margin-top:20px">
+          <div class="asset-form-actions" style="margin-top:22px;">
             <button type="button" class="library-button" data-choice="cancel">Cancel</button>
             <button type="button" class="library-button" data-choice="add">Add with New Key</button>
             <button type="button" class="library-button primary" data-choice="update">Update Existing Key</button>
           </div>
-        </div>
-      `;
+        </div>`;
 
       const finish = choice => {
         overlay.remove();
@@ -637,16 +677,9 @@
       };
 
       overlay.addEventListener('click', event => {
-        if (event.target === overlay) {
-          finish('cancel');
-          return;
-        }
-
+        if (event.target === overlay) return finish('cancel');
         const button = event.target.closest('[data-choice]');
-
-        if (button) {
-          finish(button.dataset.choice);
-        }
+        if (button) finish(button.dataset.choice);
       });
 
       document.body.appendChild(overlay);
@@ -655,34 +688,27 @@
 
   async function deleteUploadedBlobQuietly(asset) {
     const url = String(asset?.url || '').trim();
-
     if (!url) return;
 
     try {
-      const response = await fetch(API_UPLOAD, {
+      await fetch(API_UPLOAD, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
         body: JSON.stringify({ url })
       });
-
-      if (!response.ok) {
-        console.error('Temporary uploaded Blob cleanup failed.');
-      }
     } catch (error) {
-      console.error('Temporary uploaded Blob cleanup failed.', error);
+      console.error('Failed to roll back uploaded Blob:', error);
     }
   }
 
   async function registerAsset(asset, explicit = {}) {
     const fileName = getFileName(asset.pathname);
-    const key = createAssetKey(explicit.key || fileName);
-
-    if (!key) throw new Error('A valid Asset Key is required.');
+    const requestedKey = createAssetKey(explicit.key || fileName);
+    if (!requestedKey) throw new Error('A valid Asset Key is required.');
 
     const type = String(explicit.type || getFileType(asset.pathname).toLowerCase()).toLowerCase();
-
-    const payload = {
+    const buildPayload = key => ({
       key,
       name: explicit.name || fileName,
       fileName,
@@ -697,35 +723,50 @@
       thumbnailTime: isVideoType(type)
         ? (explicit.thumbnailTime ?? DEFAULT_VIDEO_THUMBNAIL_TIME)
         : null
-    };
+    });
 
+    let payload = buildPayload(requestedKey);
     let { response, data } = await postAsset(payload);
 
     if (response.status === 409 && data.duplicate) {
       const existing = data.existingItem || {};
-      const action = confirm(
-        `Asset Key "${key}" already exists.\n\nOK: update this Key to the new file.\nCancel: keep the current registry item.`
-      ) ? 'UPDATE' : 'CANCEL';
+      const action = await chooseDuplicateRegistryAction(requestedKey);
 
-      if (action === 'CANCEL') return null;
+      if (action === 'cancel') return null;
 
-      const affectedUsages = usageMappings.filter(usage => usage.assetKey === existing.key);
-      if (affectedUsages.length) {
-        const usageList = affectedUsages
-          .map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`)
-          .join('\n');
-
-        const confirmed = confirm(
-          `Asset Key "${existing.key}" is used by ${affectedUsages.length} Usage mapping(s):\n\n${usageList}\n\nContinue updating this Asset?`
-        );
-        if (!confirmed) return null;
+      if (action === 'add') {
+        const newKey = getNextAvailableAssetKey(requestedKey);
+        payload = buildPayload(newKey);
+        ({ response, data } = await postAsset(payload));
       }
 
-      ({ response, data } = await postAsset({
-        ...payload,
-        uploadedAt: existing.uploadedAt || payload.uploadedAt,
-        index: data.existingIndex
-      }, { method: 'PATCH' }));
+      if (action === 'update') {
+        const affectedUsages = usageMappings.filter(usage => usage.assetKey === existing.key);
+        let confirmUsageKeyChange = false;
+
+        if (affectedUsages.length) {
+          const usageList = affectedUsages
+            .map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`)
+            .join('\n');
+
+          const confirmed = confirm(
+            `Asset Key "${existing.key}" is used by ${affectedUsages.length} Usage mapping(s):
+
+${usageList}
+
+UPDATE will make all of these usages point to the new file. Continue?`
+          );
+          if (!confirmed) return null;
+          confirmUsageKeyChange = true;
+        }
+
+        ({ response, data } = await postAsset({
+          ...payload,
+          uploadedAt: existing.uploadedAt || payload.uploadedAt,
+          index: data.existingIndex,
+          confirmUsageKeyChange
+        }, { method: 'PATCH' }));
+      }
     }
 
     if (!response.ok) throw new Error(data.error || 'Failed to register asset.');
@@ -785,177 +826,70 @@
     const file = $('asset-upload-file').files[0];
     const folder = $('asset-upload-folder').value;
     const button = $('asset-upload-button');
+    if (!file) return alert('Please select a file first.');
+
+    const key = createAssetKey($('asset-upload-key').value || file.name);
+    if (!key) return alert('A valid Asset Key is required.');
+
+    const ext = getExtension(file.name);
+    const isVideo = ['mp4', 'webm'].includes(ext);
+    const thumbnailTimeRaw = $('asset-upload-thumbnail-time').value;
+    const thumbnailTime = isVideo ? Number(thumbnailTimeRaw) : null;
+
+    if (isVideo && (!Number.isFinite(thumbnailTime) || thumbnailTime < 0)) {
+      return alert('Thumbnail Time must be 0 or greater.');
+    }
 
     let uploadedAsset = null;
-    let registrationCompleted = false;
-
-    if (!file) {
-      return alert('Please select a file first.');
-    }
-
-    const key =
-      createAssetKey(
-        $('asset-upload-key').value ||
-        file.name
-      );
-
-    if (!key) {
-      return alert('A valid Asset Key is required.');
-    }
-
-    const ext =
-      getExtension(file.name);
-
-    const isVideo =
-      ['mp4', 'webm'].includes(ext);
-
-    const thumbnailTimeRaw =
-      $('asset-upload-thumbnail-time').value;
-
-    const thumbnailTime =
-      isVideo
-        ? Number(thumbnailTimeRaw)
-        : null;
-
-    if (
-      isVideo &&
-      (
-        !Number.isFinite(thumbnailTime) ||
-        thumbnailTime < 0
-      )
-    ) {
-      return alert(
-        'Thumbnail Time must be 0 or greater.'
-      );
-    }
+    let registered = null;
 
     try {
       button.disabled = true;
       button.textContent = 'Uploading...';
 
-      if (!window.vercelBlobUpload) {
-        throw new Error(
-          'Blob upload module is not loaded.'
-        );
-      }
+      if (!window.vercelBlobUpload) throw new Error('Blob upload module is not loaded.');
 
-      const safeFileName =
-        file.name.replace(
-          /[^a-zA-Z0-9._-]/g,
-          '-'
-        );
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+      const pathname = `${folder}/${safeFileName}`;
 
-      const pathname =
-        `${folder}/${safeFileName}`;
-
-      const uploaded =
-        await window.vercelBlobUpload(
-          pathname,
-          file,
-          {
-            access: 'public',
-            handleUploadUrl: API_UPLOAD,
-            multipart: true,
-            clientPayload:
-              JSON.stringify({
-                originalFileName:
-                  file.name
-              })
-          }
-        );
+      const uploaded = await window.vercelBlobUpload(pathname, file, {
+        access: 'public',
+        handleUploadUrl: API_UPLOAD
+      });
 
       uploadedAsset = {
-        pathname:
-          uploaded.pathname ||
-          pathname,
-
-        url:
-          uploaded.url ||
-          '',
-
-        downloadUrl:
-          uploaded.downloadUrl ||
-          uploaded.url ||
-          '',
-
-        size:
-          file.size,
-
-        uploadedAt:
-          new Date()
-            .toISOString()
+        pathname: uploaded.pathname || pathname,
+        url: uploaded.url || '',
+        downloadUrl: uploaded.downloadUrl || uploaded.url || '',
+        size: file.size,
+        uploadedAt: new Date().toISOString()
       };
 
       button.textContent = 'Registering...';
 
-      const registered =
-        await registerAsset(
-          uploadedAsset,
-          {
-            key,
-
-            name:
-              file.name,
-
-            description:
-              $('asset-upload-description')
-                .value
-                .trim(),
-
-            type:
-              ext,
-
-            thumbnailTime:
-              isVideo
-                ? thumbnailTime
-                : null
-          }
-        );
+      registered = await registerAsset(uploadedAsset, {
+        key,
+        name: file.name,
+        description: $('asset-upload-description').value.trim(),
+        type: ext,
+        thumbnailTime: isVideo ? thumbnailTime : null
+      });
 
       if (!registered) {
-        button.textContent = 'Cleaning up...';
-
-        await deleteUploadedBlobQuietly(
-          uploadedAsset
-        );
-
+        await deleteUploadedBlobQuietly(uploadedAsset);
         uploadedAsset = null;
-
-        alert(
-          'Upload registration was cancelled. The temporary uploaded file was removed.'
-        );
-
         return;
       }
 
-      registrationCompleted = true;
+      alert(`Upload and registration completed.
 
-      alert(
-        `Upload and registration completed.\n\nKey: ${registered.key || key}`
-      );
-
+Key: ${registered.key || key}`);
       resetUploadForm();
-
-      location.href =
-        'asset-library.html';
+      location.href = 'asset-library.html';
     } catch (error) {
       console.error(error);
-
-      if (
-        uploadedAsset &&
-        !registrationCompleted
-      ) {
-        button.textContent = 'Cleaning up...';
-
-        await deleteUploadedBlobQuietly(
-          uploadedAsset
-        );
-      }
-
-      alert(
-        error.message ||
-        'Upload failed.'
-      );
+      if (uploadedAsset && !registered) await deleteUploadedBlobQuietly(uploadedAsset);
+      alert(error.message || 'Upload failed.');
     } finally {
       button.disabled = false;
       button.textContent = 'Upload & Register';
@@ -964,29 +898,14 @@
 
   function showPanel(id) {
     ['asset-upload-panel', 'repository-asset-panel'].forEach(panelId => {
-      $(panelId).hidden = panelId !== id;
+      const panel = $(panelId);
+      if (panel) panel.hidden = panelId !== id;
     });
-    updateStickyHeaderOffset();
   }
 
   function closePanel(id) {
-    const mode =
-      new URLSearchParams(
-        location.search
-      ).get('mode');
-
-    if (
-      id === 'asset-upload-panel' &&
-      mode === 'upload'
-    ) {
-      location.href =
-        'asset-library.html';
-
-      return;
-    }
-
-    $(id).hidden = true;
-    updateStickyHeaderOffset();
+    const panel = $(id);
+    if (panel) panel.hidden = true;
   }
 
   function updateRepositoryKeyFromPath() {
@@ -1041,13 +960,15 @@
     } finally {
       button.disabled = false;
       button.textContent = 'Register Repository Asset';
-      updateStickyHeaderOffset();
     }
   }
 
   function renderEditMode(item, index) {
     $('asset-list-mode').hidden = true;
+    $('asset-usage-mode').hidden = true;
     $('asset-edit-mode').hidden = false;
+    $('asset-library-nav')?.classList.add('active');
+    $('asset-usage-nav')?.classList.remove('active');
 
     $('asset-edit-index').value = String(index);
     $('asset-edit-title').textContent = item.key || 'Asset';
@@ -1094,61 +1015,47 @@
   }
 
   async function initMode() {
-    const params =
-      new URLSearchParams(
-        location.search
-      );
+    const params = new URLSearchParams(location.search);
+    const editKey = params.get('edit');
+    const mode = params.get('mode') || 'library';
 
-    const editKey =
-      params.get('edit');
+    $('asset-list-mode').hidden = true;
+    $('asset-usage-mode').hidden = true;
+    $('asset-edit-mode').hidden = true;
+    $('asset-library-nav')?.classList.remove('active');
+    $('asset-usage-nav')?.classList.remove('active');
 
-    const mode =
-      params.get('mode');
-
-    if (
-      mode === 'upload' &&
-      !editKey
-    ) {
-      $('asset-list-mode').hidden = false;
-      $('asset-edit-mode').hidden = true;
-
-      await Promise.all([
-        loadRegistry(),
-        loadUsageMappings()
-      ]);
-
-      $('asset-sticky-shell').hidden = true;
-      $('repository-asset-panel').hidden = true;
-      $('asset-table-wrap')
-        .closest('.asset-table-section')
-        .hidden = true;
-      $('asset-usage-section').hidden = true;
-      $('asset-upload-panel').hidden = false;
-
+    if (editKey) {
+      await Promise.all([loadRegistry(), loadUsageMappings()]);
+      const index = registryAssets.findIndex(item => item.key === editKey);
+      if (index < 0) {
+        alert(`Asset Key "${editKey}" was not found.`);
+        location.href = 'asset-library.html';
+        return;
+      }
+      renderEditMode(registryAssets[index], index);
       return;
     }
 
-    if (!editKey) {
-      $('asset-list-mode').hidden = false;
-      $('asset-edit-mode').hidden = true;
-      await loadAssets();
+    await loadAssets();
+
+    if (mode === 'usage') {
+      $('asset-usage-mode').hidden = false;
+      $('asset-usage-nav')?.classList.add('active');
+      renderUsageMappings();
       return;
     }
 
-    await Promise.all([
-      loadRegistry(),
-      loadUsageMappings()
-    ]);
+    $('asset-list-mode').hidden = false;
+    $('asset-library-nav')?.classList.add('active');
 
-    const index = registryAssets.findIndex(item => item.key === editKey);
-
-    if (index < 0) {
-      alert(`Asset Key "${editKey}" was not found.`);
-      location.href = 'asset-library.html';
-      return;
+    if (mode === 'upload') {
+      showPanel('asset-upload-panel');
+    } else {
+      closePanel('asset-upload-panel');
     }
 
-    renderEditMode(registryAssets[index], index);
+    requestAnimationFrame(updateTopScroller);
   }
 
   async function saveEditedAsset(event) {
@@ -1335,9 +1242,11 @@
     $('asset-search')?.addEventListener('input', renderAssets);
     $('asset-folder-filter')?.addEventListener('change', renderAssets);
 
-    $('asset-upload-toggle')?.addEventListener('click', () => {
-      location.href = 'asset-library.html?mode=upload';
+    $('asset-header-table')?.addEventListener('click', event => {
+      const button = event.target.closest('[data-sort-key]');
+      if (button) setAssetSort(button.dataset.sortKey);
     });
+
     $('repository-toggle')?.addEventListener('click', () => showPanel('repository-asset-panel'));
 
     document.querySelectorAll('[data-close-panel]').forEach(button => {
@@ -1452,7 +1361,6 @@
 
     try {
       await initMode();
-      updateStickyHeaderOffset();
       updateTopScroller();
     } catch (error) {
       console.error(error);

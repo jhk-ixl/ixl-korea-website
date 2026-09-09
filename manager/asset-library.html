@@ -38,43 +38,46 @@
   </header>
 
   <main class="manager-main asset-manager">
-    <section id="asset-list-mode">
-      <div class="asset-sticky-shell" id="asset-sticky-shell">
-        <section class="asset-page-head">
-          <div>
-            <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
-            <div class="asset-title-line">
-              <h2>Asset Management</h2>
-              <span class="asset-count-pill"><strong id="asset-count">0</strong> Assets</span>
-            </div>
-            <p>Upload, register, preview, edit and reuse files from one Asset Registry.</p>
-          </div>
-
-          <div class="library-actions">
-            <button type="button" id="asset-upload-toggle" class="library-button primary">Upload Asset</button>
-            <button type="button" id="repository-toggle" class="library-button">Register Repository Asset</button>
-            <a href="knowledge.html" class="library-button">Back to Knowledge Hub</a>
-          </div>
-        </section>
-
-        <section class="asset-filter-bar">
-          <div class="asset-field asset-field-grow">
-            <label for="asset-search">Search</label>
-            <input type="search" id="asset-search" placeholder="Search file name, key, description or folder...">
-          </div>
-
-          <div class="asset-field">
-            <label for="asset-folder-filter">Folder</label>
-            <select id="asset-folder-filter">
-              <option value="all">All Folders</option>
-            </select>
-          </div>
-        </section>
-
-        <div class="asset-top-scroll" id="asset-top-scroll" aria-label="Horizontal table scroll">
-          <div id="asset-top-scroll-content"></div>
+    <section class="asset-page-head">
+      <div>
+        <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+        <div class="asset-title-line">
+          <h2>Asset Management</h2>
+          <span class="asset-count-pill"><strong id="asset-count">0</strong> Assets</span>
         </div>
+        <p>Upload, register, preview, edit and reuse files from one Asset Registry.</p>
       </div>
+
+      <div class="library-actions">
+        <a href="knowledge.html" class="library-button">Back to Knowledge Hub</a>
+      </div>
+    </section>
+
+    <nav class="asset-mode-nav" aria-label="Asset Management sections">
+      <a id="asset-library-nav" class="asset-mode-card" href="asset-library.html">
+        <span class="asset-mode-kicker">ASSET LIBRARY</span>
+        <strong>Upload / Edit Assets</strong>
+        <span>Manage Blob files, repository assets, Registry metadata and previews.</span>
+      </a>
+      <a id="asset-usage-nav" class="asset-mode-card" href="asset-library.html?mode=usage">
+        <span class="asset-mode-kicker">USAGE MAPPING</span>
+        <strong>Manage Asset Usage</strong>
+        <span>Connect website pages and functions to registered Asset Keys.</span>
+      </a>
+    </nav>
+
+    <section id="asset-list-mode" hidden>
+      <section class="asset-section-head asset-library-head">
+        <div>
+          <span class="section-eyebrow">ASSET LIBRARY</span>
+          <h3>Registered & Uploaded Assets</h3>
+          <p>Search, sort and manage all available assets from one table.</p>
+        </div>
+        <div class="library-actions">
+          <a id="asset-upload-toggle" href="asset-library.html?mode=upload" class="library-button primary">Upload Asset</a>
+          <button type="button" id="repository-toggle" class="library-button">Register Repository Asset</button>
+        </div>
+      </section>
 
       <section id="asset-upload-panel" class="asset-work-panel" hidden>
         <div class="asset-panel-head">
@@ -83,7 +86,7 @@
             <h3>Upload & Register</h3>
             <p>The selected file is uploaded to Vercel Blob and registered in Asset Registry in one flow.</p>
           </div>
-          <button type="button" class="library-button" data-close-panel="asset-upload-panel">Close</button>
+          <a href="asset-library.html" class="library-button">Close</a>
         </div>
 
         <div class="asset-upload-grid">
@@ -98,14 +101,8 @@
           <form id="asset-upload-form" class="asset-form-card">
             <div class="asset-editable-field">
               <label for="asset-upload-file">File *</label>
-              <input
-                type="file"
-                id="asset-upload-file"
-                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt"
-                required
-              >
+              <input type="file" id="asset-upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt" required>
             </div>
-
             <div class="asset-form-row">
               <div class="asset-editable-field">
                 <label for="asset-upload-folder">Folder *</label>
@@ -118,25 +115,21 @@
                   <option value="images">images</option>
                 </select>
               </div>
-
               <div class="asset-editable-field">
                 <label for="asset-upload-key">Asset Key *</label>
                 <input type="text" id="asset-upload-key" placeholder="Auto-generated from file name">
                 <small>Generated automatically; edit only when needed.</small>
               </div>
             </div>
-
             <div class="asset-editable-field">
               <label for="asset-upload-description">Description</label>
               <textarea id="asset-upload-description" rows="3" placeholder="Short description for administrators and reuse."></textarea>
             </div>
-
             <div class="asset-editable-field" id="asset-upload-thumbnail-field" hidden>
               <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
               <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
               <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
-
             <div class="asset-form-actions">
               <button type="submit" id="asset-upload-button" class="library-button primary">Upload & Register</button>
               <button type="button" class="library-button" data-reset-upload>Reset</button>
@@ -154,13 +147,11 @@
           </div>
           <button type="button" class="library-button" data-close-panel="repository-asset-panel">Close</button>
         </div>
-
         <form id="repository-asset-form" class="asset-repository-grid">
           <div class="asset-editable-field asset-field-grow">
             <label for="repository-asset-path">Repository Path *</label>
             <input type="text" id="repository-asset-path" placeholder="insightscontent/articles/example.md">
           </div>
-
           <div class="asset-editable-field">
             <label for="repository-asset-type">Type *</label>
             <select id="repository-asset-type">
@@ -172,77 +163,80 @@
               <option value="video">Video</option>
             </select>
           </div>
-
           <div class="asset-editable-field">
             <label for="repository-asset-key">Asset Key *</label>
             <input type="text" id="repository-asset-key" placeholder="Auto-generated from path">
           </div>
-
           <div class="asset-editable-field asset-field-grow">
             <label for="repository-asset-description">Description</label>
             <input type="text" id="repository-asset-description" placeholder="Optional description">
           </div>
-
           <div class="asset-form-actions">
             <button type="submit" id="repository-asset-register" class="library-button primary">Register Repository Asset</button>
           </div>
         </form>
       </section>
 
+      <section class="asset-filter-bar">
+        <div class="asset-field asset-field-grow">
+          <label for="asset-search">Search</label>
+          <input type="search" id="asset-search" placeholder="Search file name, key, description or folder...">
+        </div>
+        <div class="asset-field">
+          <label for="asset-folder-filter">Folder</label>
+          <select id="asset-folder-filter"><option value="all">All Folders</option></select>
+        </div>
+      </section>
+
+      <div class="asset-grid-sticky" id="asset-grid-sticky">
+        <div class="asset-top-scroll" id="asset-top-scroll" aria-label="Horizontal table scroll"><div id="asset-top-scroll-content"></div></div>
+        <div class="asset-header-viewport" id="asset-header-viewport" aria-hidden="false">
+          <table class="library-table asset-table asset-header-table" id="asset-header-table">
+            <colgroup>
+              <col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-view"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
+            </colgroup>
+            <thead><tr>
+              <th data-sort-column="file"><button type="button" class="asset-sort-button" data-sort-key="file">File <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th data-sort-column="key"><button type="button" class="asset-sort-button" data-sort-key="key">Key <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th data-sort-column="folder"><button type="button" class="asset-sort-button" data-sort-key="folder">Folder <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th data-sort-column="type"><button type="button" class="asset-sort-button" data-sort-key="type">Type <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th data-sort-column="size"><button type="button" class="asset-sort-button" data-sort-key="size">Size <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th data-sort-column="uploaded"><button type="button" class="asset-sort-button" data-sort-key="uploaded">Uploaded <span class="asset-sort-indicator" aria-hidden="true"></span></button></th>
+              <th>View</th><th>Registry</th><th>Download</th><th>URL</th><th>Delete</th>
+            </tr></thead>
+          </table>
+        </div>
+      </div>
+
       <section class="asset-table-section">
         <div class="library-table-wrap asset-table-wrap" id="asset-table-wrap">
-          <table class="library-table asset-table" id="asset-table">
-            <thead>
-              <tr>
-                <th>File</th>
-                <th>Key</th>
-                <th>Folder</th>
-                <th>Type</th>
-                <th>Size</th>
-                <th>Uploaded</th>
-                <th>View</th>
-                <th>Registry</th>
-                <th>Download</th>
-                <th>URL</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
+          <table class="library-table asset-table asset-body-table" id="asset-table">
+            <colgroup>
+              <col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-view"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
+            </colgroup>
             <tbody id="asset-table-body"></tbody>
           </table>
-
           <div id="library-empty" class="library-empty">Loading assets...</div>
         </div>
       </section>
+    </section>
 
-      <section class="asset-usage-section">
-        <div class="asset-section-head">
-          <div>
-            <span class="section-eyebrow">ASSET USAGE</span>
-            <h3>Usage Mapping</h3>
-            <p>Connect a website page or function to a registered Asset Key without changing code data manually.</p>
-          </div>
-
-          <button type="button" id="usage-add-button" class="library-button primary">Add Usage</button>
+    <section id="asset-usage-mode" hidden>
+      <section class="asset-section-head asset-usage-head">
+        <div>
+          <span class="section-eyebrow">ASSET USAGE</span>
+          <h3>Usage Mapping</h3>
+          <p>Connect a website page or function to a registered Asset Key without changing code data manually.</p>
         </div>
-
-        <div class="library-table-wrap asset-secondary-table-wrap">
-          <table class="library-table">
-            <thead>
-              <tr>
-                <th>Usage Key</th>
-                <th>Page / Function</th>
-                <th>Label</th>
-                <th>Asset Key</th>
-                <th>Asset</th>
-                <th>Edit</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-            <tbody id="usage-table-body"></tbody>
-          </table>
-          <div id="usage-empty" class="library-empty">Loading usage mappings...</div>
-        </div>
+        <button type="button" id="usage-add-button" class="library-button primary">Add Usage</button>
       </section>
+      <div class="library-table-wrap asset-secondary-table-wrap">
+        <table class="library-table">
+          <thead><tr><th>Usage Key</th><th>Page / Function</th><th>Label</th><th>Asset Key</th><th>Asset</th><th>Edit</th><th>Delete</th></tr></thead>
+          <tbody id="usage-table-body"></tbody>
+        </table>
+        <div id="usage-empty" class="library-empty">Loading usage mappings...</div>
+      </div>
     </section>
 
     <section id="asset-edit-mode" hidden>
