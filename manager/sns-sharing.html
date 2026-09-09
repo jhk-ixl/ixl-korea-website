@@ -11,8 +11,45 @@
 
   <script src="manager-guard.js"></script>
   <script src="manager-common.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-.sns-review-media{margin-top:10px;min-height:220px;border:1px solid #dbe3ec;border-radius:8px;background:#f7f9fb;display:flex;align-items:center;justify-content:center;overflow:hidden}.sns-review-media img,.sns-review-media video{max-width:100%;max-height:360px}.sns-review-media iframe{width:100%;height:360px;border:0}.sns-transaction-history{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ec}.sns-transaction-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #edf1f5;font-size:13px;cursor:pointer}.sns-transaction-item:hover{background:#f7f9fb}.sns-review-fields{margin:0}.sns-review-fields>div{display:grid;grid-template-columns:140px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #e7ecf1}.sns-review-fields dt{font-weight:700;color:#53657a}.sns-review-fields dd{margin:0}.sns-language-badge{font-size:11px;font-weight:800;text-transform:uppercase}.sns-knowledge-id{display:block;margin-top:4px;font-size:11px;color:#6b7b8d}.sns-summary-wrap{margin-top:6px}.sns-summary-text{white-space:pre-wrap;line-height:1.55}.sns-summary-text.is-clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.sns-summary-toggle{margin-top:5px;border:0;background:transparent;padding:0;color:#0759b6;font:inherit;font-size:12px;cursor:pointer}.sns-editor-header{margin-bottom:22px}.sns-editor-context{font-size:13px;color:#617186;margin-top:6px}.sns-version-summary{display:block;margin-top:8px;white-space:pre-wrap;line-height:1.45}.sns-version-summary.is-clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.sns-list-screen-part[hidden],#sns-review-screen[hidden],#sns-compose-section[hidden]{display:none!important}
+.sns-review-media{margin-top:10px;min-height:260px;border:1px solid #dbe3ec;border-radius:8px;background:#f7f9fb;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sns-review-media img,.sns-review-media video{display:block;max-width:100%;max-height:420px;object-fit:contain}
+.sns-review-media iframe{width:100%;height:420px;border:0;background:#fff}
+.sns-transaction-history{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ec}
+.sns-transaction-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #edf1f5;font-size:13px;cursor:pointer}
+.sns-transaction-item:hover{background:#f7f9fb}
+.sns-review-fields{margin:0}
+.sns-review-fields>div{display:grid;grid-template-columns:140px minmax(0,1fr);gap:10px;padding:10px 0;border-bottom:1px solid #e7ecf1}
+.sns-review-fields dt{font-weight:700;color:#53657a}
+.sns-review-fields dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.sns-language-badge{font-size:11px;font-weight:800;text-transform:uppercase}
+.sns-knowledge-id{display:block;margin-top:4px;font-size:11px;color:#6b7b8d;overflow-wrap:anywhere}
+.sns-summary-wrap{margin-top:6px}
+.sns-summary-text{white-space:pre-wrap;line-height:1.55;overflow-wrap:anywhere}
+.sns-summary-text.is-clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.sns-summary-toggle{margin-top:5px;border:0;background:transparent;padding:0;color:#0759b6;font:inherit;font-size:12px;cursor:pointer}
+.sns-editor-header{margin-bottom:22px}
+.sns-editor-context{font-size:13px;color:#617186;margin-top:6px}
+.sns-list-screen-part[hidden],#sns-review-screen[hidden],#sns-compose-section[hidden]{display:none!important}
+.sns-list-thumbnail{width:92px;min-width:92px;height:64px;border:1px solid #dbe3ec;border-radius:6px;background:#f7f9fb;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sns-list-thumbnail img,.sns-list-thumbnail video{width:100%;height:100%;object-fit:cover}
+.sns-list-thumbnail canvas{display:block;width:100%;height:100%;object-fit:cover}
+.sns-list-thumbnail .sns-thumb-label{font-size:11px;font-weight:800;color:#5c6c80}
+.sns-row-action{text-align:right;white-space:nowrap}
+#sns-knowledge-table{min-width:1040px}
+#sns-knowledge-table td{vertical-align:middle}
+#sns-knowledge-table th:nth-child(1){width:110px}
+#sns-knowledge-table th:nth-child(2){width:120px}
+#sns-knowledge-table th:nth-child(3){width:130px}
+#sns-knowledge-table th:nth-child(4){width:120px}
+#sns-knowledge-table th:nth-child(5){min-width:360px}
+#sns-knowledge-table th:nth-child(6){width:130px}
+#sns-knowledge-table th:nth-child(7){width:110px}
+#sns-knowledge-table th:nth-child(8){width:110px}
+.sns-list-title{font-weight:700}
+.sns-published-yes{font-weight:800}
+.sns-published-no{color:#6b7b8d}
 </style>
 </head>
 
@@ -153,56 +190,18 @@
 
 
 
-    <section class="sns-selection-summary sns-list-screen-part">
-
-      <div>
-
-        <strong id="selected-count">
-          0
-        </strong>
-
-        <span>
-          Knowledge Items Selected
-        </span>
-
-      </div>
-
-
-      <div class="library-actions">
-
-        <button
-          type="button"
-          class="library-button"
-          id="clear-selection"
-        >
-          Clear Selection
-        </button>
-
-
-        <a
-          href="distribution.html"
-          class="library-button"
-        >
-          Back to Distribution Hub
-        </a>
-
-      </div>
-
-    </section>
-
-
-
     <section class="library-table-wrap manager-canonical-table-wrap sns-list-screen-part" id="sns-knowledge-list-wrap">
       <table class="library-table manager-canonical-table" id="sns-knowledge-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
         <thead>
           <tr>
-            <th>Select</th>
+            <th>Thumbnail</th>
             <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th>Language</th>
             <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
-            <th>Classification</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="published">SNS Published <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="sns-knowledge-list"></tbody>
@@ -447,94 +446,7 @@
           <button
             type="button"
             class="library-button primary"
-            id="prepare-preview"
-          >
-            Prepare Preview
-          </button>
-
-        </div>
-
-
-      </div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         STEP 4 — PREVIEW
-         ========================================= -->
-
-    <section
-      class="sns-preview-section"
-      id="sns-preview-section"
-    >
-
-      <div class="sns-step-heading">
-
-        <span>
-          STEP 4
-        </span>
-
-        <h3>
-          Preview
-        </h3>
-
-      </div>
-
-
-
-      <div class="sns-preview-card">
-
-
-        <div
-          class="sns-preview-channel"
-          id="preview-channel"
-        >
-          LinkedIn Preview
-        </div>
-
-
-        <h3 id="preview-title">
-          Select a Knowledge item and prepare the preview.
-        </h3>
-
-
-        <p id="preview-text">
-        </p>
-
-
-        <div class="sns-preview-links">
-          <a href="#" id="preview-detail-link" target="_blank" rel="noopener noreferrer"></a>
-          <a href="#" id="preview-external-link" target="_blank" rel="noopener noreferrer"></a>
-        </div>
-
-        <div
-          class="sns-preview-media"
-          id="preview-media"
-          hidden
-        >
-
-          <strong id="preview-media-type">
-          </strong>
-
-          <a
-            href="#"
-            id="preview-media-file"
-            target="_blank"
-            rel="noopener noreferrer"
-          ></a>
-
-        </div>
-
-        <div class="sns-preview-actions">
-
-
-          <button
-            type="button"
-            class="library-button primary"
             id="add-to-queue"
-           
           >
             Add to Distribution Queue
           </button>
@@ -545,7 +457,6 @@
       </div>
 
     </section>
-
 
   </main>
 
@@ -1352,6 +1263,11 @@
 
 
 
+        await Promise.all([
+          loadAssetRegistry(),
+          loadDistributionHistoryData()
+        ]);
+
         buildTypeFilter(
           allKnowledgeItems
         );
@@ -1388,40 +1304,7 @@
 
 
 
-        /* CLEAR SELECTION */
-
-        document
-          .getElementById(
-            'clear-selection'
-          )
-          .addEventListener(
-            'click',
-            clearSelection
-          );
-
-
-
-        /* PREPARE PREVIEW */
-
-        const preparePreviewButton =
-          document.getElementById(
-            'prepare-preview'
-          );
-
-
-        if (
-          preparePreviewButton
-        ) {
-
-          preparePreviewButton
-            .addEventListener(
-              'click',
-              preparePreview
-            );
-
-        }
-
-      /* ADD TO DISTRIBUTION QUEUE */
+        /* ADD TO DISTRIBUTION QUEUE */
 
       const addToQueueButton =
         document.getElementById(
@@ -1461,6 +1344,7 @@
        KNOWLEDGE VERSION + TRANSACTION MODEL
        ========================================= */
     let distributionItems = [];
+    let assetRegistry = [];
     let selectedKnowledgeLanguage = 'other';
     let selectedTransaction = null;
 
@@ -1504,14 +1388,60 @@
       return rows;
     }
 
-    function getRepresentativeMedia(item, language) {
+    function findAssetByKey(key) {
+      const wanted = String(key || '').trim();
+      if (!wanted) return null;
+      return assetRegistry.find(asset => String(asset?.key || '').trim() === wanted) || null;
+    }
+
+    function resolveKnowledgeMedia(item, language) {
       const rep = item?.representativeMedia || {};
       const lang = rep?.[language] || {};
-      if (lang.asset || lang.url) return String(lang.asset || lang.url).trim();
-      if (!item?.representativeMedia && inferBaseLanguage(item) === language) {
-        return String(item.asset || item.url || '').trim();
+      const key = String(lang.assetKey || ((!item?.representativeMedia && inferBaseLanguage(item) === language) ? item.assetKey : '') || '').trim();
+      const registered = findAssetByKey(key);
+      if (registered?.url) {
+        return {
+          url: String(registered.url).trim(),
+          assetKey: key,
+          type: String(registered.type || rep.type || '').trim().toLowerCase(),
+          thumbnailTime: registered.thumbnailTime
+        };
       }
-      return '';
+
+      const direct = String(lang.asset || lang.url || ((!item?.representativeMedia && inferBaseLanguage(item) === language) ? (item.asset || item.url || '') : '') || '').trim();
+      return {
+        url: direct,
+        assetKey: key,
+        type: String(rep.type || '').trim().toLowerCase(),
+        thumbnailTime: null
+      };
+    }
+
+    function getRepresentativeMedia(item, language) {
+      return resolveKnowledgeMedia(item, language).url;
+    }
+
+    async function loadAssetRegistry() {
+      try {
+        const response = await fetch('/api/insights-library?resource=assets', {
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+        const data = await response.json();
+        assetRegistry = response.ok && Array.isArray(data) ? data : [];
+      } catch (error) {
+        assetRegistry = [];
+      }
+    }
+
+    async function loadDistributionHistoryData() {
+      try {
+        const response = await fetch('/api/distribution-queue', { cache: 'no-store' });
+        const data = await response.json();
+        distributionItems = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+      } catch (error) {
+        distributionItems = [];
+      }
     }
 
     function escapeHtml(value) {
@@ -1523,14 +1453,47 @@
         .replace(/'/g, '&#039;');
     }
 
+    function publishedTransactionsForEntry(entry) {
+      return distributionItems.filter(record =>
+        String(record?.knowledgeId || '').trim() === String(entry.item?.knowledgeId || '').trim() &&
+        normalizeLanguage(record?.language) === entry.language &&
+        String(record?.status || '').trim().toLowerCase() === 'published'
+      );
+    }
+
+    function thumbnailMarkup(item, language, key) {
+      const media = resolveKnowledgeMedia(item, language);
+      const url = String(media.url || '').trim();
+      if (!url) return '<div class="sns-list-thumbnail"><span class="sns-thumb-label">NO MEDIA</span></div>';
+      const safeUrl = escapeHtml(IXLManager.toUrl(url));
+      const lower = url.toLowerCase().split('?')[0].split('#')[0];
+      if (/\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
+        return `<div class="sns-list-thumbnail"><img src="${safeUrl}" alt=""></div>`;
+      }
+      if (/\.(mp4|mov|m4v|webm)$/i.test(lower)) {
+        const t = Number.isFinite(Number(media.thumbnailTime)) ? Number(media.thumbnailTime) : 0.1;
+        return `<div class="sns-list-thumbnail"><video src="${safeUrl}#t=${t}" muted preload="metadata"></video></div>`;
+      }
+      if (/\.pdf$/i.test(lower) || media.type === 'pdf' || media.type === 'document') {
+        return `<div class="sns-list-thumbnail"><canvas class="sns-pdf-thumb" data-pdf-url="${safeUrl}" data-thumb-key="${escapeHtml(key)}" aria-label="PDF first page"></canvas></div>`;
+      }
+      return '<div class="sns-list-thumbnail"><span class="sns-thumb-label">MEDIA</span></div>';
+    }
+
     function createKnowledgeCard(entry, key) {
       const item = entry.item, language = entry.language, version = entry.version;
-      const topics = normalizeArray(item.topics), industries = normalizeArray(item.industries), programs = normalizeArray(item.programs), tags = normalizeArray(item.tags);
-      const classification = [...topics,...industries,...programs,...tags].filter(Boolean).map(value => `<span class="manager-inline-tag">${escapeHtml(value)}</span>`).join(' ');
-      const checked = selectedItems.has(key) ? 'checked' : '';
-      const summary = version.summary || '';
-      const summaryHtml = summary ? `<span class="sns-version-summary is-clamped">${escapeHtml(summary)}</span><button type="button" class="sns-summary-toggle sns-list-summary-toggle">자세히...</button>` : '';
-      return `<tr><td><input type="radio" name="sns-knowledge-version" class="sns-item-checkbox" data-key="${key}" ${checked} aria-label="Select knowledge version"></td><td data-sort-value="${escapeHtml(item.type || 'Unclassified')}">${escapeHtml(item.type || 'Unclassified')}</td><td data-sort-value="${escapeHtml(item.date || item.dateLabel || '')}">${escapeHtml(item.dateLabel || item.date || '')}</td><td><span class="sns-language-badge">${escapeHtml(language)}</span></td><td data-sort-value="${escapeHtml(version.title || '')}"><strong>${escapeHtml(version.title || '')}</strong><span class="sns-knowledge-id">${escapeHtml(item.knowledgeId || '')}</span>${summaryHtml}</td><td>${classification || '—'}</td><td data-sort-value="${escapeHtml(item.access || 'Public')}">${escapeHtml(item.access || 'Public')}</td></tr>`;
+      const published = publishedTransactionsForEntry(entry);
+      const publishedLabel = published.length ? `Yes (${published.length})` : 'No';
+      return `<tr>
+        <td>${thumbnailMarkup(item, language, key)}</td>
+        <td data-sort-value="${escapeHtml(item.type || 'Unclassified')}">${escapeHtml(item.type || 'Unclassified')}</td>
+        <td data-sort-value="${escapeHtml(item.date || '')}">${escapeHtml(item.date || '—')}</td>
+        <td><span class="sns-language-badge">${escapeHtml(language)}</span></td>
+        <td data-sort-value="${escapeHtml(version.title || '')}"><span class="sns-list-title">${escapeHtml(version.title || '')}</span><span class="sns-knowledge-id">${escapeHtml(item.knowledgeId || '')}</span></td>
+        <td data-sort-value="${published.length ? '1' : '0'}" class="${published.length ? 'sns-published-yes' : 'sns-published-no'}">${publishedLabel}</td>
+        <td data-sort-value="${escapeHtml(item.access || 'Public')}">${escapeHtml(item.access || 'Public')}</td>
+        <td class="sns-row-action"><button type="button" class="library-button sns-row-edit" data-key="${escapeHtml(key)}">Edit</button></td>
+      </tr>`;
     }
 
     function filterKnowledge() {
@@ -1546,29 +1509,53 @@
       renderKnowledge(filtered);
     }
 
+    async function renderPdfListThumbnails(root = document) {
+      const canvases = root.querySelectorAll('canvas.sns-pdf-thumb[data-pdf-url]');
+      if (!window.pdfjsLib || !canvases.length) return;
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      for (const canvas of canvases) {
+        if (canvas.dataset.rendered === 'true') continue;
+        try {
+          const proxyUrl = `/api/insights-library?resource=assetproxy&url=${encodeURIComponent(canvas.dataset.pdfUrl)}`;
+          const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
+          const page = await pdf.getPage(1);
+          const baseViewport = page.getViewport({ scale: 1 });
+          const scale = Math.max(0.2, Math.min(1.2, 92 / baseViewport.width));
+          const viewport = page.getViewport({ scale });
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+          canvas.dataset.rendered = 'true';
+        } catch (error) {
+          const holder = canvas.closest('.sns-list-thumbnail');
+          if (holder) holder.innerHTML = '<span class="sns-thumb-label">PDF</span>';
+        }
+      }
+    }
+
+    function openKnowledgeVersion(key) {
+      selectedItems.clear();
+      selectedItems.add(key);
+      selectedTransaction = null;
+      updateShareContent();
+      renderSnsReview(getSelectedVersionContext(), null);
+      showSnsScreen('review');
+    }
+
     function renderKnowledge(entries) {
       const container = document.getElementById('sns-knowledge-list');
       const empty = document.getElementById('sns-knowledge-empty');
-      if (!entries.length) { container.innerHTML=''; if(empty){empty.style.display='block';empty.textContent='No knowledge matches your search.';} return; }
-      if(empty) empty.style.display='none';
-      container.innerHTML = entries.map(entry => createKnowledgeCard(entry,entry.key)).join('');
-      container.querySelectorAll('.sns-item-checkbox').forEach(input => input.addEventListener('change', async event => {
-        selectedItems.clear();
-        selectedItems.add(event.target.dataset.key);
-        selectedTransaction = null;
-        updateSelectedCount();
-        updateShareContent();
-        await loadDistributionHistory();
-        showSnsScreen('review');
-      }));
-      container.querySelectorAll('.sns-list-summary-toggle').forEach(button => button.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        const text = button.previousElementSibling;
-        const expanded = !text.classList.contains('is-clamped');
-        text.classList.toggle('is-clamped', expanded);
-        button.textContent = expanded ? '자세히...' : '접기';
-      }));
+      if (!entries.length) {
+        container.innerHTML = '';
+        if (empty) { empty.style.display='block'; empty.textContent='No knowledge matches your search.'; }
+        return;
+      }
+      if (empty) empty.style.display='none';
+      container.innerHTML = entries.map(entry => createKnowledgeCard(entry, entry.key)).join('');
+      container.querySelectorAll('.sns-row-edit').forEach(button => {
+        button.addEventListener('click', () => openKnowledgeVersion(button.dataset.key));
+      });
+      requestAnimationFrame(() => renderPdfListThumbnails(container));
     }
 
     function getSelectedVersionContext() {
@@ -1584,6 +1571,18 @@
       const editor = document.getElementById('sns-compose-section');
       if (review) review.hidden = name !== 'review';
       if (editor) editor.hidden = name !== 'editor';
+
+      const listWrap = document.getElementById('sns-knowledge-list-wrap');
+      const sticky = listWrap?.previousElementSibling?.classList?.contains('manager-canonical-sticky')
+        ? listWrap.previousElementSibling
+        : null;
+      if (sticky) sticky.hidden = name !== 'list';
+
+      if (name === 'list') {
+        selectedItems.clear();
+        selectedTransaction = null;
+        selectedKnowledgeId = '';
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -1600,8 +1599,9 @@
       const slug=String(item.slug||'').trim();
       fields.detail.value=slug?window.location.origin+'/insight.html?slug='+encodeURIComponent(slug):'';
       fields.external.value=String(item.url||'').trim();
-      const media=getRepresentativeMedia(item,language);
-      selectedAssetKey=String(item?.representativeMedia?.[language]?.assetKey || (!item?.representativeMedia ? item.assetKey : '') || '').trim();
+      const mediaInfo=resolveKnowledgeMedia(item,language);
+      const media=mediaInfo.url;
+      selectedAssetKey=mediaInfo.assetKey;
       let mediaType='None';
       const lower=media.toLowerCase().split('?')[0].split('#')[0];
       if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower))mediaType='Image';else if(/\.pdf$/i.test(lower))mediaType='Document';else if(/\.(mp4|mov|m4v|webm)$/i.test(lower))mediaType='Video';
@@ -1611,8 +1611,8 @@
     }
 
     async function loadDistributionHistory(){
-      try{const r=await fetch('/api/distribution-queue',{cache:'no-store'});const d=await r.json();distributionItems=Array.isArray(d.items)?d.items:(Array.isArray(d)?d:[]);}catch(e){distributionItems=[];}
-      renderSnsReview(getSelectedVersionContext(),selectedTransaction);
+      await loadDistributionHistoryData();
+      renderSnsReview(getSelectedVersionContext(), selectedTransaction);
     }
 
     function normalizeLanguage(value){
@@ -1683,7 +1683,10 @@
     }
 
     document.getElementById('sns-review-edit')?.addEventListener('click',populateComposerFromReview);
-    document.getElementById('sns-review-back')?.addEventListener('click',()=>showSnsScreen('list'));
+    document.getElementById('sns-review-back')?.addEventListener('click',()=>{
+      showSnsScreen('list');
+      filterKnowledge();
+    });
     document.getElementById('sns-editor-back')?.addEventListener('click',()=>showSnsScreen('review'));
     document.getElementById('sns-review-summary-toggle')?.addEventListener('click',()=>{
       const p=document.getElementById('sns-review-summary');

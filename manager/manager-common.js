@@ -213,7 +213,7 @@
       return;
     }
 
-    const table = wrap.querySelector('table.manager-canonical-table');
+    const table = wrap.querySelector('table.manager-canonical-table, table.library-table');
     if (!table) return;
 
     const sourceHead = table.tHead;
@@ -429,8 +429,28 @@
 
     wrap.dataset.managerAutoScrollBound = 'true';
     sticky.dataset.managerCanonicalSticky = 'true';
+    sticky.dataset.managerCanonicalFor = wrap.id || '';
+
+    const syncVisibility = () => {
+      sticky.hidden = Boolean(wrap.hidden || wrap.closest('[hidden]'));
+    };
+
+    const visibilityObserver = new MutationObserver(syncVisibility);
+    visibilityObserver.observe(wrap, {
+      attributes: true,
+      attributeFilter: ['hidden', 'class', 'style']
+    });
+    let ancestor = wrap.parentElement;
+    while (ancestor && ancestor !== document.body) {
+      visibilityObserver.observe(ancestor, {
+        attributes: true,
+        attributeFilter: ['hidden', 'class', 'style']
+      });
+      ancestor = ancestor.parentElement;
+    }
 
     requestAnimationFrame(() => {
+      syncVisibility();
       alignColumns();
       syncIndicatorState();
     });
@@ -479,7 +499,7 @@
 
   function initManagerUi(root = document) {
     root.querySelectorAll('table[data-manager-sortable]').forEach(initDomSortableTable);
-    root.querySelectorAll('.manager-canonical-table-wrap').forEach(initCanonicalScrollTable);
+    root.querySelectorAll('.manager-canonical-table-wrap, .library-table-wrap').forEach(initCanonicalScrollTable);
     initDetailShells(root);
   }
 
