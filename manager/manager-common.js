@@ -202,7 +202,13 @@
 
   function initCanonicalScrollTable(wrap) {
     if (!wrap || wrap.dataset.managerAutoScrollBound) return;
-    if (wrap.querySelector('.manager-table-top-scroll, .manager-top-scroll')) {
+
+    // Asset Library already owns its split header/body scroll system.
+    if (
+      wrap.classList.contains('asset-table-wrap') ||
+      wrap.closest('.asset-grid-sticky') ||
+      wrap.querySelector('.asset-body-table')
+    ) {
       wrap.dataset.managerAutoScrollBound = 'true';
       return;
     }
@@ -210,33 +216,34 @@
     const table = wrap.querySelector('table.manager-canonical-table');
     if (!table) return;
 
-    const top = document.createElement('div');
-    top.className = 'manager-auto-top-scroll';
-    top.setAttribute('aria-label', 'Horizontal table scroll');
+    let top = wrap.previousElementSibling;
+    if (!top || !top.classList.contains('manager-auto-top-scroll')) {
+      top = document.createElement('div');
+      top.className = 'manager-auto-top-scroll';
+      top.setAttribute('aria-label', 'Horizontal table scroll');
 
-    const inner = document.createElement('div');
-    inner.className = 'manager-auto-top-scroll-inner';
-    top.appendChild(inner);
+      const inner = document.createElement('div');
+      inner.className = 'manager-auto-top-scroll-inner';
+      top.appendChild(inner);
 
-    wrap.parentNode.insertBefore(top, wrap);
+      wrap.parentNode.insertBefore(top, wrap);
+    }
 
-    let syncing = false;
-    const sync = source => {
-      if (syncing) return;
-      syncing = true;
-      const left = source.scrollLeft;
-      if (source !== top) top.scrollLeft = left;
-      if (source !== wrap) wrap.scrollLeft = left;
-      syncing = false;
+    const inner = top.querySelector('.manager-auto-top-scroll-inner');
+
+    const applyHorizontalPosition = () => {
+      const maxLeft = Math.max(0, table.scrollWidth - wrap.clientWidth);
+      const left = Math.min(top.scrollLeft, maxLeft);
+      table.style.setProperty('--manager-table-x', `${-left}px`);
     };
 
     const update = () => {
+      if (!inner) return;
       inner.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
-      top.scrollLeft = wrap.scrollLeft;
+      applyHorizontalPosition();
     };
 
-    top.addEventListener('scroll', () => sync(top));
-    wrap.addEventListener('scroll', () => sync(wrap));
+    top.addEventListener('scroll', applyHorizontalPosition, { passive: true });
     window.addEventListener('resize', update);
 
     if (window.ResizeObserver) {
@@ -246,8 +253,11 @@
     }
 
     wrap.dataset.managerAutoScrollBound = 'true';
+    table.dataset.managerCanonicalFrozen = 'true';
+
     requestAnimationFrame(update);
   }
+
   function initManagerUi(root = document) {
     root.querySelectorAll('table[data-manager-sortable]').forEach(initDomSortableTable);
     root.querySelectorAll('.manager-canonical-table-wrap').forEach(initCanonicalScrollTable);

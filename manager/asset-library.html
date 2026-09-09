@@ -130,7 +130,7 @@
               <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
               <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
-            <div class="asset-form-actions">
+            <div class="asset-form-actions manager-detail-actions">
               <button type="submit" id="asset-upload-button" class="library-button primary">Upload & Register</button>
               <button type="button" class="library-button" data-reset-upload>Reset</button>
             </div>
@@ -263,8 +263,8 @@
       </section>
     </section>
 
-    <section id="asset-edit-mode" hidden>
-      <div class="asset-edit-topbar">
+    <section id="asset-edit-mode" class="manager-detail-screen" hidden>
+      <div class="asset-edit-topbar manager-detail-header">
         <div>
           <span class="section-eyebrow">ASSET REGISTRY</span>
           <h2 id="asset-edit-title">Asset</h2>
@@ -277,8 +277,8 @@
         </div>
       </div>
 
-      <div class="asset-editor-grid manager-detail-grid">
-        <div class="asset-preview-card manager-preview-card asset-editor-preview">
+      <div class="asset-editor-grid manager-detail-grid manager-detail-layout">
+        <div class="asset-preview-card manager-preview-card manager-detail-preview-card asset-editor-preview">
           <div class="asset-preview-label">Preview</div>
           <div class="asset-preview-stage" id="asset-edit-preview">
             <div class="asset-preview-empty">Loading preview...</div>
@@ -286,7 +286,7 @@
           <div class="asset-preview-note" id="asset-edit-preview-note"></div>
         </div>
 
-        <form id="asset-edit-form" class="asset-form-card manager-form-card">
+        <form id="asset-edit-form" class="asset-form-card manager-form-card manager-detail-form">
           <input type="hidden" id="asset-edit-index">
 
           <div class="asset-editable-field manager-editable-field">
@@ -311,7 +311,7 @@
             <small>Saved value is shown as-is. Legacy video assets without a value use 1 second.</small>
           </div>
 
-          <div class="asset-system-info">
+          <div class="asset-system-info manager-detail-system-info">
             <h3>System Information</h3>
             <dl>
               <div><dt>File Name</dt><dd id="asset-info-file"></dd></div>
@@ -333,27 +333,40 @@
       </div>
     </section>
 
-    <div id="usage-modal" class="asset-modal" hidden>
-      <div class="asset-modal-card">
-        <div class="asset-panel-head">
-          <div>
-            <span class="section-eyebrow">ASSET USAGE</span>
-            <h3 id="usage-modal-title">Add Usage</h3>
+    <section id="usage-edit-mode" class="manager-detail-screen" hidden>
+      <div class="asset-edit-topbar manager-detail-header">
+        <div>
+          <span class="section-eyebrow">ASSET USAGE</span>
+          <h2 id="usage-modal-title">Edit Usage</h2>
+          <p id="usage-edit-subtitle">Review the linked Asset and edit this Usage Mapping.</p>
+        </div>
+        <div class="library-actions">
+          <button type="button" id="usage-modal-cancel" class="library-button">Back to Usage List</button>
+          <a id="usage-edit-open" class="library-button" target="_blank" rel="noopener noreferrer" hidden>Open</a>
+          <a id="usage-edit-download" class="library-button" hidden>Download</a>
+        </div>
+      </div>
+
+      <div class="asset-editor-grid manager-detail-grid manager-detail-layout">
+        <div class="asset-preview-card manager-preview-card manager-detail-preview-card">
+          <div class="asset-preview-label">Preview</div>
+          <div class="asset-preview-stage" id="usage-edit-preview">
+            <div class="asset-preview-empty">Select an Asset Key to preview the linked Asset.</div>
           </div>
-          <button type="button" id="usage-modal-cancel" class="library-button">Cancel</button>
+          <div class="asset-preview-note" id="usage-edit-preview-note"></div>
         </div>
 
-        <input type="hidden" id="usage-edit-index" value="">
+        <form id="usage-edit-form" class="asset-form-card manager-form-card manager-detail-form">
+          <input type="hidden" id="usage-edit-index" value="">
 
-        <div class="asset-modal-form">
           <div class="asset-editable-field manager-editable-field">
-            <label for="usage-key-input">Usage Key</label>
+            <label for="usage-key-input">Usage Key *</label>
             <input id="usage-key-input" type="text" placeholder="e.g. offerings-profile-pdf">
           </div>
 
           <div class="asset-editable-field manager-editable-field">
-            <label for="usage-page-input">Page / Function</label>
-            <input id="usage-page-input" type="text" placeholder="e.g. Website / Offerings or Insights / LinkedIn">
+            <label for="usage-page-input">Page / Function *</label>
+            <input id="usage-page-input" type="text" placeholder="e.g. Website / Offerings">
           </div>
 
           <div class="asset-editable-field manager-editable-field">
@@ -362,16 +375,31 @@
           </div>
 
           <div class="asset-editable-field manager-editable-field">
-            <label for="usage-asset-key-select">Asset Key</label>
+            <label for="usage-asset-key-select">Asset Key *</label>
             <select id="usage-asset-key-select"></select>
           </div>
 
-          <div class="asset-form-actions">
-            <button type="button" id="usage-save-button" class="library-button primary">Save Usage</button>
+          <div class="asset-system-info manager-detail-system-info">
+            <h3>System Information</h3>
+            <dl>
+              <div><dt>Asset Key</dt><dd id="usage-info-key">—</dd></div>
+              <div><dt>File Name</dt><dd id="usage-info-file">—</dd></div>
+              <div><dt>Folder</dt><dd id="usage-info-folder">—</dd></div>
+              <div><dt>Type</dt><dd id="usage-info-type">—</dd></div>
+              <div><dt>Size</dt><dd id="usage-info-size">—</dd></div>
+              <div><dt>Uploaded</dt><dd id="usage-info-uploaded">—</dd></div>
+              <div class="full"><dt>Path</dt><dd id="usage-info-path">—</dd></div>
+              <div class="full"><dt>URL</dt><dd id="usage-info-url">—</dd></div>
+            </dl>
           </div>
-        </div>
+
+          <div class="asset-form-actions manager-detail-actions">
+            <button type="submit" id="usage-save-button" class="library-button primary">Save Usage</button>
+            <button type="button" id="usage-edit-cancel-bottom" class="library-button">Cancel</button>
+          </div>
+        </form>
       </div>
-    </div>
+    </section>
 
     <div id="duplicate-modal" class="asset-modal" hidden>
       <div class="asset-modal-card asset-duplicate-card">

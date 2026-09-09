@@ -142,8 +142,8 @@
 
 
 
-    <section id="library-knowledge-detail" class="knowledge-detail-panel manager-form-card">
-      <div class="knowledge-detail-head">
+    <section id="library-knowledge-detail" class="knowledge-detail-panel manager-detail-screen">
+      <div class="knowledge-detail-head manager-detail-header">
         <div>
           <span class="section-eyebrow">KNOWLEDGE DEEP-DOWN</span>
           <h3 id="library-detail-title">Knowledge Detail</h3>
@@ -154,15 +154,16 @@
           <button type="button" id="library-detail-back" class="library-button">Back to Library</button>
         </div>
       </div>
-      <div class="knowledge-detail-grid">
-        <div class="knowledge-detail-preview">
+      <div class="knowledge-detail-grid manager-detail-layout">
+        <div class="knowledge-detail-preview manager-detail-preview-card">
           <div class="asset-preview-label">Media / Play</div>
           <div id="library-detail-preview" class="knowledge-detail-preview-stage">
             <div class="knowledge-detail-empty">No media attached.</div>
           </div>
         </div>
-        <div class="knowledge-detail-info">
+        <div class="knowledge-detail-info manager-detail-form">
           <dl class="knowledge-detail-meta">
+            <dt>Title</dt><dd id="library-detail-meta-title">—</dd>
             <dt>Type</dt><dd id="library-detail-type">—</dd>
             <dt>Date</dt><dd id="library-detail-date">—</dd>
             <dt>Access</dt><dd id="library-detail-access">—</dd>
@@ -414,7 +415,13 @@
         type: rep.type || '',
         url: media.url || item.url || '',
         asset: media.asset || item.asset || '',
-        assetKey: media.assetKey || item.assetKey || ''
+        assetKey: media.assetKey || item.assetKey || '',
+        thumbnailTime:
+          Number.isFinite(Number(media.thumbnailTime))
+            ? Number(media.thumbnailTime)
+            : Number.isFinite(Number(rep.thumbnailTime))
+              ? Number(rep.thumbnailTime)
+              : 0.1
       };
     }
 
@@ -432,27 +439,102 @@
       const media = getKnowledgeMedia(item);
       const source = media.asset || media.url || '';
       const type = media.type || inferLibraryMediaType(media);
-      if (!source) {
-        host.innerHTML = '<div class="knowledge-detail-empty">No media attached.</div>';
+
+      host.classList.remove('is-playing');
+      host.dataset.mediaKind = type || 'none';
+      host.dataset.mediaSource = source || '';
+
+      if (!source || type === 'none') {
+        host.innerHTML = '<div class="knowledge-media-text">TEXT</div>';
         return;
       }
-      const finalUrl = /^https?:\/\//.test(source) ? source : '../' + source.replace(/^\/+/, '');
-      const safe = finalUrl.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      const finalUrl =
+        /^https?:\/\//.test(source)
+          ? source
+          : '../' + source.replace(/^\/+/, '');
+
+      const safe = finalUrl
+        .replace(/&/g,'&amp;')
+        .replace(/"/g,'&quot;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
+
+      let preview = '';
+
       if (type === 'video') {
-        host.innerHTML = `<video src="${safe}" controls preload="metadata">Your browser does not support video playback.</video>`;
+        const thumbnailTime =
+          Number.isFinite(Number(media.thumbnailTime))
+            ? Number(media.thumbnailTime)
+            : 0.1;
+        host.dataset.thumbnailTime = String(thumbnailTime);
+        preview = `<video src="${safe}#t=${thumbnailTime}" muted preload="metadata"></video>`;
       } else if (type === 'image') {
-        host.innerHTML = `<img src="${safe}" alt="">`;
+        preview = `<img src="${safe}" alt="">`;
       } else if (type === 'pdf') {
-        host.innerHTML = `<iframe src="${safe}" title="PDF preview"></iframe>`;
+        preview = '<div class="knowledge-media-text">PDF</div>';
+      } else if (type === 'markdown' || type === 'document') {
+        preview = '<div class="knowledge-media-text">TEXT</div>';
+      } else if (type === 'presentation') {
+        preview = '<div class="knowledge-media-text">PPT</div>';
       } else {
-        host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open media ↗</a></div>`;
+        preview = '<div class="knowledge-media-text">VIEW</div>';
       }
+
+      host.innerHTML = `
+        <button type="button" class="knowledge-media-thumb" id="library-media-thumb">
+          ${preview}
+          <span class="knowledge-media-action">${type === 'video' ? 'PLAY' : 'VIEW'}</span>
+        </button>
+      `;
+    }
+
+    function activateLibraryMedia() {
+      const host = document.getElementById('library-detail-preview');
+      const type = host.dataset.mediaKind || 'none';
+      const source = host.dataset.mediaSource || '';
+      if (!source || type === 'none') return;
+
+      const finalUrl =
+        /^https?:\/\//.test(source)
+          ? source
+          : '../' + source.replace(/^\/+/, '');
+
+      if (type === 'video') {
+        const thumbnailTime = Number(host.dataset.thumbnailTime || 0.1);
+        const safe = finalUrl
+          .replace(/&/g,'&amp;')
+          .replace(/"/g,'&quot;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;');
+
+        host.classList.add('is-playing');
+        host.innerHTML = `
+          <video id="library-detail-player" src="${safe}#t=${thumbnailTime}" controls autoplay preload="metadata"></video>
+        `;
+        const player = document.getElementById('library-detail-player');
+        if (player) {
+          player.addEventListener('loadedmetadata', () => {
+            try {
+              if (thumbnailTime > 0 && player.currentTime < thumbnailTime) {
+                player.currentTime = thumbnailTime;
+              }
+            } catch (error) {}
+            player.play().catch(() => {});
+          }, { once: true });
+        }
+        return;
+      }
+
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
     }
 
     function openLibraryDetail(index) {
       const item = allKnowledgeItems[index];
       if (!item) return;
-      document.getElementById('library-detail-title').textContent = getKnowledgeDisplayTitle(item);
+      const detailTitle = getKnowledgeDisplayTitle(item);
+      document.getElementById('library-detail-title').textContent = detailTitle;
+      document.getElementById('library-detail-meta-title').textContent = detailTitle;
       document.getElementById('library-detail-type').textContent = getKnowledgeTypeName(item.type);
       document.getElementById('library-detail-date').textContent = item.dateLabel || item.date || '—';
       document.getElementById('library-detail-access').textContent = item.access || 'Public';

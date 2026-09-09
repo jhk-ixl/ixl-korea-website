@@ -463,13 +463,85 @@
     }
   }
 
+  function renderUsageLinkedAsset() {
+    const selectedKey = $('usage-asset-key-select')?.value || '';
+    const asset = findRegistryByKey(selectedKey);
+
+    const preview = $('usage-edit-preview');
+    const note = $('usage-edit-preview-note');
+    const open = $('usage-edit-open');
+    const download = $('usage-edit-download');
+
+    if (!asset) {
+      if (preview) preview.innerHTML = '<div class="asset-preview-empty">Select an Asset Key to preview the linked Asset.</div>';
+      if (note) note.textContent = '';
+      ['usage-info-key','usage-info-file','usage-info-folder','usage-info-type','usage-info-size','usage-info-uploaded','usage-info-path','usage-info-url']
+        .forEach(id => { if ($(id)) $(id).textContent = '—'; });
+      if (open) {
+        open.hidden = true;
+        open.removeAttribute('href');
+      }
+      if (download) {
+        download.hidden = true;
+        download.removeAttribute('href');
+      }
+      return;
+    }
+
+    renderPreview('usage-edit-preview', asset);
+
+    if (note) {
+      note.textContent =
+        `${asset.type || getFileType(asset.pathname)} · ${formatFileSize(asset.size)} · ${asset.folder || getFolder(asset.pathname)}`;
+    }
+
+    $('usage-info-key').textContent = asset.key || '—';
+    $('usage-info-file').textContent = asset.fileName || asset.name || '—';
+    $('usage-info-folder').textContent = asset.folder || getFolder(asset.pathname) || '—';
+    $('usage-info-type').textContent = asset.type || getFileType(asset.pathname) || '—';
+    $('usage-info-size').textContent = formatFileSize(asset.size) || '—';
+    $('usage-info-uploaded').textContent = formatUploadedDate(asset.uploadedAt) || '—';
+    $('usage-info-path').textContent = asset.pathname || '—';
+    $('usage-info-url').textContent = asset.url || '—';
+
+    if (open) {
+      if (asset.url) {
+        open.hidden = false;
+        open.href = asset.url;
+      } else {
+        open.hidden = true;
+        open.removeAttribute('href');
+      }
+    }
+
+    if (download) {
+      const href = asset.downloadUrl || asset.url || '';
+      if (href) {
+        download.hidden = false;
+        download.href = href;
+      } else {
+        download.hidden = true;
+        download.removeAttribute('href');
+      }
+    }
+  }
+
   function openUsageModal(index = null) {
-    const modal = $('usage-modal');
     const title = $('usage-modal-title');
+    const subtitle = $('usage-edit-subtitle');
     const editIndex = $('usage-edit-index');
+
+    $('asset-list-mode').hidden = true;
+    $('asset-usage-mode').hidden = true;
+    $('asset-edit-mode').hidden = true;
+    $('usage-edit-mode').hidden = false;
+
+    $('asset-library-nav')?.classList.remove('active');
+    $('asset-usage-nav')?.classList.add('active');
 
     if (index === null) {
       title.textContent = 'Add Usage';
+      subtitle.textContent = 'Select the linked Asset and create a new Usage Mapping.';
       editIndex.value = '';
       $('usage-key-input').value = '';
       $('usage-page-input').value = '';
@@ -482,7 +554,8 @@
         return;
       }
 
-      title.textContent = 'Edit Usage';
+      title.textContent = usage.label || usage.usageKey || 'Edit Usage';
+      subtitle.textContent = 'Review the linked Asset and edit this Usage Mapping.';
       editIndex.value = String(index);
       $('usage-key-input').value = usage.usageKey || '';
       $('usage-page-input').value = usage.page || '';
@@ -490,11 +563,19 @@
       populateUsageAssetSelect(usage.assetKey || '');
     }
 
-    modal.hidden = false;
+    renderUsageLinkedAsset();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function closeUsageModal() {
-    $('usage-modal').hidden = true;
+    $('usage-edit-mode').hidden = true;
+    $('asset-list-mode').hidden = true;
+    $('asset-edit-mode').hidden = true;
+    $('asset-usage-mode').hidden = false;
+    $('asset-library-nav')?.classList.remove('active');
+    $('asset-usage-nav')?.classList.add('active');
+    renderUsageMappings();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function saveUsageMapping() {
@@ -1002,6 +1083,7 @@ Key: ${registered.key || key}`);
     $('asset-list-mode').hidden = true;
     $('asset-usage-mode').hidden = true;
     $('asset-edit-mode').hidden = true;
+    $('usage-edit-mode').hidden = true;
     $('asset-library-nav')?.classList.remove('active');
     $('asset-usage-nav')?.classList.remove('active');
 
@@ -1256,11 +1338,12 @@ Key: ${registered.key || key}`);
 
     $('usage-add-button')?.addEventListener('click', () => openUsageModal(null));
     $('usage-modal-cancel')?.addEventListener('click', closeUsageModal);
-    $('usage-save-button')?.addEventListener('click', saveUsageMapping);
-
-    $('usage-modal')?.addEventListener('click', event => {
-      if (event.target.id === 'usage-modal') closeUsageModal();
+    $('usage-edit-cancel-bottom')?.addEventListener('click', closeUsageModal);
+    $('usage-edit-form')?.addEventListener('submit', event => {
+      event.preventDefault();
+      saveUsageMapping();
     });
+    $('usage-asset-key-select')?.addEventListener('change', renderUsageLinkedAsset);
 
     $('usage-table-body')?.addEventListener('click', async event => {
       const editButton = event.target.closest('[data-edit-usage]');

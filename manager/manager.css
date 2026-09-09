@@ -2627,3 +2627,291 @@ a.manager-utilization-item:hover {
   .knowledge-detail-grid { grid-template-columns: 1fr; }
   .knowledge-detail-meta { grid-template-columns: 120px minmax(0, 1fr); }
 }
+
+
+/* =========================================
+   MANAGER CANONICAL LIST — ASSET STANDARD V3
+   TOP horizontal scrollbar + frozen header.
+   Vertical scrolling belongs to the browser only.
+   ========================================= */
+
+.manager-canonical-table-wrap {
+  max-height: none !important;
+  overflow-x: clip !important;
+  overflow-y: visible !important;
+  position: relative;
+  scrollbar-gutter: auto !important;
+}
+
+.manager-canonical-table[data-manager-canonical-frozen="true"] {
+  position: relative;
+  left: var(--manager-table-x, 0px);
+  transform: none !important;
+  margin-bottom: 0 !important;
+}
+
+.manager-auto-top-scroll {
+  display: block !important;
+  position: sticky !important;
+  top: 0;
+  z-index: 95;
+  width: 100%;
+  height: 18px;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  background: #fff;
+  border: 1px solid #dbe3ec;
+  border-bottom: 0;
+  border-radius: 10px 10px 0 0;
+}
+
+.manager-auto-top-scroll-inner {
+  height: 1px;
+}
+
+.manager-auto-top-scroll + .manager-canonical-table-wrap {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+.manager-canonical-table thead th {
+  position: sticky !important;
+  top: 18px !important;
+  z-index: 90 !important;
+  background: #f8fafc !important;
+  box-shadow: inset 0 -1px 0 #dbe3ec;
+}
+
+/* Do not create a second vertical scroll surface inside canonical lists. */
+.manager-canonical-table-wrap::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Review / Edit navigation */
+.insights-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.insights-editor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Clickable media thumbnail */
+.knowledge-media-thumb {
+  position: relative;
+  width: 100%;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: #f6f8fb;
+  cursor: pointer;
+}
+
+.knowledge-media-thumb img,
+.knowledge-media-thumb video,
+.knowledge-media-thumb canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+}
+
+.knowledge-media-thumb video {
+  width: 100%;
+}
+
+.knowledge-media-action {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(7,27,51,.9);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+}
+
+.knowledge-media-text {
+  width: 100%;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #071b33;
+  background: #f6f8fb;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.knowledge-detail-preview-stage.is-playing {
+  background: #000;
+}
+
+.knowledge-detail-preview-stage.is-playing video {
+  width: 100%;
+  max-height: 520px;
+}
+
+
+/* =========================================
+   MANAGER COMMON DETAIL / EDIT SYSTEM
+   Asset Library is the canonical UX source.
+   All Manager second screens reuse this shell.
+   ========================================= */
+
+.manager-detail-screen[hidden] {
+  display: none !important;
+}
+
+.manager-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #dbe3ec;
+}
+
+.manager-detail-header h2,
+.manager-detail-header h3 {
+  margin: 5px 0 4px;
+  color: #071b33;
+}
+
+.manager-detail-header p {
+  margin: 0;
+  color: #5f6f82;
+  line-height: 1.55;
+}
+
+.manager-detail-layout,
+.manager-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap: 22px;
+  margin-top: 18px;
+  align-items: stretch;
+}
+
+.manager-detail-preview-card,
+.manager-preview-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.manager-detail-form,
+.manager-form-card {
+  min-width: 0;
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.manager-detail-form {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.manager-detail-form .manager-editable-field {
+  padding: 12px;
+  border: 1px solid #d3a91f;
+  border-radius: 9px;
+  background: #fff9df;
+}
+
+.manager-detail-form .manager-editable-field label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 700;
+  color: #17283b;
+}
+
+.manager-detail-form .manager-editable-field input,
+.manager-detail-form .manager-editable-field select,
+.manager-detail-form .manager-editable-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.manager-detail-system-info {
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+  padding: 14px;
+  background: #f6f8fb;
+}
+
+.manager-detail-system-info h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.manager-detail-system-info dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.manager-detail-system-info dl > div {
+  min-width: 0;
+}
+
+.manager-detail-system-info dl > div.full {
+  grid-column: 1 / -1;
+}
+
+.manager-detail-system-info dt {
+  color: #5f6f82;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.manager-detail-system-info dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.manager-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+  .manager-detail-header {
+    flex-direction: column;
+  }
+
+  .manager-detail-layout,
+  .manager-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-detail-system-info dl {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-detail-system-info dl > div.full {
+    grid-column: auto;
+  }
+}

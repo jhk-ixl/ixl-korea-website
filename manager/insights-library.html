@@ -902,8 +902,8 @@
          EDIT REVIEW / DEEP-DOWN
          Edit always passes through this read-only summary first.
          ========================================= -->
-    <section id="knowledge-detail-panel" class="knowledge-detail-panel manager-form-card">
-      <div class="knowledge-detail-head">
+    <section id="knowledge-detail-panel" class="knowledge-detail-panel manager-detail-screen">
+      <div class="knowledge-detail-head manager-detail-header">
         <div>
           <span class="section-eyebrow">KNOWLEDGE REVIEW</span>
           <h3 id="knowledge-detail-title">Knowledge Detail</h3>
@@ -915,15 +915,16 @@
         </div>
       </div>
 
-      <div class="knowledge-detail-grid">
-        <div class="knowledge-detail-preview">
+      <div class="knowledge-detail-grid manager-detail-layout">
+        <div class="knowledge-detail-preview manager-detail-preview-card">
           <div class="asset-preview-label">Media / Preview</div>
           <div id="knowledge-detail-preview" class="knowledge-detail-preview-stage">
             <div class="knowledge-detail-empty">No media attached.</div>
           </div>
         </div>
-        <div class="knowledge-detail-info">
+        <div class="knowledge-detail-info manager-detail-form">
           <dl class="knowledge-detail-meta">
+            <dt>Title</dt><dd id="knowledge-detail-meta-title">—</dd>
             <dt>Type</dt><dd id="knowledge-detail-type">—</dd>
             <dt>Date</dt><dd id="knowledge-detail-date">—</dd>
             <dt>Access</dt><dd id="knowledge-detail-access">—</dd>
@@ -956,6 +957,16 @@
         <h3 id="editor-title">
           Add Knowledge
         </h3>
+
+        <div class="insights-editor-header-actions">
+          <button
+            type="button"
+            id="editor-back-button"
+            class="insights-btn library-button"
+          >
+            Back to List
+          </button>
+        </div>
 
       </div>
 
@@ -2478,7 +2489,7 @@
 
 
       table.style.display =
-        'block';
+        'table';
 
       empty.style.display =
         'none';
@@ -2547,60 +2558,158 @@
                     representative.ko ||
                     representative.other ||
                     {};
+
+      const assetKey = media.assetKey || item.assetKey || '';
+      const asset = assetKey ? getAssetByKey(assetKey) : null;
+
       return {
         type: representative.type || inferMediaType(media),
-        url: media.url || '',
-        asset: media.asset || '',
-        assetKey: media.assetKey || ''
+        url: media.url || item.url || '',
+        assetPath: media.asset || item.asset || '',
+        assetKey,
+        asset,
+        thumbnailTime:
+          Number.isFinite(Number(media.thumbnailTime))
+            ? Number(media.thumbnailTime)
+            : Number.isFinite(Number(representative.thumbnailTime))
+              ? Number(representative.thumbnailTime)
+              : Number.isFinite(Number(asset?.thumbnailTime))
+                ? Number(asset.thumbnailTime)
+                : 0.1
       };
+    }
+
+    function getDetailMediaSource(media) {
+      if (media?.asset) {
+        const source = getAssetSourceUrl(media.asset);
+        if (source) return source;
+      }
+      return media?.assetPath || media?.url || '';
+    }
+
+    function getDetailMediaKind(media) {
+      if (media?.asset) return getAssetPreviewKind(media.asset);
+      if (media?.type && media.type !== 'none') return media.type;
+      return inferMediaType({
+        asset: media?.assetPath || '',
+        url: media?.url || ''
+      });
     }
 
     function renderDetailMedia(item) {
       const host = document.getElementById('knowledge-detail-preview');
       const media = getDetailMedia(item);
-      const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
-      const source = media.asset || media.url || (asset ? getAssetSourceUrl(asset) : '');
-      const type = media.type || inferMediaType(media);
+      const source = getDetailMediaSource(media);
+      const kind = getDetailMediaKind(media);
 
-      if (!source && !asset) {
-        host.innerHTML = '<div class="knowledge-detail-empty">No media attached.</div>';
+      host.classList.remove('is-playing');
+      host.dataset.mediaKind = kind || 'none';
+      host.dataset.mediaSource = source || '';
+      host.dataset.thumbnailTime = String(media.thumbnailTime ?? 0.1);
+
+      if ((!source && !media.asset) || kind === 'none') {
+        host.innerHTML = '<div class="knowledge-media-text">TEXT</div>';
         return;
       }
 
-      const safe = escapeHtml(source || getAssetSourceUrl(asset));
-      if (type === 'video') {
-        host.innerHTML = `<video src="${safe}" controls preload="metadata">Your browser does not support video playback.</video>`;
-        return;
+      let previewMarkup = '';
+
+      if (media.asset) {
+        previewMarkup = getAssetPreviewMarkup(media.asset, 'card');
+      } else if (kind === 'image' && source) {
+        previewMarkup = `<img src="${escapeHtml(source)}" alt="">`;
+      } else if (kind === 'video' && source) {
+        previewMarkup =
+          `<video src="${escapeHtml(source)}#t=${Number(media.thumbnailTime || 0.1)}" muted preload="metadata"></video>`;
+      } else if (kind === 'pdf') {
+        previewMarkup =
+          `<div class="asset-picker-article-thumb"><strong>PDF</strong><span>Click to view document</span></div>`;
+      } else if (kind === 'markdown' || kind === 'document' || kind === 'presentation') {
+        const label =
+          kind === 'markdown' ? 'TEXT' :
+          kind === 'presentation' ? 'PPT' : 'DOC';
+        previewMarkup = `<div class="knowledge-media-text">${label}</div>`;
+      } else {
+        previewMarkup = `<div class="knowledge-media-text">VIEW</div>`;
       }
-      if (type === 'image') {
-        host.innerHTML = `<img src="${safe}" alt="">`;
-        return;
+
+      const actionLabel = kind === 'video' ? 'PLAY' : 'VIEW';
+
+      host.innerHTML = `
+        <button type="button" class="knowledge-media-thumb" id="knowledge-media-thumb">
+          ${previewMarkup}
+          <span class="knowledge-media-action">${actionLabel}</span>
+        </button>
+      `;
+
+      if (typeof hydrateAssetThumbnails === 'function') {
+        hydrateAssetThumbnails(host);
       }
-      if (type === 'pdf') {
-        host.innerHTML = `<iframe src="${safe}" title="PDF preview"></iframe>`;
-        return;
-      }
-      if (type === 'external') {
-        host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open external media ↗</a></div>`;
-        return;
-      }
-      if (asset) {
-        host.innerHTML = getAssetPreviewMarkup(asset, 'card');
-        hydrateAssetPreviews(host);
-        return;
-      }
-      host.innerHTML = `<div class="knowledge-detail-empty"><a href="${safe}" target="_blank" rel="noopener noreferrer">Open media ↗</a></div>`;
     }
 
-    function openKnowledgeDetail(index) {
+    function activateDetailMedia() {
+      const host = document.getElementById('knowledge-detail-preview');
+      const kind = host.dataset.mediaKind || 'none';
+      const source = host.dataset.mediaSource || '';
+      const thumbnailTime = Number(host.dataset.thumbnailTime || 0.1);
+
+      if (kind === 'none' || !source) return;
+
+      if (kind === 'video') {
+        host.classList.add('is-playing');
+        host.innerHTML = `
+          <video
+            id="knowledge-detail-player"
+            src="${escapeHtml(source)}#t=${thumbnailTime}"
+            controls
+            autoplay
+            preload="metadata"
+          >
+            Your browser does not support video playback.
+          </video>
+        `;
+
+        const player = document.getElementById('knowledge-detail-player');
+        if (player) {
+          player.addEventListener('loadedmetadata', () => {
+            try {
+              if (thumbnailTime > 0 && player.currentTime < thumbnailTime) {
+                player.currentTime = thumbnailTime;
+              }
+            } catch (error) {}
+            player.play().catch(() => {});
+          }, { once: true });
+        }
+        return;
+      }
+
+      const finalUrl =
+        /^https?:\/\//i.test(source)
+          ? source
+          : '../' + source.replace(/^\/+/, '');
+
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+    }
+
+    function openKnowledgeDetail(index, pushHistory = true) {
       const item = insightsItems.find(entry => entry._sourceIndex === index);
       if (!item) return;
 
       pendingEditIndex = index;
+
+      if (pushHistory) {
+        history.pushState(
+          { builderView: 'detail', index },
+          '',
+          `${window.location.pathname}${window.location.search}#review`
+        );
+      }
       closeAllMarkdownPreviews();
       document.getElementById('insights-editor').classList.remove('open');
 
-      document.getElementById('knowledge-detail-title').textContent = getDisplayTitle(item);
+      const detailTitle = getDisplayTitle(item);
+      document.getElementById('knowledge-detail-title').textContent = detailTitle;
+      document.getElementById('knowledge-detail-meta-title').textContent = detailTitle;
       document.getElementById('knowledge-detail-type').textContent = getKnowledgeTypeName(item.type);
       document.getElementById('knowledge-detail-date').textContent = item.dateLabel || item.date || '—';
       document.getElementById('knowledge-detail-access').textContent = item.access || 'Public';
@@ -2634,6 +2743,7 @@
       };
 
       document.getElementById('editor-title').textContent = 'Add Knowledge';
+      document.getElementById('editor-back-button').textContent = 'Back to List';
       document.getElementById('edit-type').value = getDefaultKnowledgeTypeValue();
       document.getElementById('edit-access').value = 'Public';
       document.getElementById('edit-date').value = '';
@@ -2653,12 +2763,20 @@
     }
 
 
-    function openAddEditor() {
+    function openAddEditor(pushHistory = true) {
 
       document.getElementById('knowledge-detail-panel').classList.remove('open');
       pendingEditIndex = null;
       setBuilderFocus(true);
       resetEditor();
+
+      if (pushHistory) {
+        history.pushState(
+          { builderView: 'add' },
+          '',
+          `${window.location.pathname}${window.location.search}#add`
+        );
+      }
 
 
       const editor =
@@ -2671,19 +2789,31 @@
         'open'
       );
 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
 
     }
 
 
-    function openEditEditor(index) {
+    function openEditEditor(index, pushHistory = true) {
       document.getElementById('knowledge-detail-panel').classList.remove('open');
       setBuilderFocus(true);
+
+      if (pushHistory) {
+        history.pushState(
+          { builderView: 'edit', index },
+          '',
+          `${window.location.pathname}${window.location.search}#edit`
+        );
+      }
+
       const item = insightsItems.find(entry => entry._sourceIndex === index);
       if (!item) return;
 
       resetEditor();
       editingIndex = index;
       document.getElementById('editor-title').textContent = 'Edit Knowledge';
+      document.getElementById('editor-back-button').textContent = 'Back to Review';
       document.getElementById('edit-type').value = item.type || getDefaultKnowledgeTypeValue();
       document.getElementById('edit-access').value = item.access || 'Public';
       document.getElementById('edit-date').value = item.date || '';
@@ -2729,6 +2859,7 @@
       loadActiveVersionIntoEditor();
       clearMessage();
       document.getElementById('insights-editor').classList.add('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
 
@@ -3036,7 +3167,62 @@
       if (pendingEditIndex !== null) openEditEditor(pendingEditIndex);
     });
 
-    document.getElementById('knowledge-detail-back').addEventListener('click', closeKnowledgeDetail);
+    document.getElementById('knowledge-detail-back').addEventListener('click', () => {
+      if (history.state?.builderView === 'detail') {
+        history.back();
+      } else {
+        closeKnowledgeDetail();
+      }
+    });
+
+    document.getElementById('knowledge-detail-preview').addEventListener('click', event => {
+      if (event.target.closest('#knowledge-media-thumb')) {
+        activateDetailMedia();
+      }
+    });
+
+    document.getElementById('editor-back-button').addEventListener('click', () => {
+      if (editingIndex !== null && pendingEditIndex !== null) {
+        if (history.state?.builderView === 'edit') {
+          history.back();
+        } else {
+          document.getElementById('insights-editor').classList.remove('open');
+          openKnowledgeDetail(pendingEditIndex, false);
+        }
+      } else {
+        if (history.state?.builderView === 'add') {
+          history.back();
+        } else {
+          closeEditor();
+        }
+      }
+    });
+
+    window.addEventListener('popstate', event => {
+      const state = event.state || {};
+
+      if (state.builderView === 'detail' && Number.isFinite(Number(state.index))) {
+        document.getElementById('insights-editor').classList.remove('open');
+        openKnowledgeDetail(Number(state.index), false);
+        return;
+      }
+
+      if (state.builderView === 'edit' && Number.isFinite(Number(state.index))) {
+        openEditEditor(Number(state.index), false);
+        return;
+      }
+
+      if (state.builderView === 'add') {
+        openAddEditor(false);
+        return;
+      }
+
+      document.getElementById('insights-editor').classList.remove('open');
+      document.getElementById('knowledge-detail-panel').classList.remove('open');
+      pendingEditIndex = null;
+      resetEditor();
+      setBuilderFocus(false);
+    });
 
     document
       .getElementById(
@@ -3071,7 +3257,7 @@
       )
       .addEventListener(
         'click',
-        closeEditor
+        () => document.getElementById('editor-back-button').click()
       );
 
 
