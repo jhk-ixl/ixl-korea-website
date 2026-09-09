@@ -34,12 +34,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "GIMI Certified Innovation Professional Credential Achieves ISO/IEC 17024 Accreditation",
           "summary": "The Global Innovation Management Institute (GIMI) announced that its professional certification framework is accredited to ISO/IEC 17024 (IAS PCB-169), strengthening independent recognition of innovation-management professional competence and the global portability of the CIP credential.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -54,7 +64,9 @@
           "asset": "insights/GIMI_Leaflet_Alumni-yhFZr6OpmShne9OkflLj02X24UI8Wt.pdf",
           "assetKey": "gimi-leaflet-alumni"
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_6ff530a3e8124b09ba87cca0edcad337",
@@ -80,12 +92,22 @@
         "ko": {
           "title": "AI시대 혁신 인재 발굴 및 육성",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "Identifying and Developing Innovation Talent",
           "summary": "How organizations can evaluate innovation potential, understand different innovation profiles and place people where they can contribute most effectively to innovation.",
-          "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results."
+          "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results.",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -100,7 +122,9 @@
           "asset": "companyprofile/IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
           "assetKey": "ipa-profile"
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c",
@@ -126,12 +150,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "AKAIO 1.0 Product Launch",
           "summary": "Discover AKAIO 1.0 and how AI-powered innovation can support the innovation journey from insights and foresight to opportunities and business concepts.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -146,7 +180,9 @@
           "asset": "insights/AKAIO-1.0-Product-Launch-Web-xrrcR1SYghvZwGnzXm72TwZo8O9bc3.mp4",
           "assetKey": "akaio-1-0-product-launch-web"
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_d5556a6e91cb48fda7b982317eab585e",
@@ -172,12 +208,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "Innovation & Growth Perspectives",
           "summary": "Explore innovation, growth and strategy perspectives from IXL Center's global innovation network.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -192,7 +238,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_adc433cb264a4be9919f2f0a1d1f053f",
@@ -218,12 +266,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "Innovation Management & Professional Certification Resources",
           "summary": "Explore innovation-management standards, professional certification and capability-building resources from GIMI.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -238,7 +296,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": false
     },
     {
       "knowledgeId": "kn_8bb9fc5a7db84a62a057bcebad65ce30",
@@ -264,12 +324,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "AI-Powered Innovation Platform",
           "summary": "Explore AKAIO's AI-enabled innovation platform and structured innovation methodology.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -284,7 +354,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": false
     },
     {
       "knowledgeId": "kn_c74a76d20003459aac06e7a5d505cda3",
@@ -310,12 +382,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "Who is GIMI?",
           "summary": "GIMI is the world's largest Innovation Professional Organization accredited by ISO",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -330,7 +412,9 @@
           "asset": "insights/GIMI------ver4.0-Z4EwD1SmVym7sxYq0LRpcxgQ4PIOEF.mp4",
           "assetKey": "gimi-ver4-0"
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_d724cca8aae44b5481994d87f3a3150f",
@@ -356,12 +440,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "2025 GIMI Awards Highlight?",
           "summary": "At the Global Innovation Management Institute (GIMI), our mission is to democratize innovation worldwide. With years of experience in training, certifying, and implementing best practices in innovation, we introduce the GIMI Innovation Awards. This ceremony aims to recognize and celebrate organizations and individuals’ innovations initiatives in the public, private, and social sectors.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -376,7 +470,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
     },
     {
       "knowledgeId": "kn_7c6166e08e874f1c9a4b116d4dcd2fff",
@@ -402,12 +498,22 @@
         "ko": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024​",
           "summary": "Global Innovation Management Institute Becomes World’s First and Only Innovation-Management Body Accredited to ISO/IEC 17024 CAMBRIDGE, Mass. — August 11, 2026 — The Global Innovation",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -422,7 +528,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": false
     },
     {
       "knowledgeId": "kn_96f04055c8244be78524c09b516e8da6",
@@ -458,12 +566,22 @@
         "ko": {
           "title": "IXL Korea 7대 프로그램",
           "summary": "IXL Korea는 실질적인 성과창출와 조직의 혁신역량 내재화 두가지 목표를 동시에 지원하고 있습니다. 이를 구현하기 위한 7개 개별프로그램과 통합프로그램과정을 제공합니다.",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -478,7 +596,9 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": false
     },
     {
       "knowledgeId": "kn_9d571095803a44678757d705cdf7df3b",
@@ -514,12 +634,22 @@
         "ko": {
           "title": "경영관리 5.0: AI 그리고 미래사업경쟁",
           "summary": "회사는 '경영관리'와 '혁신'이라는 두 가지 엔진를 가지고 있다.\n경영관리는 회사의 인적,물적자원을 최적화하여  최적의 역량을 발휘하게 해주는 엔진이다.\n혁신은 회사의 최적화된 역량을 사용해서 사업성과를 배가시켜주는  엔진이다.\n과거 90년대후반, 경영관리는 프로세스혁신과 IT를 포용해서 비약적인 성공을 이룩했다.\n\n프로세스혁신은 '현재의 전략'을 잘 수행하기위함이었다. 그러나 사업혁신은 '미래전략'을 잘수행하기위함이다.\n\n최근, 혁신의 가장 큰 장애물이 무엇인가 라는 서베이에서 54%가 기업의 임원진이라는 결과가 나왔다.   \n글로벌 혁신구루중 한명이 이유를 설명하기를 \"사업혁신은, 아직 전략이 수립되지 않았고, 임원진들이 아직 본적이 없고 그래서 모른다.\n또한 임원진들의 평가지표는 현재 전략을 잘 수행하는것이다.\"\n그래서 대기업의 사업혁신의 최대 장애물은 임원진이 된다는 거다.\n\n어쩌면 당연한 일이다. 이는 과거의 경영프레임이 만들어낸 결과이다. 사람 문제가 아니다.\n\n현재 AI가 모든 산업구조를 뒤집어놓고 있는 4차산업혁명기는 다른 경영프레임이 필요하다.\n왜냐하면 현재사업 및 전략으로 얻을수 있는 사업성과보다 미래사업과 전략으로 얻을수 있는 사업성과가 5-10배이상 큰 시대이기 때문이다.\n\n미래사업과 전략이 회사의 3-5년미래경쟁력을 결정하는 시대이기때문이다.\n\n현재사업경쟁과 더불어 미래사업경쟁 시대가 도래했다.",
-          "body": "## 경영관리 5.0이란?\n\n회사는 **경영관리**와 **혁신**이라는 두 가지 엔진을 가지고 있습니다.\n\n경영관리는 현재의 사업을 효율적으로 운영하는 것이고,\n혁신은 미래의 사업기회를 만들어 내는 것입니다.\n그리고 AI기반 혁신플랫폼인 AKAIO를 탐재하여 10배의 속도로 미래사업 파이프라인과 포트톨리오 구축을 하는 것입니다. \n\n## 왜 새로운 경영관리가 필요한가?\n\n과거의 경영관리는 주로 다음에 집중했습니다.\n\n- 현재 사업의 효율성\n- 비용 절감\n- 프로세스 개선\n- 생산성 향상\n\n그러나 AI 시대에는 **미래사업 경쟁력**을 함께 관리해야 합니다.\n\n### 미래사업 경쟁력\n\n미래사업 경쟁력은 다음과 같은 질문에서 시작합니다.\n\n1. 앞으로 3~5년 동안 시장은 어떻게 변할 것인가?\n2. 새로운 성장기회는 어디에 있는가?\n3. 어떤 기술이 사업구조를 바꿀 것인가?\n4. 어떤 새로운 사업을 준비해야 하는가?\n\n+ AI기반 혁신플랫폼 AKAIO\n\n> 미래사업 경쟁력은 현재의 성과가 아니라 미래의 성장 가능성을 관리하는 것입니다.\n\n자세한 내용은 [IXL Korea](https://ixlkorea.co.kr)에서 확인할 수 있습니다."
+          "body": "## 경영관리 5.0이란?\n\n회사는 **경영관리**와 **혁신**이라는 두 가지 엔진을 가지고 있습니다.\n\n경영관리는 현재의 사업을 효율적으로 운영하는 것이고,\n혁신은 미래의 사업기회를 만들어 내는 것입니다.\n그리고 AI기반 혁신플랫폼인 AKAIO를 탐재하여 10배의 속도로 미래사업 파이프라인과 포트톨리오 구축을 하는 것입니다. \n\n## 왜 새로운 경영관리가 필요한가?\n\n과거의 경영관리는 주로 다음에 집중했습니다.\n\n- 현재 사업의 효율성\n- 비용 절감\n- 프로세스 개선\n- 생산성 향상\n\n그러나 AI 시대에는 **미래사업 경쟁력**을 함께 관리해야 합니다.\n\n### 미래사업 경쟁력\n\n미래사업 경쟁력은 다음과 같은 질문에서 시작합니다.\n\n1. 앞으로 3~5년 동안 시장은 어떻게 변할 것인가?\n2. 새로운 성장기회는 어디에 있는가?\n3. 어떤 기술이 사업구조를 바꿀 것인가?\n4. 어떤 새로운 사업을 준비해야 하는가?\n\n+ AI기반 혁신플랫폼 AKAIO\n\n> 미래사업 경쟁력은 현재의 성과가 아니라 미래의 성장 가능성을 관리하는 것입니다.\n\n자세한 내용은 [IXL Korea](https://ixlkorea.co.kr)에서 확인할 수 있습니다.",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         },
         "other": {
           "title": "",
           "summary": "",
-          "body": ""
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
         }
       },
       "representativeMedia": {
@@ -534,7 +664,506 @@
           "asset": "",
           "assetKey": ""
         }
-      }
+      },
+      "publicationStatus": "Published",
+      "featured": true
+    },
+    {
+      "knowledgeId": "kn_3fe0278529464c60897960669c6f27c2",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Beyond Eureka"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2013-12-01",
+      "dateLabel": "DEC 2013",
+      "title": "Healthovate! Innovating to Live Longer, Feel Better",
+      "summary": "Healthovate! is a collection of stories of more than fifty innovative companies whose breakthroughs are changing the healthcare industry. These companies have created specific breakthroughs that are dramatically changing the way people receive and use products and services that enrich their health and well-being. Hult International Business School Publishing, Dec 2013",
+      "slug": "healthovate-innovating-to-live-longer-feel-better",
+      "author": "Ronald Jonash, Pamela McNamara, Hitendra Patel",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-healthovate",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Healthovate! Innovating to Live Longer, Feel Better",
+          "summary": "Healthovate! is a collection of stories of more than fifty innovative companies whose breakthroughs are changing the healthcare industry. These companies have created specific breakthroughs that are dramatically changing the way people receive and use products and services that enrich their health and well-being. Hult International Business School Publishing, Dec 2013",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-healthovate"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_318e12e675a242b28a42f2b68bfd7b79",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Beyond Eureka"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2012-05-01",
+      "dateLabel": "MAY 2012",
+      "title": "Connectivate! Companies Innovating in New Ways to Be Always Available",
+      "summary": "Connectivate! is a collection of stories of more than fifty innovative companies whose breakthroughs are changing the world. These companies have created a new economic context, making themselves increasingly accessible to create a space-time singularity called Always Available. Hult International Business School Publishing, May 2012",
+      "slug": "connectivate-companies-innovating-in-new-ways-to-be-always-available",
+      "author": "Ronald Jonash, Victor Fernandes, Hitendra Patel, Steve Wyatt",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-connectivate",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Connectivate! Companies Innovating in New Ways to Be Always Available",
+          "summary": "Connectivate! is a collection of stories of more than fifty innovative companies whose breakthroughs are changing the world. These companies have created a new economic context, making themselves increasingly accessible to create a space-time singularity called Always Available. Hult International Business School Publishing, May 2012",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-connectivate"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_35eabb9866944d50b71bdacd854eb3f9",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Beyond Eureka"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2012-04-01",
+      "dateLabel": "APR 2012",
+      "title": "Greenovate! Companies Innovating to Create a More Sustainable World",
+      "summary": "Greenovate! is a compilation of stories of how many of the world’s leading and emerging companies are addressing sustainability issues with profitable solutions that can spur even more innovation, growth and development as individuals and companies realize that being green DOES NOT MEAN being in the red. Hult International Business School Publishing, Apr 2012",
+      "slug": "greenovate-companies-innovating-to-create-a-more-sustainable-world",
+      "author": "Ronald Jonash, Tyler McNally, Hitendra Patel",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-greenovate",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Greenovate! Companies Innovating to Create a More Sustainable World",
+          "summary": "Greenovate! is a compilation of stories of how many of the world’s leading and emerging companies are addressing sustainability issues with profitable solutions that can spur even more innovation, growth and development as individuals and companies realize that being green DOES NOT MEAN being in the red. Hult International Business School Publishing, Apr 2012",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-greenovate"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_b6d0e5fcd66b408d8fcaf47a170000e7",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Beyond Eureka"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2017-10-01",
+      "dateLabel": "OCT 2017",
+      "title": "Game Changers. 232 Innovations That Have Shaped Our World",
+      "summary": "Game Changers gives readers a horizontal and vertical view of the wide reach of innovation over time and its impact on the lives of individuals and societies. Innovation has shaped human history in decisive ways. Global Innovation Management Institute Publishing, October 2017",
+      "slug": "game-changers-232-innovations-that-have-shaped-our-world",
+      "author": "Hitendra Patel, Mark Rennella, Julija Kaminskaite",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-gamechangers",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Game Changers. 232 Innovations That Have Shaped Our World",
+          "summary": "Game Changers gives readers a horizontal and vertical view of the wide reach of innovation over time and its impact on the lives of individuals and societies. Innovation has shaped human history in decisive ways. Global Innovation Management Institute Publishing, October 2017",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-gamechangers"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_faf378f79e42417b9b3822b63eaa11c3",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Other Innovation Books"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2005-01-01",
+      "dateLabel": "2005",
+      "title": "The State of Innovation at Firm Level in Singapore",
+      "summary": "Monitor Group, together with Singapore’s Institute of Policy Studies, led a study to assess the state of innovation capabilities in Singapore both at firm and national levels. This flagship study compares Singapore’s innovation capabilities with those in other leading economies and develops insights on policies, actions and initiatives needed to strengthen innovation capabilities and performance. Institute of Policy Studies; 1st edition, 2005",
+      "slug": "the-state-of-innovation-at-firm-level-in-singapore",
+      "author": "Hitendra Patel, Eduardo Chakarian",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-innovation-singapore",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "The State of Innovation at Firm Level in Singapore",
+          "summary": "Monitor Group, together with Singapore’s Institute of Policy Studies, led a study to assess the state of innovation capabilities in Singapore both at firm and national levels. This flagship study compares Singapore’s innovation capabilities with those in other leading economies and develops insights on policies, actions and initiatives needed to strengthen innovation capabilities and performance. Institute of Policy Studies; 1st edition, 2005",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-innovation-singapore"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_37d15b44b90e47b5b5ae30e10f821033",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Other Innovation Books"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2000-01-01",
+      "dateLabel": "2000",
+      "title": "The Innovation Premium: How Next Generation Companies Are Achieving Peak Performance and Profitability",
+      "summary": "In The Innovation Premium, Ron Jonash and Tom Sommerlatte draw on years of research and experience to demonstrate that companies that consistently achieve innovation leadership enjoy measurable advantages, including an average 15 percent increase in shareholder returns.",
+      "slug": "the-innovation-premium-how-next-generation-companies-are-achieving-peak-performance-and-profitability",
+      "author": "Ronald Jonash, Tom Sommerlatte (at Arthur D. Little)",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-innovation-premium",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "The Innovation Premium: How Next Generation Companies Are Achieving Peak Performance and Profitability",
+          "summary": "In The Innovation Premium, Ron Jonash and Tom Sommerlatte draw on years of research and experience to demonstrate that companies that consistently achieve innovation leadership enjoy measurable advantages, including an average 15 percent increase in shareholder returns.",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-innovation-premium"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_574fac41000f466d85bd8e4ef8b1be1c",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Other Innovation Books"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2009-11-18",
+      "dateLabel": "NOV 2009",
+      "title": "Entrepreneurs, Managers, and Leaders: What the Airline Industry Can Teach Us About Leadership",
+      "summary": "Entrepreneurs, Managers, and Leaders examines the role that business leaders play in shaping industries and how the evolving context of industries shapes leaders in turn, told through the story of the American airline industry across the 20th century.",
+      "slug": "entrepreneurs-managers-and-leaders-what-the-airline-industry-can-teach-us-about-leadership",
+      "author": "Anthony Mayo, Nitin Nohria, Mark Rennella",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-entreprenuers",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Entrepreneurs, Managers, and Leaders: What the Airline Industry Can Teach Us About Leadership",
+          "summary": "Entrepreneurs, Managers, and Leaders examines the role that business leaders play in shaping industries and how the evolving context of industries shapes leaders in turn, told through the story of the American airline industry across the 20th century.",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-entreprenuers"
+        }
+      },
+      "featured": false
+    },
+    {
+      "knowledgeId": "kn_22ea693547e64c21aaca8d24e14ebd75",
+      "type": "book",
+      "topics": [
+        "Innovation"
+      ],
+      "industries": [],
+      "programs": [],
+      "tags": [
+        "Other Innovation Books",
+        "Our Product"
+      ],
+      "externalSources": [],
+      "access": "Public",
+      "publicationStatus": "Published",
+      "date": "2025-01-01",
+      "dateLabel": "2025",
+      "title": "Technovate!: A Guide to the Technologies Revolutionizing our World",
+      "summary": "Technovate! is your essential guide to navigating the rapidly evolving landscape of technology and innovation. It provides actionable insights to help readers understand emerging technologies, business implications and ethical decision making in the age of technovation.",
+      "slug": "technovate-a-guide-to-the-technologies-revolutionizing-our-world",
+      "author": "Hitendra Patel, PH.D",
+      "source": "IXL Center Books",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "book-technovate",
+      "versions": {
+        "ko": {
+          "title": "",
+          "summary": "",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        },
+        "other": {
+          "title": "Technovate!: A Guide to the Technologies Revolutionizing our World",
+          "summary": "Technovate! is your essential guide to navigating the rapidly evolving landscape of technology and innovation. It provides actionable insights to help readers understand emerging technologies, business implications and ethical decision making in the age of technovation.",
+          "body": "",
+          "contentSource": {
+            "type": "builder-markdown",
+            "ref": "",
+            "path": ""
+          }
+        }
+      },
+      "representativeMedia": {
+        "type": "image",
+        "ko": {
+          "url": "",
+          "asset": "",
+          "assetKey": ""
+        },
+        "other": {
+          "url": "",
+          "asset": "",
+          "assetKey": "book-technovate"
+        }
+      },
+      "featured": false
     }
   ]
 }

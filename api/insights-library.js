@@ -374,6 +374,96 @@ export default async function handler(req, res) {
     return res.status(200).send(buffer);
   }
 
+  /* =========================================
+     CMS MARKDOWN ARTICLE INDEX
+     Manager-only read of Decap CMS folder collection.
+     ========================================= */
+
+  if (resource === 'cmsarticles') {
+    if (req.method !== 'GET') {
+      res.setHeader('Allow', 'GET');
+      return res.status(405).json({ error: 'Method not allowed.' });
+    }
+
+    const folderUrl =
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+      '/contents/insightscontent/articles';
+
+    const folderResponse = await fetch(
+      `${folderUrl}?ref=${GITHUB_BRANCH}`,
+      { headers: githubHeaders }
+    );
+
+    if (folderResponse.status === 404) {
+      return res.status(200).json([]);
+    }
+
+    if (!folderResponse.ok) {
+      return res.status(folderResponse.status).json({
+        error: 'CMS Markdown Articles could not be loaded.'
+      });
+    }
+
+    const entries = await folderResponse.json();
+    const markdownFiles = Array.isArray(entries)
+      ? entries.filter(entry => entry.type === 'file' && /\.md$/i.test(entry.name || ''))
+      : [];
+
+    function frontmatterValue(text, key) {
+      const match = String(text || '').match(
+        new RegExp('^' + key + ':\\s*(.+)$', 'mi')
+      );
+      if (!match) return '';
+      return match[1].trim().replace(/^['"]|['"]$/g, '');
+    }
+
+    const articles = await Promise.all(
+      markdownFiles.map(async entry => {
+        const fileResponse = await fetch(
+          `${entry.url}?ref=${GITHUB_BRANCH}`,
+          { headers: githubHeaders }
+        );
+
+        if (!fileResponse.ok) {
+          return {
+            contentRef: String(entry.name || '').replace(/\.md$/i, ''),
+            knowledgeId: '',
+            language: 'other',
+            title: String(entry.name || '').replace(/\.md$/i, ''),
+            summary: '',
+            author: '',
+            date: '',
+            path: entry.path || ''
+          };
+        }
+
+        const file = await fileResponse.json();
+        const text = Buffer.from(file.content || '', 'base64').toString('utf8');
+        const fallbackRef = String(entry.name || '').replace(/\.md$/i, '');
+
+        return {
+          contentRef: frontmatterValue(text, 'contentRef') || fallbackRef,
+          knowledgeId: frontmatterValue(text, 'knowledgeId'),
+          language: frontmatterValue(text, 'language') || 'other',
+          title: frontmatterValue(text, 'title') || fallbackRef,
+          summary: frontmatterValue(text, 'summary'),
+          author: frontmatterValue(text, 'author'),
+          date: frontmatterValue(text, 'date'),
+          path: entry.path || ''
+        };
+      })
+    );
+
+    articles.sort((a, b) =>
+      String(b.date || '').localeCompare(String(a.date || '')) ||
+      String(a.title || '').localeCompare(String(b.title || ''))
+    );
+
+    res.setHeader('Cache-Control', 'no-store, max-age=0');
+    return res.status(200).json(articles);
+  }
+
+
   const resourceConfig =
     DATA_FILES[resource];
 
@@ -384,7 +474,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, knowledge, assets, usage, knowledgetypes, topics, industries, programs, tags, accesslevels or externalsources.'
+          'Invalid resource. Use insights, knowledge, cmsarticles, assets, usage, knowledgetypes, topics, industries, programs, tags, accesslevels or externalsources.'
       });
   }
 
@@ -910,11 +1000,24 @@ export default async function handler(req, res) {
      NORMALIZE INSIGHT
      ========================================= */
 
+  function normalizeKnowledgeContentSource(value = {}) {
+    const type = cleanString(value.type || 'builder-markdown').toLowerCase();
+    const allowed = ['builder-markdown', 'cms-markdown'];
+
+    return {
+      type: allowed.includes(type) ? type : 'builder-markdown',
+      ref: cleanString(value.ref),
+      path: cleanString(value.path)
+    };
+  }
+
+
   function normalizeKnowledgeVersion(value = {}) {
     return {
       title: cleanString(value.title),
       summary: cleanString(value.summary),
-      body: String(value.body ?? '')
+      body: String(value.body ?? ''),
+      contentSource: normalizeKnowledgeContentSource(value.contentSource)
     };
   }
 
@@ -929,10 +1032,16 @@ export default async function handler(req, res) {
 
 
   function hasKnowledgeVersionContent(version) {
+    const contentSource = version?.contentSource || {};
+    const hasCmsSource =
+      contentSource.type === 'cms-markdown' &&
+      Boolean(contentSource.ref || contentSource.path);
+
     return Boolean(
       version.title ||
       version.summary ||
-      String(version.body || '').trim()
+      String(version.body || '').trim() ||
+      hasCmsSource
     );
   }
 
@@ -948,6 +1057,15 @@ export default async function handler(req, res) {
     const source = cleanString(body.source);
     const access = cleanString(body.access || 'Public');
     const featured = body.featured === true;
+    const publicationStatus = cleanString(
+      body.publicationStatus || (resource === 'insights' ? 'Published' : 'Draft')
+    );
+
+    if (!['Draft', 'Published'].includes(publicationStatus)) {
+      const error = new Error('Invalid Publication Status.');
+      error.statusCode = 400;
+      throw error;
+    }
 
     const allowedTypes = Array.isArray(validation.allowedTypes)
       ? validation.allowedTypes
@@ -1042,6 +1160,7 @@ export default async function handler(req, res) {
         tags: normalizeStringArray(body.tags),
         externalSources: normalizeStringArray(body.externalSources),
         access,
+        publicationStatus,
         date,
         dateLabel,
         title,
@@ -1076,6 +1195,7 @@ export default async function handler(req, res) {
       tags: normalizeStringArray(body.tags),
       externalSources: normalizeStringArray(body.externalSources),
       access,
+      publicationStatus,
       date,
       dateLabel,
       title: primaryVersion.title,
@@ -1579,7 +1699,7 @@ export default async function handler(req, res) {
             cleanString(existingItem?.knowledgeId) ||
             cleanString(body.knowledgeId) ||
             createKnowledgeId(),
-          featured: undefined
+          featured: normalized.featured === true
         };
       }
 

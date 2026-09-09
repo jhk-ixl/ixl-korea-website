@@ -1648,6 +1648,7 @@
     const typeConfig = {
         news: {panel:'news', latestLabel:'LATEST NEWS', selectedLabel:'SELECTED NEWS', archiveTitle:'All News', action:'Read More →'},
         article: {panel:'article', latestLabel:'LATEST ARTICLE', selectedLabel:'SELECTED ARTICLE', archiveTitle:'All Articles', action:'Read More →'},
+        book: {panel:'books', latestLabel:'BOOK', selectedLabel:'BOOK', archiveTitle:'Books', action:'Read More →'},
         video: {panel:'video', latestLabel:'LATEST VIDEO', selectedLabel:'SELECTED VIDEO', archiveTitle:'All Videos', action:'Watch Video →'},
         external: {panel:'links', latestLabel:'FEATURED RESOURCE', selectedLabel:'SELECTED RESOURCE', archiveTitle:'External Links', action:'Visit Resource ↗'}
     };
@@ -1738,6 +1739,9 @@ let assetUsage = [];
     }
 
     function insightDetailUrl(item) {
+        if (item.knowledgeId) {
+            return 'insight.html?id=' + encodeURIComponent(item.knowledgeId);
+        }
         const slug = item.slug || slugifyInsight(item.title);
         return 'insight.html?slug=' + encodeURIComponent(slug);
     }
@@ -1749,6 +1753,11 @@ let assetUsage = [];
     function hasInsightDetail(item) {
         const body = typeof item.body === 'string' ? item.body.trim() : '';
         if (body) return true;
+
+        const contentSource = item.contentSource || {};
+        if (contentSource.type === 'cms-markdown' && (contentSource.ref || contentSource.path)) {
+            return true;
+        }
 
         const slug = item.slug || slugifyInsight(item.title);
         return legacyInsightDetailSlugs.has(slug);
@@ -1940,21 +1949,109 @@ let assetUsage = [];
         });
     }
 
+    function getPublicKnowledgeVersion(item) {
+        const versions = item && item.versions ? item.versions : {};
+        const isKorean = document.documentElement.lang === 'ko';
+        const preferred = isKorean ? versions.ko : versions.other;
+        const fallback = isKorean ? versions.other : versions.ko;
+
+        if (preferred && (preferred.title || preferred.summary || preferred.body || preferred.contentSource)) {
+            return { key: isKorean ? 'ko' : 'other', value: preferred };
+        }
+        if (fallback && (fallback.title || fallback.summary || fallback.body || fallback.contentSource)) {
+            return { key: isKorean ? 'other' : 'ko', value: fallback };
+        }
+        return { key: '', value: {} };
+    }
+
+    function normalizeKnowledgeForPublic(item) {
+        const selected = getPublicKnowledgeVersion(item);
+        const version = selected.value || {};
+        const representative = item.representativeMedia || {};
+        const media = selected.key ? (representative[selected.key] || {}) : {};
+
+        return {
+            ...item,
+            title: version.title || item.title || '',
+            summary: version.summary || item.summary || '',
+            body: version.body || item.body || '',
+            contentSource: version.contentSource || { type: 'builder-markdown', ref: '', path: '' },
+            url: media.url || item.url || '',
+            asset: media.asset || item.asset || '',
+            assetKey: media.assetKey || item.assetKey || ''
+        };
+    }
+
+    function renderBooks() {
+        const panel = document.querySelector('.insights-panel[data-panel="books"]');
+        if (!panel) return;
+
+        const items = sortedItems('book');
+        if (!items.length) {
+            // Keep the existing hard-coded book presentation as a temporary fallback
+            // until the Book Knowledge migration is deployed.
+            return;
+        }
+
+        const group = tag => items.filter(item => Array.isArray(item.tags) && item.tags.includes(tag));
+        const beyond = group('Beyond Eureka');
+        const other = group('Other Innovation Books');
+        const products = group('Our Product');
+
+        function bookCards(list) {
+            return list.map(item => {
+                const cover = itemUrl(item);
+                const image = cover && cover !== '#'
+                    ? `<div class="book-cover-image-wrap"><img alt="${item.title}" class="book-cover-image" src="${cover}"></div>`
+                    : '<div class="book-cover-image-wrap"></div>';
+                return `<article class="book-card">
+                    ${image}
+                    <div class="book-copy">
+                        <h3>${item.title}</h3>
+                        ${item.author ? `<p class="book-authors">${item.author}</p>` : ''}
+                        <p>${item.summary || ''}</p>
+                        ${actionLinkHtml(item, typeConfig.book)}
+                    </div>
+                </article>`;
+            }).join('');
+        }
+
+        const productHtml = products.length
+            ? `<div class="books-section-title second"><h2>Our Products</h2><span></span></div>` +
+              products.map(item => {
+                  const cover = itemUrl(item);
+                  return `<article class="product-feature">
+                      <div class="product-visual original-product-visual">${cover && cover !== '#' ? `<img alt="${item.title}" class="product-original-image" src="${cover}">` : ''}</div>
+                      <div class="product-copy"><h3>${item.title}</h3><p>${item.summary || ''}</p>${actionLinkHtml(item, typeConfig.book)}</div>
+                  </article>`;
+              }).join('')
+            : '';
+
+        panel.innerHTML = `<div class="books-page">
+            <div class="books-section-title"><h2>BEYOND EUREKA BOOK SERIES</h2><span></span></div>
+            ${bookCards(beyond)}
+            <div class="books-section-title second"><h2>OTHER INNOVATION BOOKS</h2><span></span></div>
+            ${bookCards(other)}
+            ${productHtml}
+        </div>`;
+    }
+
     function renderAllInsights() {
         renderType('news');
         renderType('article');
         renderType('video');
         renderType('external');
+        renderBooks();
     }
 
     async function loadInsights() {
         try {
                 const [
-                insightsResponse,
+                knowledgeResponse,
                 assetsResponse,
                 usageResponse
             ] = await Promise.all([
-                fetch('insightscontent/insights-data.json', {
+                fetch('insightscontent/knowledge-data.json', {
                     cache: 'no-store'
                 }),
                 fetch('insightscontent/asset-registry.json', {
@@ -1965,14 +2062,22 @@ let assetUsage = [];
                 })
             ]);
 
-            if (!insightsResponse.ok) {
-                throw new Error('Insights HTTP ' + insightsResponse.status);
+            if (!knowledgeResponse.ok) {
+                throw new Error('Knowledge HTTP ' + knowledgeResponse.status);
             }
 
-            const insightsData = await insightsResponse.json();
-            insightsContent = Array.isArray(insightsData)
-                ? insightsData
-                : (Array.isArray(insightsData.items) ? insightsData.items : []);
+            const knowledgeData = await knowledgeResponse.json();
+            const knowledgeItems = Array.isArray(knowledgeData)
+                ? knowledgeData
+                : (Array.isArray(knowledgeData.items) ? knowledgeData.items : []);
+
+            insightsContent = knowledgeItems
+                .filter(item =>
+                    item.access === 'Public' &&
+                    item.publicationStatus === 'Published' &&
+                    ['news', 'book', 'article', 'video', 'external'].includes(item.type)
+                )
+                .map(normalizeKnowledgeForPublic);
 
             if (assetsResponse.ok) {
                 const assetsData = await assetsResponse.json();
@@ -1997,7 +2102,7 @@ let assetUsage = [];
             resolveAssetUsageLinks();
             renderAllInsights();
         } catch (error) {
-            console.error('Failed to load Insights data:', error);
+            console.error('Failed to load Public Knowledge:', error);
             document.querySelectorAll(
                 '.insights-panel[data-panel="news"], ' +
                 '.insights-panel[data-panel="article"], ' +

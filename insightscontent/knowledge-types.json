@@ -11,6 +11,11 @@
       "value": "article"
     },
     {
+      "name": "Book",
+      "description": "Books and long-form innovation publications presented in the public Insights library.",
+      "value": "book"
+    },
+    {
       "name": "Video",
       "description": "Video-based knowledge, interviews, presentations and events.",
       "value": "video"

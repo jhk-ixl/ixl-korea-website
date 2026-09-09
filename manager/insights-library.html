@@ -997,6 +997,25 @@
 
 
         <div class="insights-field manager-editable-field">
+          <label for="edit-publication-status">Publication Status *</label>
+          <select id="edit-publication-status">
+            <option value="Draft">Draft</option>
+            <option value="Published">Published</option>
+          </select>
+          <span class="insights-field-hint">Only Public + Published Knowledge is shown automatically on Website Insights.</span>
+        </div>
+
+
+        <div class="insights-field manager-editable-field">
+          <label for="edit-featured">Featured</label>
+          <select id="edit-featured">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+
+
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-date">
             Date *
@@ -1101,6 +1120,33 @@
 
         </div>
 
+
+        <div class="insights-field manager-editable-field">
+          <label for="edit-content-source-type"><span id="content-source-version-label">Korean</span> Content Source</label>
+          <select id="edit-content-source-type">
+            <option value="builder-markdown">Knowledge Builder Markdown</option>
+            <option value="cms-markdown">CMS Markdown Article</option>
+          </select>
+          <span class="insights-field-hint">Use Builder Markdown for normal content, or link a Decap CMS long-form Markdown article.</span>
+        </div>
+
+        <div class="insights-field manager-editable-field" id="cms-article-picker-field" hidden>
+          <label for="edit-cms-article">CMS Markdown Article</label>
+          <select id="edit-cms-article">
+            <option value="">Select CMS Article...</option>
+          </select>
+          <span class="insights-field-hint">Articles are read from insightscontent/articles/*.md through the Manager API.</span>
+        </div>
+
+        <div class="insights-field manager-editable-field" id="cms-ref-field" hidden>
+          <label for="edit-content-ref">Content Ref</label>
+          <input type="text" id="edit-content-ref" placeholder="article-innovation-5-0">
+        </div>
+
+        <div class="insights-field manager-editable-field" id="cms-path-field" hidden>
+          <label for="edit-content-path">CMS Markdown Path</label>
+          <input type="text" id="edit-content-path" placeholder="insightscontent/articles/...md">
+        </div>
 
         <div class="insights-field manager-editable-field full">
           <label for="edit-version-body"><span id="version-body-label">Korean</span> Markdown Body</label>
@@ -1366,13 +1412,15 @@
 
     let externalSourceRegistry = [];
 
+    let cmsArticleRegistry = [];
+
     let editingIndex = null;
 
     let activeVersion = 'ko';
 
     let versionDrafts = {
-      ko: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } },
-      other: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } }
+      ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: { url: '', asset: '', assetKey: '' } },
+      other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: { url: '', asset: '', assetKey: '' } }
     };
 
     let legacyDraft = null;
@@ -2203,11 +2251,58 @@
       hydrateAssetThumbnails(card);
     }
 
+    function updateContentSourceEditorVisibility() {
+      const type = document.getElementById('edit-content-source-type').value;
+      const isCms = type === 'cms-markdown';
+      document.getElementById('cms-article-picker-field').hidden = !isCms;
+      document.getElementById('cms-ref-field').hidden = !isCms;
+      document.getElementById('cms-path-field').hidden = !isCms;
+      const body = document.getElementById('edit-version-body');
+      body.disabled = isCms;
+      body.placeholder = isCms
+        ? 'Body is loaded from the linked CMS Markdown article.'
+        : 'Write or paste Markdown content here...';
+    }
+
+    function populateCmsArticleOptions() {
+      const select = document.getElementById('edit-cms-article');
+      if (!select) return;
+      const current = select.value;
+      const language = activeVersion;
+      const options = cmsArticleRegistry
+        .filter(article => !article.language || article.language === language)
+        .map(article => `<option value="${escapeHtml(article.path || '')}">${escapeHtml(article.title || article.contentRef || article.path || '')}</option>`)
+        .join('');
+      select.innerHTML = '<option value="">Select CMS Article...</option>' + options;
+      if ([...select.options].some(option => option.value === current)) {
+        select.value = current;
+      }
+    }
+
+    async function loadCmsArticles() {
+      try {
+        const response = await fetch('/api/insights-library?resource=cmsarticles', { cache: 'no-store' });
+        if (!response.ok) throw new Error('CMS Markdown Articles could not be loaded.');
+        const data = await response.json();
+        cmsArticleRegistry = Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.warn(error);
+        cmsArticleRegistry = [];
+      }
+      populateCmsArticleOptions();
+    }
+
+
     function syncEditorToActiveVersion() {
       const draft = versionDrafts[activeVersion];
       draft.title = document.getElementById('edit-version-title').value.trim();
       draft.summary = document.getElementById('edit-version-summary').value.trim();
       draft.body = document.getElementById('edit-version-body').value;
+      draft.contentSource = {
+        type: document.getElementById('edit-content-source-type').value || 'builder-markdown',
+        ref: document.getElementById('edit-content-ref').value.trim(),
+        path: document.getElementById('edit-content-path').value.trim()
+      };
       draft.media.url = document.getElementById('edit-media-url').value.trim();
     }
 
@@ -2217,8 +2312,11 @@
       document.getElementById('edit-version-title').value = draft.title || '';
       document.getElementById('edit-version-summary').value = draft.summary || '';
       document.getElementById('edit-version-body').value = draft.body || '';
+      document.getElementById('edit-content-source-type').value = draft.contentSource?.type || 'builder-markdown';
+      document.getElementById('edit-content-ref').value = draft.contentSource?.ref || '';
+      document.getElementById('edit-content-path').value = draft.contentSource?.path || '';
       document.getElementById('edit-media-url').value = draft.media?.url || '';
-      ['version-title-label', 'version-summary-label', 'version-body-label', 'media-version-label', 'media-url-version-label']
+      ['version-title-label', 'version-summary-label', 'version-body-label', 'content-source-version-label', 'media-version-label', 'media-url-version-label']
         .forEach(id => { document.getElementById(id).textContent = label; });
       document.querySelectorAll('.knowledge-version-tab').forEach(button => {
         const isActive = button.dataset.version === activeVersion;
@@ -2228,8 +2326,10 @@
       const preview = document.getElementById('version-markdown-preview');
       preview.classList.remove('open');
       preview.innerHTML = '';
+      populateCmsArticleOptions();
       renderSelectedAsset();
       updateMediaEditorVisibility();
+      updateContentSourceEditorVisibility();
     }
 
     function switchVersion(nextVersion) {
@@ -2796,6 +2896,8 @@
       document.getElementById('editor-back-button').textContent = 'Back to List';
       document.getElementById('edit-type').value = getDefaultKnowledgeTypeValue();
       document.getElementById('edit-access').value = 'Public';
+      document.getElementById('edit-publication-status').value = 'Draft';
+      document.getElementById('edit-featured').value = 'false';
       document.getElementById('edit-date').value = '';
       document.getElementById('edit-date-label').value = '';
       document.getElementById('edit-slug').value = '';
@@ -2866,6 +2968,8 @@
       document.getElementById('editor-back-button').textContent = 'Back to Review';
       document.getElementById('edit-type').value = item.type || getDefaultKnowledgeTypeValue();
       document.getElementById('edit-access').value = item.access || 'Public';
+      document.getElementById('edit-publication-status').value = item.publicationStatus || 'Draft';
+      document.getElementById('edit-featured').value = item.featured === true ? 'true' : 'false';
       document.getElementById('edit-date').value = item.date || '';
       document.getElementById('edit-date-label').value = item.dateLabel || '';
       document.getElementById('edit-slug').value = item.slug || '';
@@ -2885,6 +2989,11 @@
           title: version.title || '',
           summary: version.summary || '',
           body: version.body || '',
+          contentSource: {
+            type: version.contentSource?.type || 'builder-markdown',
+            ref: version.contentSource?.ref || '',
+            path: version.contentSource?.path || ''
+          },
           media: {
             url: media.url || '',
             asset: media.asset || '',
@@ -3020,17 +3129,25 @@
         ko: {
           title: versionDrafts.ko.title.trim(),
           summary: versionDrafts.ko.summary.trim(),
-          body: versionDrafts.ko.body
+          body: versionDrafts.ko.body,
+          contentSource: { ...versionDrafts.ko.contentSource }
         },
         other: {
           title: versionDrafts.other.title.trim(),
           summary: versionDrafts.other.summary.trim(),
-          body: versionDrafts.other.body
+          body: versionDrafts.other.body,
+          contentSource: { ...versionDrafts.other.contentSource }
         }
       };
 
-      const koHasAny = Boolean(versions.ko.title || versions.ko.summary || versions.ko.body.trim());
-      const otherHasAny = Boolean(versions.other.title || versions.other.summary || versions.other.body.trim());
+      const versionHasAny = version => Boolean(
+        version.title ||
+        version.summary ||
+        version.body.trim() ||
+        (version.contentSource?.type === 'cms-markdown' && (version.contentSource.ref || version.contentSource.path))
+      );
+      const koHasAny = versionHasAny(versions.ko);
+      const otherHasAny = versionHasAny(versions.other);
 
       if (!document.getElementById('edit-date').value ||
           !document.getElementById('edit-date-label').value.trim()) {
@@ -3052,6 +3169,8 @@
       const payload = {
         type: document.getElementById('edit-type').value,
         access: document.getElementById('edit-access').value,
+        publicationStatus: document.getElementById('edit-publication-status').value,
+        featured: document.getElementById('edit-featured').value === 'true',
         date: document.getElementById('edit-date').value,
         dateLabel: document.getElementById('edit-date-label').value.trim(),
         slug: document.getElementById('edit-slug').value.trim(),
@@ -3546,6 +3665,26 @@
       'DOMContentLoaded',
       loadInsights
     );
+
+    document.getElementById('edit-content-source-type').addEventListener('change', () => {
+      syncEditorToActiveVersion();
+      updateContentSourceEditorVisibility();
+    });
+
+    document.getElementById('edit-cms-article').addEventListener('change', function () {
+      const article = cmsArticleRegistry.find(entry => entry.path === this.value);
+      if (!article) return;
+      document.getElementById('edit-content-ref').value = article.contentRef || '';
+      document.getElementById('edit-content-path').value = article.path || '';
+      const titleInput = document.getElementById('edit-version-title');
+      const summaryInput = document.getElementById('edit-version-summary');
+      if (!titleInput.value.trim() && article.title) titleInput.value = article.title;
+      if (!summaryInput.value.trim() && article.summary) summaryInput.value = article.summary;
+      syncEditorToActiveVersion();
+    });
+
+    loadCmsArticles();
+
 </script>
 
 </body>
