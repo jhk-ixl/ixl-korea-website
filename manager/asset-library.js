@@ -14,6 +14,15 @@
 
   const $ = id => document.getElementById(id);
 
+  function setAssetDetailActive(active) {
+    document
+      .querySelector('main.asset-manager')
+      ?.classList.toggle(
+        'detail-active',
+        Boolean(active)
+      );
+  }
+
   function formatFileSize(bytes) {
     const size = Number(bytes || 0);
     if (size < 1024) return `${size} B`;
@@ -527,6 +536,7 @@
   }
 
   function openUsageModal(index = null) {
+    setAssetDetailActive(true);
     const title = $('usage-modal-title');
     const subtitle = $('usage-edit-subtitle');
     const editIndex = $('usage-edit-index');
@@ -568,6 +578,7 @@
   }
 
   function closeUsageModal() {
+    setAssetDetailActive(false);
     $('usage-edit-mode').hidden = true;
     $('asset-list-mode').hidden = true;
     $('asset-edit-mode').hidden = true;
@@ -1025,6 +1036,7 @@ Key: ${registered.key || key}`);
   }
 
   function renderEditMode(item, index) {
+    setAssetDetailActive(true);
     $('asset-list-mode').hidden = true;
     $('asset-usage-mode').hidden = true;
     $('asset-edit-mode').hidden = false;
@@ -1076,6 +1088,7 @@ Key: ${registered.key || key}`);
   }
 
   async function initMode() {
+    setAssetDetailActive(false);
     const params = new URLSearchParams(location.search);
     const editKey = params.get('edit');
     const mode = params.get('mode') || 'library';

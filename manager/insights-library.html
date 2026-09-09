@@ -937,7 +937,8 @@
           </dl>
           <div class="knowledge-detail-summary">
             <h4>Summary</h4>
-            <p id="knowledge-detail-summary">—</p>
+            <div id="knowledge-detail-summary" class="knowledge-summary-preview">—</div>
+            <button type="button" id="knowledge-summary-more" class="knowledge-summary-more" hidden>자세히...</button>
           </div>
         </div>
       </div>
@@ -2750,7 +2751,25 @@
       document.getElementById('knowledge-detail-industries').textContent = (item.industries || []).join(', ') || '—';
       document.getElementById('knowledge-detail-programs').textContent = (item.programs || []).join(', ') || '—';
       document.getElementById('knowledge-detail-tags').textContent = (item.tags || []).join(', ') || '—';
-      document.getElementById('knowledge-detail-summary').textContent = getDetailSummary(item);
+      const summaryElement =
+        document.getElementById('knowledge-detail-summary');
+
+      summaryElement.textContent =
+        getDetailSummary(item);
+
+      summaryElement.classList.remove('expanded');
+
+      const summaryMore =
+        document.getElementById('knowledge-summary-more');
+
+      requestAnimationFrame(() => {
+        summaryMore.hidden =
+          summaryElement.scrollHeight <=
+          summaryElement.clientHeight + 2;
+
+        summaryMore.textContent =
+          '자세히...';
+      });
 
       renderDetailMedia(item);
       document.getElementById('knowledge-detail-panel').classList.add('open');
@@ -3246,6 +3265,18 @@
     /* =========================================
        EVENTS
        ========================================= */
+
+
+    document.getElementById('knowledge-summary-more').addEventListener('click', () => {
+      const summary =
+        document.getElementById('knowledge-detail-summary');
+
+      const expanded =
+        summary.classList.toggle('expanded');
+
+      document.getElementById('knowledge-summary-more').textContent =
+        expanded ? '접기' : '자세히...';
+    });
 
 
     document.getElementById('knowledge-detail-edit').addEventListener('click', () => {

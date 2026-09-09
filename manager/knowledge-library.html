@@ -79,7 +79,7 @@
       <article class="manager-overview-card">
         <span class="manager-overview-label">SNS DISTRIBUTED</span>
         <strong class="manager-overview-value" id="overview-sns">0</strong>
-        <small class="manager-overview-note">Unique Knowledge published to SNS channels</small>
+        <small class="manager-overview-note">Unique Knowledge linked to SNS distribution</small>
       </article>
 
     </section>
@@ -355,6 +355,7 @@
 
       if (!records.length) {
         return {
+          state: 'none',
           published: false,
           label: 'No',
           detail: 'No SNS distribution records.'
@@ -368,9 +369,16 @@
             .toLowerCase() === 'published'
         );
 
+      const drafts =
+        records.filter(record =>
+          String(record?.status || '')
+            .trim()
+            .toLowerCase() !== 'published'
+        );
+
       const channels =
         [...new Set(
-          published
+          records
             .map(record =>
               String(
                 record?.channel ||
@@ -382,13 +390,23 @@
             .filter(Boolean)
         )];
 
+      const state =
+        published.length
+          ? 'published'
+          : drafts.length
+            ? 'draft'
+            : 'linked';
+
       return {
+        state,
         published:
           published.length > 0,
         label:
-          published.length
-            ? `Yes${channels.length ? ` · ${channels.join(', ')}` : ''}`
-            : 'No',
+          state === 'published'
+            ? `Published${channels.length ? ` · ${channels.join(', ')}` : ''}`
+            : state === 'draft'
+              ? `Draft${channels.length ? ` · ${channels.join(', ')}` : ''}`
+              : `Linked${channels.length ? ` · ${channels.join(', ')}` : ''}`,
         detail:
           records
             .map(record => {
@@ -403,9 +421,11 @@
                 'Unknown';
 
               const date =
+                record?.publishedDate ||
                 record?.publishedAt ||
                 record?.updatedAt ||
                 record?.createdAt ||
+                record?.scheduledDate ||
                 '';
 
               return `${channel}: ${status}${date ? ` · ${formatKnowledgeDate(date)}` : ''}`;
@@ -572,9 +592,9 @@
             ${access}
           </td>
 
-          <td data-sort-value="${sns.published ? 'yes' : 'no'}">
-            <span class="manager-status-pill ${sns.published ? 'published' : 'not-published'}">
-              ${sns.published ? 'Yes' : 'No'}
+          <td data-sort-value="${sns.state}">
+            <span class="manager-status-pill ${sns.state}">
+              ${sns.state === 'published' ? 'Published' : sns.state === 'draft' ? 'Draft' : sns.state === 'linked' ? 'Linked' : 'No'}
             </span>
           </td>
 
@@ -1606,13 +1626,6 @@
             getResourceItems(
               overviewLoads[1].value
             )
-              .filter(item =>
-                String(
-                  item.status || ''
-                )
-                  .trim()
-                  .toLowerCase() === 'published'
-              )
               .map(item =>
                 normalizeKnowledgeId(
                   item.knowledgeId

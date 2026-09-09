@@ -3163,3 +3163,115 @@ a.manager-utilization-item:hover {
   color: #667085;
   background: #f2f4f7;
 }
+
+
+/* =========================================
+   MANAGER SECOND SCREEN STANDARD V10
+   Knowledge Review is the canonical visual pattern.
+   ========================================= */
+
+/* Keep Search / Type labels readable and separated from controls. */
+.library-search label,
+.library-filter label,
+.manager-field label {
+  display: block;
+  margin: 0 0 8px !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0.75px !important;
+  text-transform: uppercase;
+  color: #667085 !important;
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-weight: 800 !important;
+}
+
+/* Builder focus must hide every generated list header as well as the body table. */
+.builder-focus-mode .manager-canonical-sticky,
+.builder-focus-mode .manager-auto-top-scroll,
+.builder-focus-mode .manager-canonical-header-viewport,
+.builder-focus-mode #insights-table-wrap,
+.builder-focus-mode #insights-empty,
+.builder-focus-mode .insights-toolbar,
+.builder-focus-mode .insights-result-summary {
+  display: none !important;
+}
+
+/* Asset second screens keep the page identity but remove the mode-selector strip. */
+.asset-manager.detail-active .asset-mode-nav {
+  display: none !important;
+}
+
+.asset-manager.detail-active .asset-page-head {
+  margin-bottom: 22px;
+}
+
+/* All second screens share the same Knowledge Review geometry. */
+.manager-detail-screen {
+  margin-top: 22px;
+}
+
+.manager-detail-screen .manager-detail-header,
+.knowledge-detail-panel .manager-detail-header {
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #dbe3ec;
+}
+
+.manager-detail-screen .manager-detail-header h2,
+.manager-detail-screen .manager-detail-header h3,
+.knowledge-detail-panel .manager-detail-header h2,
+.knowledge-detail-panel .manager-detail-header h3 {
+  margin: 4px 0 6px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.manager-detail-screen .manager-detail-layout,
+.knowledge-detail-panel .manager-detail-layout {
+  grid-template-columns: minmax(300px, .85fr) minmax(0, 1.15fr);
+  gap: 22px;
+}
+
+.manager-detail-screen .manager-detail-preview-card,
+.manager-detail-screen .manager-detail-form,
+.knowledge-detail-panel .manager-detail-preview-card,
+.knowledge-detail-panel .manager-detail-form {
+  border-radius: 10px;
+  border: 1px solid #dbe3ec;
+  background: #fff;
+}
+
+.manager-detail-screen .manager-detail-preview-card,
+.knowledge-detail-panel .manager-detail-preview-card {
+  padding: 16px;
+}
+
+/* SNS list states */
+.manager-status-pill.draft {
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.manager-status-pill.linked {
+  color: #175cd3;
+  background: #eff8ff;
+}
+
+.manager-status-pill.none {
+  color: #667085;
+  background: #f2f4f7;
+}
+
+/* Avoid ghost/overlapping canonical header rows below focused forms. */
+.builder-focus-mode .manager-canonical-body-table > thead,
+.builder-focus-mode .manager-canonical-header-table,
+.builder-focus-mode .manager-canonical-sticky {
+  visibility: hidden !important;
+}
+
+@media (max-width: 960px) {
+  .manager-detail-screen .manager-detail-layout,
+  .knowledge-detail-panel .manager-detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
