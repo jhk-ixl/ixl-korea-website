@@ -1124,10 +1124,20 @@ Key: ${registered.key || key}`);
     $('asset-list-mode').hidden = false;
     $('asset-library-nav')?.classList.add('active');
 
+    const filterBar = document.querySelector('#asset-list-mode > .asset-filter-bar');
+    const gridSticky = document.getElementById('asset-grid-sticky');
+    const tableSection = document.querySelector('#asset-list-mode > .asset-table-section');
+
     if (mode === 'upload') {
       showPanel('asset-upload-panel');
+      if (filterBar) filterBar.hidden = true;
+      if (gridSticky) gridSticky.hidden = true;
+      if (tableSection) tableSection.hidden = true;
     } else {
       closePanel('asset-upload-panel');
+      if (filterBar) filterBar.hidden = false;
+      if (gridSticky) gridSticky.hidden = false;
+      if (tableSection) tableSection.hidden = false;
     }
 
     requestAnimationFrame(updateTopScroller);

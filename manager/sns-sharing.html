@@ -12,7 +12,7 @@
   <script src="manager-guard.js"></script>
   <script src="manager-common.js"></script>
 <style>
-.sns-review-media{margin-top:10px;min-height:220px;border:1px solid #dbe3ec;border-radius:8px;background:#f7f9fb;display:flex;align-items:center;justify-content:center;overflow:hidden}.sns-review-media img,.sns-review-media video{max-width:100%;max-height:360px}.sns-review-media iframe{width:100%;height:360px;border:0}.sns-transaction-history{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ec}.sns-transaction-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #edf1f5;font-size:13px}.sns-review-fields{margin:0}.sns-review-fields>div{display:grid;grid-template-columns:140px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #e7ecf1}.sns-review-fields dt{font-weight:700;color:#53657a}.sns-review-fields dd{margin:0}.sns-language-badge{font-size:11px;font-weight:800;text-transform:uppercase}.sns-knowledge-id{display:block;margin-top:4px;font-size:11px;color:#6b7b8d}.sns-compose-section.sns-editor-active{outline:2px solid #dfe8f2;outline-offset:10px}
+.sns-review-media{margin-top:10px;min-height:220px;border:1px solid #dbe3ec;border-radius:8px;background:#f7f9fb;display:flex;align-items:center;justify-content:center;overflow:hidden}.sns-review-media img,.sns-review-media video{max-width:100%;max-height:360px}.sns-review-media iframe{width:100%;height:360px;border:0}.sns-transaction-history{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ec}.sns-transaction-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #edf1f5;font-size:13px;cursor:pointer}.sns-transaction-item:hover{background:#f7f9fb}.sns-review-fields{margin:0}.sns-review-fields>div{display:grid;grid-template-columns:140px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #e7ecf1}.sns-review-fields dt{font-weight:700;color:#53657a}.sns-review-fields dd{margin:0}.sns-language-badge{font-size:11px;font-weight:800;text-transform:uppercase}.sns-knowledge-id{display:block;margin-top:4px;font-size:11px;color:#6b7b8d}.sns-summary-wrap{margin-top:6px}.sns-summary-text{white-space:pre-wrap;line-height:1.55}.sns-summary-text.is-clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.sns-summary-toggle{margin-top:5px;border:0;background:transparent;padding:0;color:#0759b6;font:inherit;font-size:12px;cursor:pointer}.sns-editor-header{margin-bottom:22px}.sns-editor-context{font-size:13px;color:#617186;margin-top:6px}.sns-version-summary{display:block;margin-top:8px;white-space:pre-wrap;line-height:1.45}.sns-version-summary.is-clamped{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}.sns-list-screen-part[hidden],#sns-review-screen[hidden],#sns-compose-section[hidden]{display:none!important}
 </style>
 </head>
 
@@ -82,7 +82,7 @@
          INTRO
          ========================================= -->
 
-    <section class="manager-intro">
+    <section class="manager-intro sns-list-screen-part">
 
       <span class="section-eyebrow">
         DISTRIBUTION
@@ -98,7 +98,7 @@
       </p>
 
     </section>
-    <nav class="manager-mode-nav" aria-label="Distribution functions">
+    <nav class="manager-mode-nav sns-list-screen-part" aria-label="Distribution functions">
       <a class="manager-mode-card active" href="sns-sharing.html">
         <span class="manager-mode-kicker">SOCIAL DISTRIBUTION</span>
         <strong>SNS Sharing</strong>
@@ -118,7 +118,7 @@
          STEP 1 — SELECT KNOWLEDGE
          ========================================= -->
 
-    <section class="sns-toolbar">
+    <section class="sns-toolbar sns-list-screen-part">
 
       <div class="sns-search">
 
@@ -153,7 +153,7 @@
 
 
 
-    <section class="sns-selection-summary">
+    <section class="sns-selection-summary sns-list-screen-part">
 
       <div>
 
@@ -192,7 +192,7 @@
 
 
 
-    <section class="library-table-wrap manager-canonical-table-wrap" id="sns-knowledge-list-wrap">
+    <section class="library-table-wrap manager-canonical-table-wrap sns-list-screen-part" id="sns-knowledge-list-wrap">
       <table class="library-table manager-canonical-table" id="sns-knowledge-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
         <thead>
           <tr>
@@ -218,7 +218,7 @@
     <section id="sns-review-screen" class="manager-detail-screen manager-second-screen-shell" hidden>
       <div class="manager-detail-header manager-second-screen-head">
         <div><span class="section-eyebrow">SNS KNOWLEDGE REVIEW</span><h3 id="sns-review-title">Knowledge Detail</h3><p id="sns-review-subtitle">Review the official Knowledge version and its communication transactions.</p></div>
-        <div class="knowledge-detail-actions manager-second-screen-actions"><button type="button" class="library-button primary" id="sns-review-edit">Edit Details</button></div>
+        <div class="knowledge-detail-actions manager-second-screen-actions"><button type="button" class="library-button primary" id="sns-review-edit">Edit Details</button><button type="button" class="library-button" id="sns-review-back">Back to List</button></div>
       </div>
       <div class="manager-detail-layout manager-second-screen-grid">
         <div class="manager-detail-preview-card manager-second-screen-preview">
@@ -229,7 +229,7 @@
           <dl class="sns-review-fields">
             <div><dt>Knowledge ID</dt><dd id="sns-review-id">—</dd></div><div><dt>Language</dt><dd id="sns-review-language">—</dd></div><div><dt>Title</dt><dd id="sns-review-detail-title">—</dd></div><div><dt>Type</dt><dd id="sns-review-type">—</dd></div><div><dt>Date</dt><dd id="sns-review-date">—</dd></div><div><dt>Access</dt><dd id="sns-review-access">—</dd></div>
           </dl>
-          <div class="manager-detail-system-info manager-second-screen-system"><strong id="sns-review-summary-label">Summary</strong><p id="sns-review-summary">—</p></div>
+          <div class="manager-detail-system-info manager-second-screen-system"><strong id="sns-review-summary-label">Summary</strong><div class="sns-summary-wrap"><p id="sns-review-summary" class="sns-summary-text is-clamped">—</p><button type="button" class="sns-summary-toggle" id="sns-review-summary-toggle" hidden>자세히...</button></div></div>
         </div>
       </div>
     </section>
@@ -241,7 +241,18 @@
     <section
       class="sns-compose-section"
       id="sns-compose-section"
+      hidden
     >
+      <div class="manager-detail-header manager-second-screen-head sns-editor-header">
+        <div>
+          <span class="section-eyebrow">SNS TRANSACTION EDIT</span>
+          <h3 id="sns-editor-title">Prepare Distribution Transaction</h3>
+          <p id="sns-editor-context" class="sns-editor-context">Adjust the selected Knowledge version or transaction, then create a new distribution transaction.</p>
+        </div>
+        <div class="manager-second-screen-actions">
+          <button type="button" class="library-button" id="sns-editor-back">Back to Review</button>
+        </div>
+      </div>
 
       <div class="sns-step-heading">
 
@@ -1453,13 +1464,35 @@
     let selectedKnowledgeLanguage = 'other';
     let selectedTransaction = null;
 
+    function hasKorean(value) {
+      return /[가-힣]/.test(String(value || ''));
+    }
+
+    function inferBaseLanguage(item) {
+      const sample = [item?.title, item?.summary, item?.body].join(' ');
+      return hasKorean(sample) ? 'ko' : 'other';
+    }
+
     function getVersion(item, language) {
-      const versions = item && item.versions && typeof item.versions === 'object' ? item.versions : {};
-      const version = versions[language] || {};
-      if (language === 'other') {
-        return { title: version.title || item.title || '', summary: version.summary || item.summary || '', body: version.body || item.body || '' };
+      const versions = item && item.versions && typeof item.versions === 'object' ? item.versions : null;
+      if (versions) {
+        const version = versions[language] || {};
+        return {
+          title: String(version.title || '').trim(),
+          summary: String(version.summary || '').trim(),
+          body: String(version.body || '').trim()
+        };
       }
-      return { title: version.title || '', summary: version.summary || '', body: version.body || '' };
+
+      if (inferBaseLanguage(item) !== language) {
+        return { title: '', summary: '', body: '' };
+      }
+
+      return {
+        title: String(item?.title || '').trim(),
+        summary: String(item?.summary || '').trim(),
+        body: String(item?.body || '').trim()
+      };
     }
 
     function availableVersions(item) {
@@ -1474,16 +1507,30 @@
     function getRepresentativeMedia(item, language) {
       const rep = item?.representativeMedia || {};
       const lang = rep?.[language] || {};
-      const source = lang.asset || lang.url || item.asset || item.url || '';
-      return String(source || '').trim();
+      if (lang.asset || lang.url) return String(lang.asset || lang.url).trim();
+      if (!item?.representativeMedia && inferBaseLanguage(item) === language) {
+        return String(item.asset || item.url || '').trim();
+      }
+      return '';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     function createKnowledgeCard(entry, key) {
       const item = entry.item, language = entry.language, version = entry.version;
       const topics = normalizeArray(item.topics), industries = normalizeArray(item.industries), programs = normalizeArray(item.programs), tags = normalizeArray(item.tags);
-      const classification = [...topics,...industries,...programs,...tags].filter(Boolean).map(value => `<span class="manager-inline-tag">${value}</span>`).join(' ');
+      const classification = [...topics,...industries,...programs,...tags].filter(Boolean).map(value => `<span class="manager-inline-tag">${escapeHtml(value)}</span>`).join(' ');
       const checked = selectedItems.has(key) ? 'checked' : '';
-      return `<tr><td><input type="radio" name="sns-knowledge-version" class="sns-item-checkbox" data-key="${key}" ${checked} aria-label="Select knowledge version"></td><td data-sort-value="${item.type || 'Unclassified'}">${item.type || 'Unclassified'}</td><td data-sort-value="${item.date || item.dateLabel || ''}">${item.dateLabel || item.date || ''}</td><td><span class="sns-language-badge">${language}</span></td><td data-sort-value="${version.title || ''}"><strong>${version.title || ''}</strong><span class="sns-knowledge-id">${item.knowledgeId || ''}</span><br><small>${version.summary || ''}</small></td><td>${classification || '—'}</td><td data-sort-value="${item.access || 'Public'}">${item.access || 'Public'}</td></tr>`;
+      const summary = version.summary || '';
+      const summaryHtml = summary ? `<span class="sns-version-summary is-clamped">${escapeHtml(summary)}</span><button type="button" class="sns-summary-toggle sns-list-summary-toggle">자세히...</button>` : '';
+      return `<tr><td><input type="radio" name="sns-knowledge-version" class="sns-item-checkbox" data-key="${key}" ${checked} aria-label="Select knowledge version"></td><td data-sort-value="${escapeHtml(item.type || 'Unclassified')}">${escapeHtml(item.type || 'Unclassified')}</td><td data-sort-value="${escapeHtml(item.date || item.dateLabel || '')}">${escapeHtml(item.dateLabel || item.date || '')}</td><td><span class="sns-language-badge">${escapeHtml(language)}</span></td><td data-sort-value="${escapeHtml(version.title || '')}"><strong>${escapeHtml(version.title || '')}</strong><span class="sns-knowledge-id">${escapeHtml(item.knowledgeId || '')}</span>${summaryHtml}</td><td>${classification || '—'}</td><td data-sort-value="${escapeHtml(item.access || 'Public')}">${escapeHtml(item.access || 'Public')}</td></tr>`;
     }
 
     function filterKnowledge() {
@@ -1505,8 +1552,22 @@
       if (!entries.length) { container.innerHTML=''; if(empty){empty.style.display='block';empty.textContent='No knowledge matches your search.';} return; }
       if(empty) empty.style.display='none';
       container.innerHTML = entries.map(entry => createKnowledgeCard(entry,entry.key)).join('');
-      container.querySelectorAll('.sns-item-checkbox').forEach(input => input.addEventListener('change', event => {
-        selectedItems.clear(); selectedItems.add(event.target.dataset.key); updateSelectedCount(); updateShareContent();
+      container.querySelectorAll('.sns-item-checkbox').forEach(input => input.addEventListener('change', async event => {
+        selectedItems.clear();
+        selectedItems.add(event.target.dataset.key);
+        selectedTransaction = null;
+        updateSelectedCount();
+        updateShareContent();
+        await loadDistributionHistory();
+        showSnsScreen('review');
+      }));
+      container.querySelectorAll('.sns-list-summary-toggle').forEach(button => button.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const text = button.previousElementSibling;
+        const expanded = !text.classList.contains('is-clamped');
+        text.classList.toggle('is-clamped', expanded);
+        button.textContent = expanded ? '자세히...' : '접기';
       }));
     }
 
@@ -1517,37 +1578,139 @@
       return {item,language,version:getVersion(item,language)};
     }
 
+    function showSnsScreen(name) {
+      document.querySelectorAll('.sns-list-screen-part').forEach(node => { node.hidden = name !== 'list'; });
+      const review = document.getElementById('sns-review-screen');
+      const editor = document.getElementById('sns-compose-section');
+      if (review) review.hidden = name !== 'review';
+      if (editor) editor.hidden = name !== 'editor';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function updateShareContent() {
       const ctx = getSelectedVersionContext();
       const fields = {title:document.getElementById('share-title'),text:document.getElementById('share-text'),detail:document.getElementById('share-detail-link'),external:document.getElementById('share-external-link'),mediaType:document.getElementById('share-media-type'),mediaFile:document.getElementById('share-media-file'),language:document.getElementById('share-language')};
       if(!ctx){ Object.values(fields).forEach(el=>{if(el && el.tagName!=='SELECT') el.value='';}); selectedAssetKey='';selectedKnowledgeId='';document.getElementById('sns-review-screen').hidden=true;return; }
-      const {item,language,version}=ctx; selectedKnowledgeId=String(item.knowledgeId||'').trim(); selectedKnowledgeLanguage=language; fields.language.value=language; fields.title.value=version.title||''; fields.text.value=version.summary||'';
-      const slug=String(item.slug||'').trim(); fields.detail.value=slug?window.location.origin+'/insight.html?slug='+encodeURIComponent(slug):''; fields.external.value=String(item.url||'').trim();
-      const media=getRepresentativeMedia(item,language); selectedAssetKey=String(item?.representativeMedia?.[language]?.assetKey || item.assetKey || '').trim(); let mediaType='None'; const lower=media.toLowerCase().split('?')[0].split('#')[0]; if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower))mediaType='Image';else if(/\.pdf$/i.test(lower))mediaType='Document';else if(/\.(mp4|mov|m4v|webm)$/i.test(lower))mediaType='Video'; fields.mediaType.value=mediaType; fields.mediaFile.value=mediaType==='None'?'':media;
-      renderSnsReview(ctx,null); loadDistributionHistory();
+      const {item,language,version}=ctx;
+      selectedKnowledgeId=String(item.knowledgeId||'').trim();
+      selectedKnowledgeLanguage=language;
+      fields.language.value=language;
+      fields.title.value=version.title||'';
+      fields.text.value=version.summary||'';
+      const slug=String(item.slug||'').trim();
+      fields.detail.value=slug?window.location.origin+'/insight.html?slug='+encodeURIComponent(slug):'';
+      fields.external.value=String(item.url||'').trim();
+      const media=getRepresentativeMedia(item,language);
+      selectedAssetKey=String(item?.representativeMedia?.[language]?.assetKey || (!item?.representativeMedia ? item.assetKey : '') || '').trim();
+      let mediaType='None';
+      const lower=media.toLowerCase().split('?')[0].split('#')[0];
+      if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower))mediaType='Image';else if(/\.pdf$/i.test(lower))mediaType='Document';else if(/\.(mp4|mov|m4v|webm)$/i.test(lower))mediaType='Video';
+      fields.mediaType.value=mediaType;
+      fields.mediaFile.value=mediaType==='None'?'':media;
+      renderSnsReview(ctx,null);
     }
 
     async function loadDistributionHistory(){
-      try{const r=await fetch('/api/distribution-queue',{cache:'no-store'});const d=await r.json();distributionItems=Array.isArray(d.items)?d.items:(Array.isArray(d)?d:[]);}catch(e){distributionItems=[];} renderSnsReview(getSelectedVersionContext(),selectedTransaction);
+      try{const r=await fetch('/api/distribution-queue',{cache:'no-store'});const d=await r.json();distributionItems=Array.isArray(d.items)?d.items:(Array.isArray(d)?d:[]);}catch(e){distributionItems=[];}
+      renderSnsReview(getSelectedVersionContext(),selectedTransaction);
     }
 
-    function matchingTransactions(ctx){ if(!ctx)return[]; return distributionItems.filter(x=>String(x.knowledgeId||'').trim()===String(ctx.item.knowledgeId||'').trim() && String(x.language||'other').trim()===ctx.language).sort((a,b)=>String(b.publishedDate||b.createdAt||'').localeCompare(String(a.publishedDate||a.createdAt||''))); }
+    function normalizeLanguage(value){
+      const v=String(value||'').trim().toLowerCase();
+      if(v==='ko'||v==='kr'||v==='korean') return 'ko';
+      return 'other';
+    }
+
+    function matchingTransactions(ctx){
+      if(!ctx)return[];
+      return distributionItems.filter(x=>String(x.knowledgeId||'').trim()===String(ctx.item.knowledgeId||'').trim() && normalizeLanguage(x.language)===ctx.language).sort((a,b)=>String(b.publishedDate||b.createdAt||'').localeCompare(String(a.publishedDate||a.createdAt||'')));
+    }
 
     function renderMedia(source){ const box=document.getElementById('sns-review-media'); const value=String(source||'').trim(); if(!value){box.textContent='No media';return;} const url=IXLManager.toUrl(value); const lower=value.toLowerCase().split('?')[0].split('#')[0]; if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) box.innerHTML=`<img src="${url}" alt="Preview">`; else if(/\.(mp4|mov|m4v|webm)$/i.test(lower)) box.innerHTML=`<video controls src="${url}"></video>`; else if(/\.pdf$/i.test(lower)) box.innerHTML=`<iframe src="${url}#page=1&view=FitH" title="PDF preview"></iframe>`; else box.innerHTML=`<a href="${url}" target="_blank" rel="noopener">View media</a>`; }
 
+    function setReviewSummary(text) {
+      const p = document.getElementById('sns-review-summary');
+      const toggle = document.getElementById('sns-review-summary-toggle');
+      const value = String(text || '—');
+      p.textContent = value;
+      p.classList.add('is-clamped');
+      toggle.textContent = '자세히...';
+      toggle.hidden = value === '—' || value.length < 140;
+    }
+
     function renderSnsReview(ctx,transaction){
-      const screen=document.getElementById('sns-review-screen'); if(!ctx){screen.hidden=true;return;} screen.hidden=false; const {item,language,version}=ctx; const tx=transaction && String(transaction.knowledgeId||'')===String(item.knowledgeId||'') ? transaction:null; selectedTransaction=tx;
-      document.getElementById('sns-review-title').textContent=tx?(tx.title||version.title):(version.title||item.title||'Knowledge Detail'); document.getElementById('sns-review-id').textContent=item.knowledgeId||'—'; document.getElementById('sns-review-language').textContent=language; document.getElementById('sns-review-detail-title').textContent=tx?(tx.title||'—'):(version.title||'—'); document.getElementById('sns-review-type').textContent=item.type||'—'; document.getElementById('sns-review-date').textContent=tx?(tx.publishedDate||tx.createdDate||'—'):(item.date||'—'); document.getElementById('sns-review-access').textContent=item.access||'Public'; document.getElementById('sns-review-summary-label').textContent=tx?'Post Text':'Summary'; document.getElementById('sns-review-summary').textContent=tx?(tx.postText||'—'):(version.summary||'—'); renderMedia(tx?(tx.mediaFile||''):getRepresentativeMedia(item,language));
-      const txs=matchingTransactions(ctx); document.getElementById('sns-transaction-list').innerHTML=`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="current" ${!tx?'checked':''}> Current Knowledge · ${language}</label>`+txs.map((x,i)=>`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="${i}" ${tx===x?'checked':''}> ${(x.publishedDate||x.createdDate||'').slice(0,10)||'—'} · ${x.channel||'SNS'} · #${String(i+1).padStart(3,'0')} · ${x.status||'Draft'}</label>`).join('');
+      const screen=document.getElementById('sns-review-screen'); if(!ctx){screen.hidden=true;return;}
+      const {item,language,version}=ctx;
+      const tx=transaction && String(transaction.knowledgeId||'')===String(item.knowledgeId||'') && normalizeLanguage(transaction.language)===language ? transaction:null;
+      selectedTransaction=tx;
+      document.getElementById('sns-review-title').textContent=tx?(tx.title||version.title):(version.title||item.title||'Knowledge Detail');
+      document.getElementById('sns-review-id').textContent=item.knowledgeId||'—';
+      document.getElementById('sns-review-language').textContent=language;
+      document.getElementById('sns-review-detail-title').textContent=tx?(tx.title||'—'):(version.title||'—');
+      document.getElementById('sns-review-type').textContent=item.type||'—';
+      document.getElementById('sns-review-date').textContent=tx?(tx.publishedDate||tx.createdDate||'—'):(item.date||'—');
+      document.getElementById('sns-review-access').textContent=item.access||'Public';
+      document.getElementById('sns-review-summary-label').textContent=tx?'Post Text':'Summary';
+      setReviewSummary(tx?(tx.postText||'—'):(version.summary||'—'));
+      renderMedia(tx?(tx.mediaFile||''):getRepresentativeMedia(item,language));
+      const txs=matchingTransactions(ctx);
+      document.getElementById('sns-transaction-list').innerHTML=`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="current" ${!tx?'checked':''}> Current Knowledge · ${language}</label>`+txs.map((x,i)=>`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="${i}" ${tx===x?'checked':''}> ${escapeHtml((x.publishedDate||x.createdDate||'').slice(0,10)||'—')} · ${escapeHtml(x.channel||'SNS')} · #${escapeHtml(x.serialNo||String(i+1).padStart(3,'0'))} · ${escapeHtml(x.status||'Draft')}</label>`).join('');
       document.querySelectorAll('input[name="sns-tx"]').forEach(r=>r.addEventListener('change',e=>{const v=e.target.value;renderSnsReview(ctx,v==='current'?null:txs[Number(v)]);}));
     }
 
     function populateComposerFromReview(){
-      const ctx=getSelectedVersionContext(); if(!ctx)return; const tx=selectedTransaction; document.getElementById('share-language').value=ctx.language; document.getElementById('share-title').value=tx?(tx.title||''):(ctx.version.title||''); document.getElementById('share-text').value=tx?(tx.postText||''):(ctx.version.summary||''); if(tx){document.getElementById('share-detail-link').value=tx.detailLink||'';document.getElementById('share-external-link').value=tx.externalLink||'';document.getElementById('share-media-type').value=tx.mediaType||'None';document.getElementById('share-media-file').value=tx.mediaFile||'';selectedAssetKey=tx.assetKey||'';} const section=document.getElementById('sns-compose-section'); section.classList.add('sns-editor-active'); section.scrollIntoView({behavior:'smooth',block:'start'});
+      const ctx=getSelectedVersionContext(); if(!ctx)return;
+      const tx=selectedTransaction;
+      document.getElementById('share-language').value=ctx.language;
+      document.getElementById('share-title').value=tx?(tx.title||''):(ctx.version.title||'');
+      document.getElementById('share-text').value=tx?(tx.postText||''):(ctx.version.summary||'');
+      if(tx){
+        document.getElementById('share-detail-link').value=tx.detailLink||tx.link||'';
+        document.getElementById('share-external-link').value=tx.externalLink||'';
+        document.getElementById('share-media-type').value=tx.mediaType||'None';
+        document.getElementById('share-media-file').value=tx.mediaFile||'';
+        selectedAssetKey=tx.assetKey||'';
+        const channelRadio=document.querySelector(`input[name="sns-channel"][value="${CSS.escape(tx.channel||'LinkedIn')}"]`);
+        if(channelRadio) channelRadio.checked=true;
+      } else {
+        updateShareContent();
+      }
+      document.getElementById('sns-editor-title').textContent=tx?'Create New Transaction from Selected Transaction':'Create Transaction from Knowledge';
+      document.getElementById('sns-editor-context').textContent=tx
+        ? `${tx.channel||'SNS'} · ${(tx.publishedDate||tx.createdDate||'').slice(0,10)||'—'} · #${tx.serialNo||'—'} — edit a copy; the original transaction remains unchanged.`
+        : `${ctx.item.knowledgeId||''} · ${ctx.language} — edit the official Knowledge version for this distribution only.`;
+      showSnsScreen('editor');
     }
 
     document.getElementById('sns-review-edit')?.addEventListener('click',populateComposerFromReview);
-    document.getElementById('share-language')?.addEventListener('change',event=>{ const ctx=getSelectedVersionContext(); if(!ctx)return; const wanted=event.target.value; const available=availableVersions(ctx.item).find(v=>v.language===wanted); if(!available){ event.target.value=ctx.language; if (confirm('This Knowledge language version does not exist. Open Knowledge Builder to add it?')) { window.location.href = 'insights-library.html?edit=' + encodeURIComponent(ctx.item.knowledgeId || '') + '&language=' + encodeURIComponent(wanted) + '&from=sns&return=' + encodeURIComponent(window.location.href); } return; } const idx=allKnowledgeItems.indexOf(ctx.item); selectedItems.clear();selectedItems.add(`${idx}:${wanted}`);updateShareContent();filterKnowledge(); });
+    document.getElementById('sns-review-back')?.addEventListener('click',()=>showSnsScreen('list'));
+    document.getElementById('sns-editor-back')?.addEventListener('click',()=>showSnsScreen('review'));
+    document.getElementById('sns-review-summary-toggle')?.addEventListener('click',()=>{
+      const p=document.getElementById('sns-review-summary');
+      const button=document.getElementById('sns-review-summary-toggle');
+      const expanded=!p.classList.contains('is-clamped');
+      p.classList.toggle('is-clamped',expanded);
+      button.textContent=expanded?'자세히...':'접기';
+    });
+
+    document.getElementById('share-language')?.addEventListener('change',event=>{
+      const ctx=getSelectedVersionContext(); if(!ctx)return;
+      const wanted=event.target.value;
+      const available=availableVersions(ctx.item).find(v=>v.language===wanted);
+      if(!available){
+        event.target.value=ctx.language;
+        if (confirm('This Knowledge language version does not exist. Open Knowledge Builder to add it?')) {
+          window.location.href = 'insights-library.html?edit=' + encodeURIComponent(ctx.item.knowledgeId || '') + '&language=' + encodeURIComponent(wanted) + '&from=sns&return=' + encodeURIComponent(window.location.href);
+        }
+        return;
+      }
+      const idx=allKnowledgeItems.indexOf(ctx.item);
+      selectedItems.clear();selectedItems.add(`${idx}:${wanted}`);
+      selectedTransaction=null;
+      updateShareContent();
+      filterKnowledge();
+      populateComposerFromReview();
+    });
 
     /* =========================================
        START
