@@ -9,5 +9,9 @@
   "mediaFile": "images/book-greenovate.jpg",
   "status": "Draft",
   "scheduledDate": "",
-  "publishedDate": ""
+  "publishedDate": "",
+  "language": "other",
+  "distributionId": "dist_e2d7256aefc75f5c9a2f150292cc1b1b",
+  "serialNo": "002",
+  "transactionKey": "unlinked::other::linkedin::2026-09-01::002"
 }

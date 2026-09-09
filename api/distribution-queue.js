@@ -319,7 +319,7 @@ export default async function handler(req, res) {
 
       const language =
         String(
-          body.language || 'en'
+          body.language || 'other'
         )
           .trim()
           .toLowerCase();
@@ -432,19 +432,10 @@ export default async function handler(req, res) {
 
     }        
 
-      if (
-        !/^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/.test(
-          language
-        )
-      ) {
-
-        return res
-          .status(400)
-          .json({
-            error:
-              'Invalid language code.'
-          });
-
+      if (!['ko', 'other'].includes(language)) {
+        return res.status(400).json({
+          error: 'Language must be ko or other.'
+        });
       }
 
 
@@ -453,6 +444,7 @@ export default async function handler(req, res) {
         ========================================= */
 
       if (
+        !knowledgeId ||
         !channel ||
         !title ||
         !postText
@@ -462,7 +454,7 @@ export default async function handler(req, res) {
           .status(400)
           .json({
             error:
-              'Channel, title and post text are required.'
+              'Knowledge ID, channel, title and post text are required.'
           });
 
       }
@@ -525,9 +517,14 @@ export default async function handler(req, res) {
         BUILD QUEUE JSON
         ========================================= */
 
+      const distributionId = createDistributionId();
+      const serialNo = now.toISOString().replace(/\D/g, '').slice(8, 17);
+      const transactionKey = [knowledgeId, language, channel.toLowerCase(), createdDate, serialNo].join('::');
+
       const queueData = {
-        distributionId:
-          createDistributionId(),
+        distributionId,
+        transactionKey,
+        serialNo,
         createdDate,
         createdAt: now.toISOString(),
         knowledgeId,

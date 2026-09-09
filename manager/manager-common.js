@@ -436,9 +436,51 @@
     });
   }
 
+
+  /* =========================================
+     COMMON SECOND-SCREEN SHELL
+     One runtime structure contract for Builder Review,
+     Knowledge Deep-Down, Asset/Usage and governance editors.
+     ========================================= */
+  function initDetailShell(root) {
+    if (!root || root.dataset?.managerDetailShellBound === 'true') return;
+
+    root.classList.add('manager-second-screen-shell');
+
+    const header = root.querySelector(':scope > .manager-detail-header');
+    if (header) header.classList.add('manager-second-screen-head');
+
+    const actions = header?.querySelector('.library-actions, .knowledge-detail-actions, .manager-detail-actions');
+    if (actions) actions.classList.add('manager-second-screen-actions');
+
+    const layout = root.querySelector(':scope > .manager-detail-layout, :scope > .manager-detail-grid');
+    if (layout) layout.classList.add('manager-second-screen-grid');
+
+    const preview = layout?.querySelector('.manager-detail-preview-card');
+    if (preview) preview.classList.add('manager-second-screen-preview');
+
+    const content = layout?.querySelector('.manager-detail-form');
+    if (content) content.classList.add('manager-second-screen-content');
+
+    root.querySelectorAll('.manager-detail-system-info').forEach(node =>
+      node.classList.add('manager-second-screen-system')
+    );
+
+    root.querySelectorAll('.manager-detail-actions, .asset-form-actions').forEach(node =>
+      node.classList.add('manager-second-screen-form-actions')
+    );
+
+    root.dataset.managerDetailShellBound = 'true';
+  }
+
+  function initDetailShells(root = document) {
+    root.querySelectorAll('.manager-detail-screen, .knowledge-detail-panel').forEach(initDetailShell);
+  }
+
   function initManagerUi(root = document) {
     root.querySelectorAll('table[data-manager-sortable]').forEach(initDomSortableTable);
     root.querySelectorAll('.manager-canonical-table-wrap').forEach(initCanonicalScrollTable);
+    initDetailShells(root);
   }
 
   window.IXLManager = {
@@ -449,6 +491,8 @@
     compareValues,
     createSortableTable,
     initCanonicalScrollTable,
+    initDetailShell,
+    initDetailShells,
     initManagerUi
   };
 

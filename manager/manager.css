@@ -3275,3 +3275,95 @@ a.manager-utilization-item:hover {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* =========================================
+   COMMON SECOND-SCREEN SHELL — CANONICAL
+   This is the single geometry source for every Manager second screen.
+   ========================================= */
+.manager-second-screen-shell {
+  margin-top: 22px;
+}
+
+.manager-second-screen-shell > .manager-second-screen-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #dbe3ec;
+}
+
+.manager-second-screen-head .section-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.manager-second-screen-head h2,
+.manager-second-screen-head h3 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.manager-second-screen-head p {
+  margin: 0;
+  max-width: 760px;
+}
+
+.manager-second-screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.manager-second-screen-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, .85fr) minmax(0, 1.15fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.manager-second-screen-preview,
+.manager-second-screen-content {
+  min-width: 0;
+  border: 1px solid #dbe3ec !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.manager-second-screen-preview {
+  padding: 18px;
+}
+
+.manager-second-screen-content {
+  padding: 20px;
+}
+
+.manager-second-screen-system {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e3e9ef;
+}
+
+.manager-second-screen-form-actions {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #e3e9ef;
+}
+
+@media (max-width: 900px) {
+  .manager-second-screen-shell > .manager-second-screen-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .manager-second-screen-actions {
+    justify-content: flex-start;
+  }
+  .manager-second-screen-grid {
+    grid-template-columns: 1fr;
+  }
+}

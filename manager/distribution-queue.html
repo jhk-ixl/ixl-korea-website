@@ -327,6 +327,17 @@
 
 
         <label>
+          Knowledge ID
+
+          <input
+            type="text"
+            id="queue-edit-knowledge-id"
+            readonly
+          >
+        </label>
+
+
+        <label>
           Title
 
           <input
@@ -986,6 +997,12 @@
         getLanguageLabel(
           item.language
         );
+
+
+      document.getElementById(
+        'queue-edit-knowledge-id'
+      ).value =
+        item.knowledgeId || '';
 
 
       document.getElementById(

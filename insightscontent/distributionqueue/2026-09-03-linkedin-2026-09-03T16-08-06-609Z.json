@@ -12,5 +12,10 @@
   "assetKey": "",
   "status": "Ready",
   "scheduledDate": "",
-  "publishedDate": ""
+  "publishedDate": "",
+  "knowledgeId": "kn_6ff530a3e8124b09ba87cca0edcad337",
+  "language": "other",
+  "distributionId": "dist_46f4164525e05b6ca6e52d5af3305e81",
+  "serialNo": "001",
+  "transactionKey": "kn_6ff530a3e8124b09ba87cca0edcad337::other::linkedin::2026-09-03::001"
 }

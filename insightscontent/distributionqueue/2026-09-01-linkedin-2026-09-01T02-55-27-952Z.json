@@ -9,5 +9,10 @@
   "mediaFile": "insightscontent/AKAIO-1.0-Product-Launch-Web.mp4",
   "status": "Published",
   "scheduledDate": "",
-  "publishedDate": "2026-09-01T12:09"
+  "publishedDate": "2026-09-01T12:09",
+  "knowledgeId": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c",
+  "language": "ko",
+  "distributionId": "dist_892e3b725e205040bac1cbaba8127014",
+  "serialNo": "001",
+  "transactionKey": "kn_d497d6046b4d4a1a8ac98b5c2d35bb6c::ko::linkedin::2026-09-01::001"
 }

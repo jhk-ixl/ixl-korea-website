@@ -10,5 +10,10 @@
   "assetKey": "ixl-korea-company-7offerings",
   "status": "Published",
   "scheduledDate": "",
-  "publishedDate": "2026-09-02T12:39"
+  "publishedDate": "2026-09-02T12:39",
+  "knowledgeId": "kn_96f04055c8244be78524c09b516e8da6",
+  "language": "ko",
+  "distributionId": "dist_a3408390babd5bfe92106f242ee945d1",
+  "serialNo": "001",
+  "transactionKey": "kn_96f04055c8244be78524c09b516e8da6::ko::linkedin::2026-09-02::001"
 }

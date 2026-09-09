@@ -10,5 +10,10 @@
   "assetKey": "",
   "status": "Published",
   "scheduledDate": "",
-  "publishedDate": "2026-09-03T18:55"
+  "publishedDate": "2026-09-03T18:55",
+  "knowledgeId": "kn_9d571095803a44678757d705cdf7df3b",
+  "language": "ko",
+  "distributionId": "dist_a8df69a35d4f5f9aba65844691476956",
+  "serialNo": "001",
+  "transactionKey": "kn_9d571095803a44678757d705cdf7df3b::ko::linkedin::2026-09-03::001"
 }

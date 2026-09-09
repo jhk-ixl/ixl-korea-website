@@ -339,12 +339,19 @@
 
     function getKnowledgeSnsRecords(item) {
       const id =
-        String(item?.knowledgeId || '').trim();
+        normalizeKnowledgeId(item?.knowledgeId);
 
       if (!id) return [];
 
       return distributionItems.filter(record =>
-        String(record?.knowledgeId || '').trim() === id
+        normalizeKnowledgeId(record?.knowledgeId) === id
+      );
+    }
+
+    function getPublishedKnowledgeSnsRecords(item) {
+      return getKnowledgeSnsRecords(item).filter(record =>
+        String(record?.status || '').trim().toLowerCase() === 'published' &&
+        String(record?.publishedDate || '').trim()
       );
     }
 
@@ -1626,6 +1633,10 @@
             getResourceItems(
               overviewLoads[1].value
             )
+              .filter(item =>
+                String(item?.status || '').trim().toLowerCase() === 'published' &&
+                String(item?.publishedDate || '').trim()
+              )
               .map(item =>
                 normalizeKnowledgeId(
                   item.knowledgeId
