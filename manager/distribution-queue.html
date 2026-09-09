@@ -124,6 +124,19 @@
       </p>
 
     </section>
+    <nav class="manager-mode-nav" aria-label="Distribution functions">
+      <a class="manager-mode-card " href="sns-sharing.html">
+        <span class="manager-mode-kicker">SOCIAL DISTRIBUTION</span>
+        <strong>SNS Sharing</strong>
+        <span>Select knowledge and prepare social content.</span>
+      </a>
+      <a class="manager-mode-card active" href="distribution-queue.html">
+        <span class="manager-mode-kicker">WORKFLOW</span>
+        <strong>Distribution Queue</strong>
+        <span>Review, schedule and publish prepared content.</span>
+      </a>
+    </nav>
+
 
 
 
@@ -210,37 +223,25 @@
          QUEUE TABLE
          ========================================= -->
 
-    <section class="library-table-wrap">
+    <section class="library-table-wrap manager-canonical-table-wrap">
 
-      <table class="library-table">
+      <table class="library-table manager-canonical-table" data-manager-sortable data-default-sort-key="created" data-default-sort-direction="desc">
 
         <thead>
 
           <tr>
 
-            <th>
-              Created
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="created">Created <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
-            <th>
-              Channel
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="channel">Channel <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
-            <th>
-              Language
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="language">Language <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
-            <th>
-              Title
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
-            <th>
-              Status
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="status">Status <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
-            <th>
-              Scheduled
-            </th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="scheduled">Scheduled <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
 
             <th>
               Published
@@ -289,7 +290,7 @@
       hidden
     >
 
-      <div class="queue-editor-card">
+      <div class="queue-editor-card manager-form-card">
 
         <h3>Edit Distribution Item</h3>
 

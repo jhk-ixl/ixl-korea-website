@@ -9,9 +9,8 @@
   let registryAssets = [];
   let usageMappings = [];
   let uploadObjectUrl = '';
-  let syncingScroll = false;
-  let assetSortKey = 'uploaded';
-  let assetSortDirection = 'desc';
+  let assetSorter = null;
+  let usageSorter = null;
 
   const $ = id => document.getElementById(id);
 
@@ -233,35 +232,32 @@
   }
 
   function updateTopScroller() {
-    const wrap = $('asset-table-wrap');
-    const table = $('asset-table');
-    const headerTable = $('asset-header-table');
-    const content = $('asset-top-scroll-content');
-    if (!wrap || !table || !headerTable || !content) return;
+    if (!window.IXLManager) return;
+    IXLManager.syncScrollTable({
+      topScrollId: 'asset-top-scroll',
+      topInnerId: 'asset-top-scroll-content',
+      wrapId: 'asset-table-wrap',
+      tableId: 'asset-table',
+      headerViewportId: 'asset-header-viewport',
+      headerTableId: 'asset-header-table'
+    });
+  }
 
-    const width = Math.max(table.scrollWidth, headerTable.scrollWidth, wrap.clientWidth);
-    content.style.width = `${width}px`;
+  function updateUsageScroller() {
+    if (!window.IXLManager) return;
+    IXLManager.syncScrollTable({
+      topScrollId: 'usage-top-scroll',
+      topInnerId: 'usage-top-scroll-content',
+      wrapId: 'usage-table-wrap',
+      tableId: 'usage-table',
+      headerViewportId: 'usage-header-viewport',
+      headerTableId: 'usage-header-table'
+    });
   }
 
   function setupScrollSync() {
-    const top = $('asset-top-scroll');
-    const header = $('asset-header-viewport');
-    const wrap = $('asset-table-wrap');
-    if (!top || !header || !wrap) return;
-
-    const syncTo = source => {
-      if (syncingScroll) return;
-      syncingScroll = true;
-      const left = source.scrollLeft;
-      if (source !== top) top.scrollLeft = left;
-      if (source !== header) header.scrollLeft = left;
-      if (source !== wrap) wrap.scrollLeft = left;
-      syncingScroll = false;
-    };
-
-    top.addEventListener('scroll', () => syncTo(top));
-    wrap.addEventListener('scroll', () => syncTo(wrap));
-    window.addEventListener('resize', updateTopScroller);
+    updateTopScroller();
+    updateUsageScroller();
   }
 
   function getAssetSortValue(asset, key) {
@@ -282,33 +278,6 @@
       }
       default: return '';
     }
-  }
-
-  function compareAssetValues(a, b) {
-    if (typeof a === 'number' && typeof b === 'number') return a - b;
-    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
-  }
-
-  function updateSortIndicators() {
-    document.querySelectorAll('.asset-sort-button').forEach(button => {
-      const active = button.dataset.sortKey === assetSortKey;
-      button.dataset.sortDirection = active ? assetSortDirection : '';
-      const th = button.closest('th');
-      if (th) th.setAttribute('aria-sort', active ? (assetSortDirection === 'asc' ? 'ascending' : 'descending') : 'none');
-    });
-  }
-
-  function setAssetSort(key) {
-    if (!['file', 'key', 'folder', 'type', 'size', 'uploaded'].includes(key)) return;
-
-    if (assetSortKey === key) {
-      assetSortDirection = assetSortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      assetSortKey = key;
-      assetSortDirection = key === 'uploaded' ? 'desc' : 'asc';
-    }
-
-    renderAssets();
   }
 
   function renderAssets() {
@@ -334,19 +303,16 @@
 
         const matchesFolder = folder === 'all' || getFolder(pathname) === folder;
         return matchesSearch && matchesFolder;
-      })
-      .sort((a, b) => {
-        const result = compareAssetValues(
-          getAssetSortValue(a, assetSortKey),
-          getAssetSortValue(b, assetSortKey)
-        );
-        return assetSortDirection === 'asc' ? result : -result;
       });
 
-    if ($('asset-count')) $('asset-count').textContent = filtered.length;
+    const sorted = assetSorter
+      ? assetSorter.sort(filtered, getAssetSortValue)
+      : filtered;
+
+    if ($('asset-count')) $('asset-count').textContent = sorted.length;
     tbody.innerHTML = '';
 
-    filtered.forEach(asset => {
+    sorted.forEach(asset => {
       const row = document.createElement('tr');
       const pathname = asset.pathname || '';
       const fileName = getFileName(pathname);
@@ -388,10 +354,8 @@
       tbody.appendChild(row);
     });
 
-    empty.style.display = filtered.length ? 'none' : 'block';
+    empty.style.display = sorted.length ? 'none' : 'block';
     empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
-    updateSortIndicators();
-
     requestAnimationFrame(updateTopScroller);
   }
 
@@ -429,13 +393,28 @@
     usageMappings = Array.isArray(data) ? data : [];
   }
 
+  function getUsageSortValue(entry, key) {
+    const usage = entry.usage || {};
+    switch (key) {
+      case 'usageKey': return String(usage.usageKey || '').toLowerCase();
+      case 'page': return String(usage.page || '').toLowerCase();
+      case 'label': return String(usage.label || '').toLowerCase();
+      case 'assetKey': return String(usage.assetKey || '').toLowerCase();
+      default: return '';
+    }
+  }
+
   function renderUsageMappings() {
     const tbody = $('usage-table-body');
     const empty = $('usage-empty');
+    if (!tbody || !empty) return;
 
     tbody.innerHTML = '';
 
-    usageMappings.forEach((usage, index) => {
+    const indexed = usageMappings.map((usage, index) => ({ usage, index }));
+    const rows = usageSorter ? usageSorter.sort(indexed, getUsageSortValue) : indexed;
+
+    rows.forEach(({ usage, index }) => {
       const asset = findRegistryByKey(usage.assetKey);
       const row = document.createElement('tr');
 
@@ -452,8 +431,9 @@
       tbody.appendChild(row);
     });
 
-    empty.style.display = usageMappings.length ? 'none' : 'block';
-    empty.textContent = usageMappings.length ? '' : 'No usage mappings yet.';
+    empty.style.display = rows.length ? 'none' : 'block';
+    empty.textContent = rows.length ? '' : 'No usage mappings yet.';
+    requestAnimationFrame(updateUsageScroller);
   }
 
   function populateUsageAssetSelect(selectedKey = '') {
@@ -1237,15 +1217,29 @@ Key: ${registered.key || key}`);
   }
 
   function bindEvents() {
+    if (window.IXLManager) {
+      assetSorter = IXLManager.createSortableTable({
+        root: '#asset-header-table',
+        keys: ['file', 'key', 'folder', 'type', 'size', 'uploaded'],
+        defaultKey: 'uploaded',
+        defaultDirection: 'desc',
+        defaultDirectionByKey: { uploaded: 'desc' },
+        onChange: renderAssets
+      });
+
+      usageSorter = IXLManager.createSortableTable({
+        root: '#usage-header-table',
+        keys: ['usageKey', 'page', 'label', 'assetKey'],
+        defaultKey: 'usageKey',
+        defaultDirection: 'asc',
+        onChange: renderUsageMappings
+      });
+    }
+
     setupScrollSync();
 
     $('asset-search')?.addEventListener('input', renderAssets);
     $('asset-folder-filter')?.addEventListener('change', renderAssets);
-
-    $('asset-header-table')?.addEventListener('click', event => {
-      const button = event.target.closest('[data-sort-key]');
-      if (button) setAssetSort(button.dataset.sortKey);
-    });
 
     $('repository-toggle')?.addEventListener('click', () => showPanel('repository-asset-panel'));
 

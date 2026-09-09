@@ -21,7 +21,7 @@
     <nav class="manager-nav"><a href="index.html">Dashboard</a><a href="knowledge.html" class="active">Knowledge</a><a href="../index.html" class="website-link">Website</a></nav>
   </header>
   <main class="manager-main">
-    <section class="manager-page-heading"><span class="section-eyebrow">EXTERNAL SOURCE</span><h2>External Sources</h2><p>Register and maintain external articles, websites, reports, videos and reference URLs. These are references, not internal Assets.</p></section>
+    <section class="manager-page-heading manager-page-head"><span class="section-eyebrow">EXTERNAL SOURCE</span><h2>External Sources</h2><p>Register and maintain external articles, websites, reports, videos and reference URLs. These are references, not internal Assets.</p></section>
     <section class="source-toolbar"><button type="button" id="add-source" class="library-button primary">Add External Source</button></section>
     <section class="source-editor" id="source-editor" hidden>
       <h3 id="editor-title">Add External Source</h3>
@@ -36,7 +36,7 @@
       <div class="source-actions"><button id="save-source" class="primary" type="button">Save</button><button id="cancel-source" type="button">Cancel</button></div>
       <div id="source-message" class="message"></div>
     </section>
-    <section class="source-list"><table><thead><tr><th>Type</th><th>Title</th><th>Source</th><th>URL</th><th>Actions</th></tr></thead><tbody id="source-body"></tbody></table></section>
+    <section class="source-list manager-canonical-table-wrap"><table class="manager-canonical-table" data-manager-sortable data-default-sort-key="title"><thead><tr><th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th><th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th><th><button type="button" class="manager-sort-button" data-sort-key="source">Source <span class="manager-sort-indicator" aria-hidden="true"></span></button></th><th><button type="button" class="manager-sort-button" data-sort-key="url">URL <span class="manager-sort-indicator" aria-hidden="true"></span></button></th><th>Actions</th></tr></thead><tbody id="source-body"></tbody></table></section>
   </main>
 <script>
 const API='/api/insights-library?resource=externalsources';let items=[];let editingIndex=null;
@@ -49,5 +49,6 @@ async function save(){const payload={title:document.getElementById('source-title
 async function remove(index){if(!confirm('Delete this External Source?'))return;const r=await fetch(API,{method:'DELETE',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({index})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Delete failed.');await load();}
 document.getElementById('add-source').onclick=()=>openEditor();document.getElementById('cancel-source').onclick=closeEditor;document.getElementById('save-source').onclick=()=>save().catch(e=>document.getElementById('source-message').textContent=e.message);document.getElementById('source-body').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.edit!==undefined)openEditor(Number(b.dataset.edit));if(b.dataset.delete!==undefined)remove(Number(b.dataset.delete)).catch(err=>alert(err.message));};load().catch(e=>alert(e.message));
 </script>
+<script src="manager-common.js"></script>
 </body>
 </html>

@@ -75,7 +75,17 @@
     </section>
 
 
-    <section class="type-grid" id="tag-grid">
+    <section class="manager-canonical-table-wrap">
+      <table class="manager-canonical-table" data-manager-sortable data-default-sort-key="name">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col"><button type="button" class="manager-sort-button" data-sort-key="name">Name <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th scope="col"><button type="button" class="manager-sort-button" data-sort-key="description">Description <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+          </tr>
+        </thead>
+        <tbody id="tag-grid"></tbody>
+      </table>
     </section>
 
   </main>
@@ -101,11 +111,11 @@
             String(index + 1).padStart(2, '0');
 
           return `
-            <article class="type-card">
-              <span>${number}</span>
-              <h3>${tag.name}</h3>
-              <p>${tag.description || ''}</p>
-            </article>
+            <tr>
+              <td class="manager-master-index">${number}</td>
+              <td class="manager-master-name" data-sort-value="${tag.name || ''}">${tag.name || ''}</td>
+              <td class="manager-master-description" data-sort-value="${tag.description || ''}">${tag.description || ''}</td>
+            </tr>
           `;
 
         }).join('');
@@ -165,5 +175,6 @@
     );
   </script>
 
+  <script src="manager-common.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@
 
   <link rel="stylesheet" href="manager.css">
   <script src="manager-guard.js"></script>
+  <script src="manager-common.js"></script>
 <script src="../markdown-renderer.js?v=20260904-v1"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
@@ -823,9 +824,9 @@
   </header>
 
 
-  <main class="manager-main">
+  <main class="manager-main manager-standard-page">
 
-    <section class="manager-intro">
+    <section class="manager-intro manager-page-head">
 
       <span class="section-eyebrow">
         KNOWLEDGE MANAGEMENT
@@ -844,14 +845,14 @@
          TOOLBAR
          ========================================= -->
 
-    <section class="insights-toolbar">
+    <section class="insights-toolbar manager-filter-panel">
 
       <div class="insights-toolbar-top">
 
         <button
           type="button"
           id="add-insight"
-          class="insights-btn primary"
+          class="insights-btn library-button primary"
         >
           + Add Knowledge
         </button>
@@ -867,7 +868,7 @@
         <button
           type="button"
           id="clear-insights"
-          class="insights-btn"
+          class="insights-btn library-button"
         >
           Clear
         </button>
@@ -876,35 +877,6 @@
 
 
       <div class="insights-toolbar-bottom">
-
-        <div class="insights-control">
-
-          <label for="insights-sort">
-            Sort by
-          </label>
-
-          <select id="insights-sort">
-
-            <option value="date-desc">
-              Date: Newest
-            </option>
-
-            <option value="date-asc">
-              Date: Oldest
-            </option>
-
-            <option value="title-asc">
-              Title: A → Z
-            </option>
-
-            <option value="title-desc">
-              Title: Z → A
-            </option>
-
-          </select>
-
-        </div>
-
 
         <div class="insights-control">
 
@@ -931,7 +903,7 @@
 
     <section
       id="insights-editor"
-      class="insights-editor"
+      class="insights-editor manager-form-card"
     >
 
       <div class="insights-editor-header">
@@ -945,7 +917,7 @@
 
       <div class="insights-form-grid">
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-type">
             Type *
@@ -956,7 +928,7 @@
         </div>
 
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-access">
             Access Level *
@@ -967,7 +939,7 @@
         </div>
 
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-date">
             Date *
@@ -981,7 +953,7 @@
         </div>
 
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-date-label">
             Display Label *
@@ -1009,22 +981,22 @@
         <div id="legacy-content-panel" class="legacy-content-panel">
           이 항목은 이전 형식으로 저장된 Knowledge입니다. 기존 내용을 자동으로 Korean/Other에 배정하지 않습니다.
           <div class="legacy-content-actions">
-            <button type="button" class="insights-btn" id="copy-legacy-ko">Copy Legacy to Korean</button>
-            <button type="button" class="insights-btn" id="copy-legacy-other">Copy Legacy to Other</button>
+            <button type="button" class="insights-btn library-button" id="copy-legacy-ko">Copy Legacy to Korean</button>
+            <button type="button" class="insights-btn library-button" id="copy-legacy-other">Copy Legacy to Other</button>
           </div>
         </div>
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
           <label for="edit-version-title"><span id="version-title-label">Korean</span> Title</label>
           <input type="text" id="edit-version-title">
         </div>
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
           <label for="edit-version-summary"><span id="version-summary-label">Korean</span> Summary</label>
           <textarea id="edit-version-summary"></textarea>
         </div>
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-slug">
             Slug
@@ -1043,7 +1015,7 @@
         </div>
 
 
-        <div class="insights-field">
+        <div class="insights-field manager-editable-field">
 
           <label for="edit-author">
             Author
@@ -1058,7 +1030,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
 
           <label for="edit-source">
             Source
@@ -1073,7 +1045,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
           <label for="edit-version-body"><span id="version-body-label">Korean</span> Markdown Body</label>
           <textarea
             id="edit-version-body"
@@ -1082,12 +1054,12 @@
           ></textarea>
           <span class="insights-field-hint">선택한 콘텐츠 버전의 전체 본문입니다.</span>
           <div class="markdown-preview-tools">
-            <button type="button" id="toggle-version-markdown-preview" class="insights-btn">Preview</button>
+            <button type="button" id="toggle-version-markdown-preview" class="insights-btn library-button">Preview</button>
           </div>
           <div id="version-markdown-preview" class="markdown-preview" aria-live="polite"></div>
         </div>
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
 
           <label for="edit-topics">
             Topics
@@ -1106,7 +1078,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
 
           <label for="edit-industries">
             Industries
@@ -1125,7 +1097,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
 
           <label for="edit-programs">
             Programs
@@ -1144,7 +1116,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
 
           <label for="edit-tags">
             Tags
@@ -1163,7 +1135,7 @@
         </div>
 
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
           <label for="edit-external-sources">External Sources</label>
           <select id="edit-external-sources" multiple size="5"></select>
           <span class="insights-field-hint">External Sources registry에서 연결할 참고 출처를 선택합니다. Ctrl/Cmd로 여러 개를 선택할 수 있습니다.</span>
@@ -1172,7 +1144,7 @@
 
         <div class="media-section-heading">MEDIA</div>
 
-        <div class="insights-field full">
+        <div class="insights-field manager-editable-field full">
           <label for="edit-media-type">Media Type</label>
           <select id="edit-media-type">
             <option value="none">None</option>
@@ -1186,9 +1158,9 @@
           </select>
         </div>
 
-        <div class="insights-field full" id="media-asset-field">
+        <div class="insights-field manager-editable-field full" id="media-asset-field">
           <label><span id="media-version-label">Korean</span> Media Asset</label>
-          <button type="button" class="insights-btn" id="open-asset-picker">Select from Asset Library</button>
+          <button type="button" class="insights-btn library-button" id="open-asset-picker">Select from Asset Library</button>
           <div id="selected-asset-card" class="selected-asset-card">
             <div id="selected-asset-preview" class="selected-asset-preview" aria-hidden="true"></div>
             <div class="selected-asset-info">
@@ -1202,7 +1174,7 @@
           </div>
         </div>
 
-        <div class="insights-field full" id="media-url-field">
+        <div class="insights-field manager-editable-field full" id="media-url-field">
           <label for="edit-media-url"><span id="media-url-version-label">Korean</span> External URL</label>
           <input type="text" id="edit-media-url" placeholder="https://...">
           <span class="insights-field-hint">External Link 유형에서만 사용합니다.</span>
@@ -1215,7 +1187,7 @@
         <button
           type="button"
           id="save-insight"
-          class="insights-btn primary"
+          class="insights-btn library-button primary"
         >
           Save
         </button>
@@ -1223,7 +1195,7 @@
         <button
           type="button"
           id="cancel-insight"
-          class="insights-btn"
+          class="insights-btn library-button"
         >
           Cancel
         </button>
@@ -1264,19 +1236,19 @@
 
     <section
       id="insights-table-wrap"
-      class="insights-table-wrap"
+      class="insights-table-wrap manager-canonical-table-wrap"
     >
 
-      <table class="insights-table">
+      <table class="insights-table manager-canonical-table" id="insights-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
 
         <thead>
 
           <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Title</th>
-            <th>Display Label</th>
-            <th>Access</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="label">Display Label <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th>Actions</th>
           </tr>
 
@@ -2316,12 +2288,6 @@
         ).value;
 
 
-      const sort =
-        document.getElementById(
-          'insights-sort'
-        ).value;
-
-
       let results =
         [...insightsItems];
 
@@ -2349,65 +2315,7 @@
       }
 
 
-      results.sort(
-        (a, b) => {
 
-          if (sort === 'date-desc') {
-
-            return String(
-              b.date || ''
-            ).localeCompare(
-              String(a.date || '')
-            );
-
-          }
-
-
-          if (sort === 'date-asc') {
-
-            return String(
-              a.date || ''
-            ).localeCompare(
-              String(b.date || '')
-            );
-
-          }
-
-
-          if (sort === 'title-asc') {
-
-            return String(
-              getDisplayTitle(a)
-            ).localeCompare(
-              String(getDisplayTitle(b)),
-              'en',
-              {
-                sensitivity: 'base'
-              }
-            );
-
-          }
-
-
-          if (sort === 'title-desc') {
-
-            return String(
-              getDisplayTitle(b)
-            ).localeCompare(
-              String(getDisplayTitle(a)),
-              'en',
-              {
-                sensitivity: 'base'
-              }
-            );
-
-          }
-
-
-          return 0;
-
-        }
-      );
 
 
       return results;
@@ -2476,25 +2384,25 @@
 
             <tr>
 
-              <td class="insights-date">
+              <td class="insights-date" data-sort-value="${escapeHtml(item.date || '')}">
                 ${escapeHtml(item.date || '—')}
               </td>
 
-              <td>
+              <td data-sort-value="${escapeHtml(getKnowledgeTypeName(item.type))}">
                 <span class="insights-type">
                   ${escapeHtml(getKnowledgeTypeName(item.type))}
                 </span>
               </td>
 
-              <td class="insights-title">
+              <td class="insights-title" data-sort-value="${escapeHtml(getDisplayTitle(item))}">
                 ${escapeHtml(getDisplayTitle(item))}
               </td>
 
-              <td>
+              <td data-sort-value="${escapeHtml(item.dateLabel || '')}">
                 ${escapeHtml(item.dateLabel || '—')}
               </td>
 
-              <td>
+              <td data-sort-value="${escapeHtml(item.access || 'Public')}">
                 ${escapeHtml(item.access || 'Public')}
               </td>
 
@@ -3009,16 +2917,6 @@
 
     document
       .getElementById(
-        'insights-sort'
-      )
-      .addEventListener(
-        'change',
-        renderInsights
-      );
-
-
-    document
-      .getElementById(
         'insights-type'
       )
       .addEventListener(
@@ -3039,11 +2937,6 @@
             'insights-search'
           ).value =
             '';
-
-          document.getElementById(
-            'insights-sort'
-          ).value =
-            'date-desc';
 
           document.getElementById(
             'insights-type'

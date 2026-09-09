@@ -109,9 +109,9 @@
     </section>
 
 
-    <section class="library-filters">
+    <section class="library-filters manager-filter-bar">
 
-      <div class="library-search">
+      <div class="library-search manager-field">
 
         <label for="knowledge-search">
           Search
@@ -126,7 +126,7 @@
       </div>
 
 
-      <div class="library-filter">
+      <div class="library-filter manager-field">
 
         <label for="knowledge-type-filter">
           Type
@@ -141,7 +141,7 @@
     </section>
 
 
-    <section class="library-table-wrap manager-scroll-table-wrap" id="knowledge-table-scroll-wrap">
+    <section class="library-table-wrap manager-scroll-table-wrap manager-canonical-table-wrap" id="knowledge-table-scroll-wrap">
 
       <div
         id="knowledge-table-top-scroll"
@@ -154,18 +154,18 @@
         ></div>
       </div>
 
-      <table class="library-table manager-scroll-table" id="knowledge-library-table">
+      <table class="library-table manager-scroll-table manager-canonical-table" id="knowledge-library-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
 
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Title</th>
-            <th>Topics</th>
-            <th>Industries</th>
-            <th>Programs</th>
-            <th>Tags</th>
-            <th>Access</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="topics">Topics <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="industries">Industries <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="programs">Programs <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="tags">Tags <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th>Open</th>
           </tr>
         </thead>

@@ -451,8 +451,22 @@
   content: "▼";
 }
 
+
+.asset-usage-table {
+  width: 1180px;
+  min-width: 1180px;
+  table-layout: fixed;
+}
+.asset-usage-table col.usage-col-key { width: 190px; }
+.asset-usage-table col.usage-col-page { width: 235px; }
+.asset-usage-table col.usage-col-label { width: 220px; }
+.asset-usage-table col.usage-col-asset-key { width: 220px; }
+.asset-usage-table col.usage-col-asset { width: 105px; }
+.asset-usage-table col.usage-col-edit { width: 105px; }
+.asset-usage-table col.usage-col-delete { width: 105px; }
+
 .asset-secondary-table-wrap {
-  margin-top: 18px;
+  margin-top: 0;
 }
 
 .asset-edit-topbar {

@@ -135,8 +135,21 @@
     </section>
 
 
-    <section class="search-results" id="search-results">
-      Loading knowledge...
+    <section class="library-table-wrap manager-canonical-table-wrap" id="search-results-wrap">
+      <table class="library-table manager-canonical-table" id="search-results-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
+        <thead>
+          <tr>
+            <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th>Classification</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th>Open</th>
+          </tr>
+        </thead>
+        <tbody id="search-results"></tbody>
+      </table>
+      <div id="search-empty" class="library-empty">Loading knowledge...</div>
     </section>
 
   </main>
@@ -367,123 +380,56 @@
     }
 
 
+    function escapeSearchHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+
     function renderResults(items) {
+      const tbody = document.getElementById('search-results');
+      const empty = document.getElementById('search-empty');
+      const count = document.getElementById('search-count');
 
-      const container =
-        document.getElementById(
-          'search-results'
-        );
-
-      const count =
-        document.getElementById(
-          'search-count'
-        );
-
-      count.textContent =
-        items.length;
-
+      count.textContent = items.length;
+      tbody.innerHTML = '';
 
       if (!items.length) {
-
-        container.innerHTML =
-          '<p>No knowledge matches the selected filters.</p>';
-
+        empty.style.display = 'block';
+        empty.textContent = 'No knowledge matches the selected filters.';
         return;
       }
 
+      empty.style.display = 'none';
 
-      container.innerHTML =
-        items.map(item => {
+      items.forEach(item => {
+        const topics = normalizeArray(item.topics);
+        const industries = normalizeArray(item.industries);
+        const programs = normalizeArray(item.programs);
+        const tags = normalizeArray(item.tags);
+        const access = item.access || 'Public';
+        const url = item.asset || item.url || '';
+        const date = item.dateLabel || item.date || '';
+        const type = getKnowledgeTypeName(item.type);
+        const classifications = [...topics, ...industries, ...programs, ...tags].filter(Boolean);
 
-          const topics =
-            normalizeArray(item.topics);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td data-sort-value="${escapeSearchHtml(item.date || date)}">${escapeSearchHtml(date)}</td>
+          <td data-sort-value="${escapeSearchHtml(type)}">${escapeSearchHtml(type)}</td>
+          <td data-sort-value="${escapeSearchHtml(item.title || '')}"><strong>${escapeSearchHtml(item.title || '')}</strong><br><small>${escapeSearchHtml(item.summary || '')}</small></td>
+          <td>${classifications.length ? classifications.map(value => `<span class="manager-inline-tag">${escapeSearchHtml(value)}</span>`).join(' ') : '—'}</td>
+          <td data-sort-value="${escapeSearchHtml(access)}">${escapeSearchHtml(access)}</td>
+          <td>${url ? `<a class="library-button" href="${escapeSearchHtml(IXLManager.toUrl(url))}" target="_blank" rel="noopener noreferrer">Open ↗</a>` : '—'}</td>
+        `;
+        tbody.appendChild(row);
+      });
 
-          const industries =
-            normalizeArray(item.industries);
-
-          const programs =
-            normalizeArray(item.programs);
-
-          const tags =
-            normalizeArray(item.tags);
-
-          const access =
-            item.access || 'Public';
-
-          const url =
-            item.asset ||
-            item.url ||
-            '';
-
-          const openHtml =
-            url
-              ? `<a href="${
-                  IXLManager.toUrl(url)
-                }"
-                target="_blank"
-                rel="noopener noreferrer">
-                Open ↗
-              </a>`
-              : '';
-
-
-          return `
-            <article class="search-result-card">
-
-              <div class="search-result-meta">
-                <span>${item.dateLabel || item.date || ''}</span>
-                <span>${getKnowledgeTypeName(item.type)}</span>
-                <span>${access}</span>
-              </div>
-
-              <h3>
-                ${item.title || ''}
-              </h3>
-
-              <p>
-                ${item.summary || ''}
-              </p>
-
-              <div class="search-result-tags">
-
-                ${
-                  topics.map(
-                    value =>
-                      `<span class="topic-tag">${value}</span>`
-                  ).join('')
-                }
-
-                ${
-                  industries.map(
-                    value =>
-                      `<span class="industry-tag">${value}</span>`
-                  ).join('')
-                }
-
-                ${
-                  programs.map(
-                    value =>
-                      `<span class="program-tag">${value}</span>`
-                  ).join('')
-                }
-
-                ${
-                  tags.map(
-                    value =>
-                      `<span class="tag-tag">${value}</span>`
-                  ).join('')
-                }
-
-              </div>
-
-              <div class="search-result-open">
-                ${openHtml}
-              </div>
-
-            </article>
-          `;
-
-        }).join('');
+      if (window.IXLManager) IXLManager.initManagerUi();
     }
 
 

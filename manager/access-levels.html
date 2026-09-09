@@ -72,7 +72,17 @@
     </section>
 
 
-    <section class="type-grid" id="access-grid">
+    <section class="manager-canonical-table-wrap">
+      <table class="manager-canonical-table" data-manager-sortable data-default-sort-key="name">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col"><button type="button" class="manager-sort-button" data-sort-key="name">Name <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th scope="col"><button type="button" class="manager-sort-button" data-sort-key="description">Description <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+          </tr>
+        </thead>
+        <tbody id="access-grid"></tbody>
+      </table>
     </section>
 
   </main>
@@ -98,11 +108,11 @@
             String(index + 1).padStart(2, '0');
 
           return `
-            <article class="type-card">
-              <span>${number}</span>
-              <h3>${level.name}</h3>
-              <p>${level.description || ''}</p>
-            </article>
+            <tr>
+              <td class="manager-master-index">${number}</td>
+              <td class="manager-master-name" data-sort-value="${level.name || ''}">${level.name || ''}</td>
+              <td class="manager-master-description" data-sort-value="${level.description || ''}">${level.description || ''}</td>
+            </tr>
           `;
 
         }).join('');
@@ -147,7 +157,7 @@
         document.getElementById(
           'access-grid'
         ).innerHTML =
-          '<p>Access Levels could not be loaded.</p>';
+          '<tr><td colspan="3" class="manager-master-empty">Access Levels could not be loaded.</td></tr>';
 
         document.getElementById(
           'access-count'
@@ -163,5 +173,6 @@
     );
   </script>
 
+  <script src="manager-common.js"></script>
 </body>
 </html>

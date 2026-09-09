@@ -95,6 +95,19 @@
       </p>
 
     </section>
+    <nav class="manager-mode-nav" aria-label="Distribution functions">
+      <a class="manager-mode-card active" href="sns-sharing.html">
+        <span class="manager-mode-kicker">SOCIAL DISTRIBUTION</span>
+        <strong>SNS Sharing</strong>
+        <span>Select knowledge and prepare social content.</span>
+      </a>
+      <a class="manager-mode-card " href="distribution-queue.html">
+        <span class="manager-mode-kicker">WORKFLOW</span>
+        <strong>Distribution Queue</strong>
+        <span>Review, schedule and publish prepared content.</span>
+      </a>
+    </nav>
+
 
 
 
@@ -176,11 +189,21 @@
 
 
 
-    <section
-      class="sns-knowledge-list"
-      id="sns-knowledge-list"
-    >
-      Loading knowledge...
+    <section class="library-table-wrap manager-canonical-table-wrap" id="sns-knowledge-list-wrap">
+      <table class="library-table manager-canonical-table" id="sns-knowledge-table" data-manager-sortable data-default-sort-key="date" data-default-sort-direction="desc">
+        <thead>
+          <tr>
+            <th>Select</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th>Classification</th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+          </tr>
+        </thead>
+        <tbody id="sns-knowledge-list"></tbody>
+      </table>
+      <div id="sns-knowledge-empty" class="library-empty">Loading knowledge...</div>
     </section>
 
 
@@ -719,148 +742,30 @@
        KNOWLEDGE CARDS
        ========================================= */
 
-    function createKnowledgeCard(
-      item,
-      index
-    ) {
-
-      const topics =
-        normalizeArray(
-          item.topics
-        );
-
-
-      const industries =
-        normalizeArray(
-          item.industries
-        );
-
-
-      const programs =
-        normalizeArray(
-          item.programs
-        );
-
-
-      const tags =
-        normalizeArray(
-          item.tags
-        );
-
-
-      const checked =
-        selectedItems.has(index)
-          ? 'checked'
-          : '';
-
-
+    function createKnowledgeCard(item, index) {
+      const topics = normalizeArray(item.topics);
+      const industries = normalizeArray(item.industries);
+      const programs = normalizeArray(item.programs);
+      const tags = normalizeArray(item.tags);
+      const checked = selectedItems.has(index) ? 'checked' : '';
+      const classification = [...topics, ...industries, ...programs, ...tags]
+        .filter(Boolean)
+        .map(value => `<span class="manager-inline-tag">${value}</span>`)
+        .join(' ');
 
       return `
-
-        <article class="sns-knowledge-card">
-
-
-          <label class="sns-select-control">
-
-            <input
-              type="checkbox"
-              class="sns-item-checkbox"
-              data-index="${index}"
-              ${checked}
-            >
-
-            <span class="sns-select-box"></span>
-
-          </label>
-
-
-
-          <div class="sns-knowledge-content">
-
-
-            <div class="sns-knowledge-meta">
-
-              <span>
-                ${item.type || 'Unclassified'}
-              </span>
-
-              <span>
-                ${item.dateLabel || item.date || ''}
-              </span>
-
-              <span>
-                ${item.access || 'Public'}
-              </span>
-
-            </div>
-
-
-
-            <h3>
-              ${item.title || ''}
-            </h3>
-
-
-
-            <p>
-              ${item.summary || ''}
-            </p>
-
-
-
-            <div class="sns-knowledge-tags">
-
-              ${
-                topics
-                  .map(
-                    value =>
-                      `<span class="topic-tag">${value}</span>`
-                  )
-                  .join('')
-              }
-
-
-              ${
-                industries
-                  .map(
-                    value =>
-                      `<span class="industry-tag">${value}</span>`
-                  )
-                  .join('')
-              }
-
-
-              ${
-                programs
-                  .map(
-                    value =>
-                      `<span class="program-tag">${value}</span>`
-                  )
-                  .join('')
-              }
-
-
-              ${
-                tags
-                  .map(
-                    value =>
-                      `<span class="tag-tag">${value}</span>`
-                  )
-                  .join('')
-              }
-
-            </div>
-
-
-          </div>
-
-
-        </article>
-
+        <tr>
+          <td>
+            <input type="checkbox" class="sns-item-checkbox" data-index="${index}" ${checked} aria-label="Select knowledge item">
+          </td>
+          <td data-sort-value="${item.type || 'Unclassified'}">${item.type || 'Unclassified'}</td>
+          <td data-sort-value="${item.date || item.dateLabel || ''}">${item.dateLabel || item.date || ''}</td>
+          <td data-sort-value="${item.title || ''}"><strong>${item.title || ''}</strong><br><small>${item.summary || ''}</small></td>
+          <td>${classification || '—'}</td>
+          <td data-sort-value="${item.access || 'Public'}">${item.access || 'Public'}</td>
+        </tr>
       `;
-
     }
-
 
 
     function renderKnowledge(items) {
@@ -872,13 +777,18 @@
 
 
 
+      const empty = document.getElementById('sns-knowledge-empty');
+
       if (!items.length) {
-
-        container.innerHTML =
-          '<p>No knowledge matches your search.</p>';
-
+        container.innerHTML = '';
+        if (empty) {
+          empty.style.display = 'block';
+          empty.textContent = 'No knowledge matches your search.';
+        }
         return;
       }
+
+      if (empty) empty.style.display = 'none';
 
 
 
