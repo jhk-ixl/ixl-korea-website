@@ -1,0 +1,484 @@
+/* Asset Management
+   Canonical page-specific styles.
+   Shared Manager styles remain in manager.css.
+*/
+
+:root {
+  --asset-border: #dbe3ec;
+  --asset-border-strong: #c6d2df;
+  --asset-muted: #5f6f82;
+  --asset-bg-soft: #f6f8fb;
+  --asset-edit-bg: #fff9df;
+  --asset-edit-border: #d3a91f;
+  --asset-navy: #071b33;
+  --asset-sticky-top: 0px;
+}
+
+.asset-manager {
+  padding-top: 26px;
+}
+
+.asset-sticky-shell {
+  position: sticky;
+  top: 0;
+  z-index: 1800;
+  background: #fff;
+  padding-top: 12px;
+  border-bottom: 1px solid var(--asset-border);
+}
+
+.asset-page-head,
+.asset-edit-topbar,
+.asset-panel-head,
+.asset-section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.asset-page-head {
+  padding: 10px 0 16px;
+}
+
+.asset-page-head h2,
+.asset-edit-topbar h2 {
+  margin: 5px 0 8px;
+}
+
+.asset-page-head p,
+.asset-edit-topbar p,
+.asset-panel-head p,
+.asset-section-head p {
+  margin: 0;
+  color: var(--asset-muted);
+}
+
+.asset-title-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.asset-title-line h2 {
+  margin-right: 0;
+}
+
+.asset-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid var(--asset-border);
+  border-radius: 999px;
+  background: var(--asset-bg-soft);
+  font-size: 13px;
+  color: var(--asset-muted);
+}
+
+.asset-count-pill strong {
+  color: var(--asset-navy);
+}
+
+.library-actions {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.asset-filter-bar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(170px, 240px);
+  gap: 12px;
+  padding: 0 0 12px;
+}
+
+.asset-field,
+.asset-editable-field {
+  display: grid;
+  gap: 6px;
+}
+
+.asset-field label,
+.asset-editable-field label {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--asset-navy);
+}
+
+.asset-field input,
+.asset-field select,
+.asset-editable-field input,
+.asset-editable-field select,
+.asset-editable-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 11px;
+  border: 1px solid var(--asset-border-strong);
+  border-radius: 7px;
+  background: #fff;
+  font: inherit;
+}
+
+.asset-editable-field {
+  padding: 12px;
+  border: 1px solid var(--asset-edit-border);
+  border-radius: 9px;
+  background: var(--asset-edit-bg);
+}
+
+.asset-editable-field small {
+  color: var(--asset-muted);
+  line-height: 1.4;
+}
+
+.asset-field-grow {
+  min-width: 0;
+}
+
+.asset-top-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 16px;
+  background: #fff;
+  border-top: 1px solid var(--asset-border);
+}
+
+.asset-top-scroll > div {
+  height: 1px;
+}
+
+.asset-work-panel {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--asset-border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(7, 27, 51, 0.07);
+}
+
+.asset-work-panel[hidden],
+.asset-modal[hidden],
+#asset-list-mode[hidden],
+#asset-edit-mode[hidden] {
+  display: none !important;
+}
+
+.asset-panel-head h3,
+.asset-section-head h3 {
+  margin: 5px 0 6px;
+}
+
+.asset-upload-grid,
+.asset-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  gap: 22px;
+  margin-top: 18px;
+}
+
+.asset-preview-card,
+.asset-form-card {
+  border: 1px solid var(--asset-border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.asset-preview-card {
+  overflow: hidden;
+}
+
+.asset-preview-label {
+  padding: 12px 14px;
+  font-weight: 800;
+  border-bottom: 1px solid var(--asset-border);
+  background: var(--asset-bg-soft);
+}
+
+.asset-preview-stage {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  box-sizing: border-box;
+  background: #f8fafc;
+}
+
+.asset-preview-stage img,
+.asset-preview-stage video,
+.asset-preview-stage canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.asset-preview-stage video {
+  width: 100%;
+  background: #000;
+}
+
+.asset-preview-stage pre {
+  width: 100%;
+  max-height: 470px;
+  overflow: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.asset-preview-empty {
+  color: var(--asset-muted);
+  text-align: center;
+}
+
+.asset-preview-note {
+  min-height: 20px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--asset-border);
+  color: var(--asset-muted);
+  font-size: 13px;
+}
+
+.asset-form-card {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.asset-form-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 12px;
+}
+
+.asset-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.asset-repository-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.4fr) minmax(150px, 0.5fr) minmax(220px, 0.7fr);
+  gap: 12px;
+  margin-top: 18px;
+  align-items: end;
+}
+
+.asset-repository-grid .asset-form-actions {
+  grid-column: 1 / -1;
+}
+
+.asset-table-section {
+  margin-top: 18px;
+}
+
+.asset-table-wrap {
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: 1px solid var(--asset-border);
+  border-radius: 10px;
+}
+
+.asset-table-wrap::-webkit-scrollbar {
+  height: 0;
+}
+
+.asset-table {
+  min-width: 1320px;
+}
+
+.asset-table thead th {
+  position: sticky;
+  top: var(--asset-table-head-top, 186px);
+  z-index: 1700;
+  background: #fff;
+  box-shadow: inset 0 -1px 0 var(--asset-border);
+}
+
+.asset-table td,
+.asset-table th {
+  white-space: nowrap;
+}
+
+.asset-table td:first-child {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asset-table td:nth-child(2) code {
+  display: inline-block;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.asset-table .library-button {
+  white-space: nowrap;
+}
+
+.asset-usage-section {
+  margin-top: 34px;
+  padding-top: 10px;
+}
+
+.asset-secondary-table-wrap {
+  margin-top: 18px;
+}
+
+.asset-edit-topbar {
+  padding: 8px 0 18px;
+  border-bottom: 1px solid var(--asset-border);
+}
+
+.asset-editor-grid {
+  margin-top: 22px;
+}
+
+.asset-editor-preview .asset-preview-stage {
+  min-height: 440px;
+}
+
+.asset-system-info {
+  border: 1px solid var(--asset-border);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--asset-bg-soft);
+}
+
+.asset-system-info h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.asset-system-info dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.asset-system-info dl > div {
+  min-width: 0;
+}
+
+.asset-system-info dl > div.full {
+  grid-column: 1 / -1;
+}
+
+.asset-system-info dt {
+  color: var(--asset-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.asset-system-info dd {
+  margin: 3px 0 0;
+  word-break: break-all;
+  font-size: 13px;
+}
+
+.asset-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 27, 51, 0.45);
+}
+
+.asset-modal-card {
+  width: min(680px, 100%);
+  max-height: 86vh;
+  overflow: auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(7, 27, 51, 0.25);
+}
+
+.asset-duplicate-card {
+  width: min(820px, 100%);
+}
+
+.asset-modal-form,
+.asset-duplicate-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.asset-duplicate-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--asset-border);
+  border-radius: 10px;
+}
+
+.asset-duplicate-item strong {
+  display: block;
+  word-break: break-word;
+}
+
+.asset-duplicate-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+  color: var(--asset-muted);
+  font-size: 14px;
+}
+
+.asset-duplicate-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+  .asset-page-head,
+  .asset-edit-topbar,
+  .asset-panel-head,
+  .asset-section-head {
+    flex-direction: column;
+  }
+
+  .library-actions {
+    justify-content: flex-start;
+  }
+
+  .asset-filter-bar,
+  .asset-upload-grid,
+  .asset-editor-grid,
+  .asset-repository-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-form-row,
+  .asset-system-info dl {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-system-info dl > div.full {
+    grid-column: auto;
+  }
+
+  .asset-table thead th {
+    top: var(--asset-table-head-top-mobile, 250px);
+  }
+}

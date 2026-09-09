@@ -1165,6 +1165,11 @@ export default async function handler(req, res) {
           body.type
         ).toLowerCase(),
 
+      description:
+        cleanString(
+          body.description
+        ),
+
       size:
         Number.isFinite(
           Number(
@@ -1186,11 +1191,29 @@ export default async function handler(req, res) {
           body.height
         ),
 
-      thumbnailTime:
-        Number.isFinite(Number(body.thumbnailTime)) &&
-        Number(body.thumbnailTime) >= 0
-          ? Number(body.thumbnailTime)
-          : null,
+      thumbnailTime: (() => {
+
+        const raw =
+          body.thumbnailTime;
+
+        if (
+          raw === null ||
+          raw === undefined ||
+          raw === ''
+        ) {
+          return null;
+        }
+
+        const value =
+          Number(raw);
+
+        return (
+          Number.isFinite(value) &&
+          value >= 0
+        )
+          ? value
+          : null;
+      })(),
 
       uploadedAt:
         cleanString(

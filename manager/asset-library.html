@@ -3,24 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Asset Library | IXL Korea Manager</title>
+
   <link rel="stylesheet" href="manager.css">
+  <link rel="stylesheet" href="asset-library.css">
 
   <script src="manager-guard.js"></script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <script type="module">
     import { upload } from 'https://esm.sh/@vercel/blob/client';
     window.vercelBlobUpload = upload;
   </script>
-
 </head>
 
 <body>
-
   <header class="manager-header">
-
     <div class="manager-brand">
       <h1>IXL KOREA MANAGER</h1>
       <p>Innovation Knowledge Ecosystem Control Center</p>
@@ -35,1744 +33,343 @@
       <a href="index.html#business">Business</a>
       <a href="index.html#analytics">Analytics</a>
       <a href="index.html#system">System</a>
-
       <a href="../index.html" class="website-link">View Website ↗</a>
     </nav>
-
   </header>
 
+  <main class="manager-main asset-manager">
+    <section id="asset-list-mode">
+      <div class="asset-sticky-shell" id="asset-sticky-shell">
+        <section class="asset-page-head">
+          <div>
+            <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
+            <div class="asset-title-line">
+              <h2>Asset Management</h2>
+              <span class="asset-count-pill"><strong id="asset-count">0</strong> Assets</span>
+            </div>
+            <p>Upload, register, preview, edit and reuse files from one Asset Registry.</p>
+          </div>
 
-  <main class="manager-main">
+          <div class="library-actions">
+            <button type="button" id="asset-upload-toggle" class="library-button primary">Upload Asset</button>
+            <button type="button" id="repository-toggle" class="library-button">Register Repository Asset</button>
+            <a href="knowledge.html" class="library-button">Back to Knowledge Hub</a>
+          </div>
+        </section>
 
-    <section class="manager-intro">
+        <section class="asset-filter-bar">
+          <div class="asset-field asset-field-grow">
+            <label for="asset-search">Search</label>
+            <input type="search" id="asset-search" placeholder="Search file name, key, description or folder...">
+          </div>
 
-      <span class="section-eyebrow">
-        KNOWLEDGE MANAGEMENT
-      </span>
+          <div class="asset-field">
+            <label for="asset-folder-filter">Folder</label>
+            <select id="asset-folder-filter">
+              <option value="all">All Folders</option>
+            </select>
+          </div>
+        </section>
 
-      <h2>Asset Library</h2>
-
-      <p>
-        Manage website assets stored in Vercel Blob, including PDFs,
-        presentations, images, videos and other downloadable files.
-      </p>
-
-    </section>
-
-
-    <section class="library-toolbar">
-
-      <div class="library-count">
-
-        <strong id="asset-count">0</strong>
-        <span>Assets</span>
-
-      </div>
-
-
-      <div class="library-actions">
-
-        <button
-          type="button"
-          id="asset-upload-toggle"
-          class="library-button primary"
-        >
-          Upload Asset
-        </button>
-
-        <a href="knowledge.html" class="library-button">
-          Back to Knowledge Hub
-        </a>
-
-      </div>
-
-    </section>
-
-
-    <section
-      id="asset-upload-panel"
-      class="library-filters"
-      style="display:none;"
-    >
-
-      <div class="library-search">
-
-        <label for="asset-upload-file">
-          File
-        </label>
-
-        <input
-          type="file"
-          id="asset-upload-file"
-          accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt"
-        >
-
-      </div>
-
-
-      <div class="library-filter">
-
-        <label for="asset-upload-folder">
-          Folder
-        </label>
-
-        <select id="asset-upload-folder">
-          <option value="companyprofile">companyprofile</option>
-          <option value="insights">insights</option>
-          <option value="articles">articles</option>
-          <option value="documents">documents</option>
-          <option value="presentations">presentations</option>
-          <option value="images">images</option>
-        </select>
-
-      </div>
-
-
-      <div class="library-filter">
-
-        <label>
-          Action
-        </label>
-
-        <button
-          type="button"
-          id="asset-upload-button"
-          class="library-button primary"
-        >
-          Upload
-        </button>
-
-      </div>
-
-    </section>
-
-    <section class="library-filters" id="repository-asset-panel">
-      <div class="library-search">
-        <label for="repository-asset-path">Existing Repository Asset Path</label>
-        <input type="text" id="repository-asset-path" placeholder="insightscontent/articles/example.md">
-      </div>
-      <div class="library-filter">
-        <label for="repository-asset-type">Type</label>
-        <select id="repository-asset-type">
-          <option value="markdown">Markdown</option>
-          <option value="pdf">PDF</option>
-          <option value="presentation">Presentation</option>
-          <option value="document">Document</option>
-          <option value="image">Image</option>
-          <option value="video">Video</option>
-        </select>
-      </div>
-      <div class="library-filter">
-        <label>Action</label>
-        <button type="button" id="repository-asset-register" class="library-button">Register Repository Asset</button>
-      </div>
-    </section>
-
-
-    <section class="library-filters">
-
-      <div class="library-search">
-
-        <label for="asset-search">
-          Search
-        </label>
-
-        <input
-          type="search"
-          id="asset-search"
-          placeholder="Search file name, key or folder..."
-        >
-
-      </div>
-
-
-      <div class="library-filter">
-
-        <label for="asset-folder-filter">
-          Folder
-        </label>
-
-        <select id="asset-folder-filter">
-          <option value="all">All Folders</option>
-        </select>
-
-      </div>
-
-    </section>
-
-
-    <section class="library-table-wrap">
-
-      <table class="library-table">
-
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>Key</th>
-            <th>Folder</th>
-            <th>Type</th>
-            <th>Size</th>
-            <th>Uploaded</th>
-            <th>View</th>
-            <th>Registry</th>
-            <th>Download</th>
-            <th>URL</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-
-
-        <tbody id="asset-table-body">
-        </tbody>
-
-      </table>
-
-
-      <div id="library-empty" class="library-empty">
-        Loading assets...
-      </div>
-
-    </section>
-
-
-    <section style="margin-top:34px;">
-      <div style="display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap;">
-        <div>
-          <span class="section-eyebrow">ASSET USAGE</span>
-          <h3 style="margin:6px 0 6px;">Usage Mapping</h3>
-          <p style="margin:0;color:#5f6f82;">
-            Connect a website page or function to a registered Asset Key without changing code data manually.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          id="usage-add-button"
-          class="library-button primary"
-        >
-          Add Usage
-        </button>
-      </div>
-
-      <div class="library-table-wrap" style="margin-top:18px;">
-        <table class="library-table">
-          <thead>
-            <tr>
-              <th>Usage Key</th>
-              <th>Page / Function</th>
-              <th>Label</th>
-              <th>Asset Key</th>
-              <th>Asset</th>
-              <th>Edit</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody id="usage-table-body"></tbody>
-        </table>
-
-        <div id="usage-empty" class="library-empty">
-          Loading usage mappings...
+        <div class="asset-top-scroll" id="asset-top-scroll" aria-label="Horizontal table scroll">
+          <div id="asset-top-scroll-content"></div>
         </div>
       </div>
-    </section>
 
-    <div
-      id="usage-modal"
-      style="
-        display:none;
-        position:fixed;
-        inset:0;
-        z-index:5100;
-        background:rgba(7,27,51,0.45);
-        align-items:center;
-        justify-content:center;
-        padding:24px;
-      "
-    >
-      <div
-        style="
-          width:min(680px,100%);
-          background:#fff;
-          border-radius:12px;
-          box-shadow:0 20px 60px rgba(7,27,51,0.25);
-          padding:24px;
-        "
-      >
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+      <section id="asset-upload-panel" class="asset-work-panel" hidden>
+        <div class="asset-panel-head">
+          <div>
+            <span class="section-eyebrow">NEW ASSET</span>
+            <h3>Upload & Register</h3>
+            <p>The selected file is uploaded to Vercel Blob and registered in Asset Registry in one flow.</p>
+          </div>
+          <button type="button" class="library-button" data-close-panel="asset-upload-panel">Close</button>
+        </div>
+
+        <div class="asset-upload-grid">
+          <div class="asset-preview-card">
+            <div class="asset-preview-label">Preview</div>
+            <div class="asset-preview-stage" id="upload-preview">
+              <div class="asset-preview-empty">Choose a file to preview.</div>
+            </div>
+            <div class="asset-preview-note" id="upload-preview-note"></div>
+          </div>
+
+          <form id="asset-upload-form" class="asset-form-card">
+            <div class="asset-editable-field">
+              <label for="asset-upload-file">File *</label>
+              <input
+                type="file"
+                id="asset-upload-file"
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt"
+                required
+              >
+            </div>
+
+            <div class="asset-form-row">
+              <div class="asset-editable-field">
+                <label for="asset-upload-folder">Folder *</label>
+                <select id="asset-upload-folder">
+                  <option value="companyprofile">companyprofile</option>
+                  <option value="insights">insights</option>
+                  <option value="articles">articles</option>
+                  <option value="documents">documents</option>
+                  <option value="presentations">presentations</option>
+                  <option value="images">images</option>
+                </select>
+              </div>
+
+              <div class="asset-editable-field">
+                <label for="asset-upload-key">Asset Key *</label>
+                <input type="text" id="asset-upload-key" placeholder="Auto-generated from file name">
+                <small>Generated automatically; edit only when needed.</small>
+              </div>
+            </div>
+
+            <div class="asset-editable-field">
+              <label for="asset-upload-description">Description</label>
+              <textarea id="asset-upload-description" rows="3" placeholder="Short description for administrators and reuse."></textarea>
+            </div>
+
+            <div class="asset-editable-field" id="asset-upload-thumbnail-field" hidden>
+              <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
+              <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
+              <small>New video assets default to 1 second. Explicit 0 is valid.</small>
+            </div>
+
+            <div class="asset-form-actions">
+              <button type="submit" id="asset-upload-button" class="library-button primary">Upload & Register</button>
+              <button type="button" class="library-button" data-reset-upload>Reset</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="repository-asset-panel" class="asset-work-panel" hidden>
+        <div class="asset-panel-head">
+          <div>
+            <span class="section-eyebrow">REPOSITORY ASSET</span>
+            <h3>Register Existing Repository Asset</h3>
+            <p>Register an existing repository file without uploading a duplicate Blob.</p>
+          </div>
+          <button type="button" class="library-button" data-close-panel="repository-asset-panel">Close</button>
+        </div>
+
+        <form id="repository-asset-form" class="asset-repository-grid">
+          <div class="asset-editable-field asset-field-grow">
+            <label for="repository-asset-path">Repository Path *</label>
+            <input type="text" id="repository-asset-path" placeholder="insightscontent/articles/example.md">
+          </div>
+
+          <div class="asset-editable-field">
+            <label for="repository-asset-type">Type *</label>
+            <select id="repository-asset-type">
+              <option value="markdown">Markdown</option>
+              <option value="pdf">PDF</option>
+              <option value="presentation">Presentation</option>
+              <option value="document">Document</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div class="asset-editable-field">
+            <label for="repository-asset-key">Asset Key *</label>
+            <input type="text" id="repository-asset-key" placeholder="Auto-generated from path">
+          </div>
+
+          <div class="asset-editable-field asset-field-grow">
+            <label for="repository-asset-description">Description</label>
+            <input type="text" id="repository-asset-description" placeholder="Optional description">
+          </div>
+
+          <div class="asset-form-actions">
+            <button type="submit" id="repository-asset-register" class="library-button primary">Register Repository Asset</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="asset-table-section">
+        <div class="library-table-wrap asset-table-wrap" id="asset-table-wrap">
+          <table class="library-table asset-table" id="asset-table">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Key</th>
+                <th>Folder</th>
+                <th>Type</th>
+                <th>Size</th>
+                <th>Uploaded</th>
+                <th>View</th>
+                <th>Registry</th>
+                <th>Download</th>
+                <th>URL</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody id="asset-table-body"></tbody>
+          </table>
+
+          <div id="library-empty" class="library-empty">Loading assets...</div>
+        </div>
+      </section>
+
+      <section class="asset-usage-section">
+        <div class="asset-section-head">
           <div>
             <span class="section-eyebrow">ASSET USAGE</span>
-            <h3 id="usage-modal-title" style="margin:6px 0 0;">Add Usage</h3>
+            <h3>Usage Mapping</h3>
+            <p>Connect a website page or function to a registered Asset Key without changing code data manually.</p>
+          </div>
+
+          <button type="button" id="usage-add-button" class="library-button primary">Add Usage</button>
+        </div>
+
+        <div class="library-table-wrap asset-secondary-table-wrap">
+          <table class="library-table">
+            <thead>
+              <tr>
+                <th>Usage Key</th>
+                <th>Page / Function</th>
+                <th>Label</th>
+                <th>Asset Key</th>
+                <th>Asset</th>
+                <th>Edit</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody id="usage-table-body"></tbody>
+          </table>
+          <div id="usage-empty" class="library-empty">Loading usage mappings...</div>
+        </div>
+      </section>
+    </section>
+
+    <section id="asset-edit-mode" hidden>
+      <div class="asset-edit-topbar">
+        <div>
+          <span class="section-eyebrow">ASSET REGISTRY</span>
+          <h2 id="asset-edit-title">Asset</h2>
+          <p id="asset-edit-subtitle">Edit one registered asset.</p>
+        </div>
+        <div class="library-actions">
+          <button type="button" id="asset-edit-back" class="library-button">Back to Asset List</button>
+          <a id="asset-edit-open" class="library-button" target="_blank" rel="noopener noreferrer" hidden>Open</a>
+          <a id="asset-edit-download" class="library-button" hidden>Download</a>
+        </div>
+      </div>
+
+      <div class="asset-editor-grid">
+        <div class="asset-preview-card asset-editor-preview">
+          <div class="asset-preview-label">Preview</div>
+          <div class="asset-preview-stage" id="asset-edit-preview">
+            <div class="asset-preview-empty">Loading preview...</div>
+          </div>
+          <div class="asset-preview-note" id="asset-edit-preview-note"></div>
+        </div>
+
+        <form id="asset-edit-form" class="asset-form-card">
+          <input type="hidden" id="asset-edit-index">
+
+          <div class="asset-editable-field">
+            <label for="asset-edit-key">Asset Key *</label>
+            <input type="text" id="asset-edit-key" required>
+            <small>If this key is used by Usage Mapping, the related mappings will be updated after confirmation.</small>
+          </div>
+
+          <div class="asset-editable-field">
+            <label for="asset-edit-name">Title / Name</label>
+            <input type="text" id="asset-edit-name">
+          </div>
+
+          <div class="asset-editable-field">
+            <label for="asset-edit-description">Description</label>
+            <textarea id="asset-edit-description" rows="4" placeholder="Short administrative description"></textarea>
+          </div>
+
+          <div class="asset-editable-field" id="asset-edit-thumbnail-field" hidden>
+            <label for="asset-edit-thumbnail-time">Thumbnail Time (seconds)</label>
+            <input id="asset-edit-thumbnail-time" type="number" min="0" step="0.1">
+            <small>Saved value is shown as-is. Legacy video assets without a value use 1 second.</small>
+          </div>
+
+          <div class="asset-system-info">
+            <h3>System Information</h3>
+            <dl>
+              <div><dt>File Name</dt><dd id="asset-info-file"></dd></div>
+              <div><dt>Folder</dt><dd id="asset-info-folder"></dd></div>
+              <div><dt>Type</dt><dd id="asset-info-type"></dd></div>
+              <div><dt>Size</dt><dd id="asset-info-size"></dd></div>
+              <div><dt>Uploaded</dt><dd id="asset-info-uploaded"></dd></div>
+              <div><dt>Updated</dt><dd id="asset-info-updated"></dd></div>
+              <div class="full"><dt>Path</dt><dd id="asset-info-path"></dd></div>
+              <div class="full"><dt>URL</dt><dd id="asset-info-url"></dd></div>
+            </dl>
+          </div>
+
+          <div class="asset-form-actions">
+            <button type="submit" id="asset-edit-save" class="library-button primary">Save Changes</button>
+            <button type="button" id="asset-edit-cancel" class="library-button">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <div id="usage-modal" class="asset-modal" hidden>
+      <div class="asset-modal-card">
+        <div class="asset-panel-head">
+          <div>
+            <span class="section-eyebrow">ASSET USAGE</span>
+            <h3 id="usage-modal-title">Add Usage</h3>
           </div>
           <button type="button" id="usage-modal-cancel" class="library-button">Cancel</button>
         </div>
 
         <input type="hidden" id="usage-edit-index" value="">
 
-        <div style="display:grid;gap:16px;margin-top:22px;">
-          <div>
-            <label for="usage-key-input" style="display:block;margin-bottom:6px;font-weight:700;">Usage Key</label>
-            <input
-              id="usage-key-input"
-              type="text"
-              placeholder="e.g. offerings-profile-pdf"
-              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
-            >
+        <div class="asset-modal-form">
+          <div class="asset-editable-field">
+            <label for="usage-key-input">Usage Key</label>
+            <input id="usage-key-input" type="text" placeholder="e.g. offerings-profile-pdf">
           </div>
 
-          <div>
-            <label for="usage-page-input" style="display:block;margin-bottom:6px;font-weight:700;">Page / Function</label>
-            <input
-              id="usage-page-input"
-              type="text"
-              placeholder="e.g. Website / Offerings or Insights / LinkedIn"
-              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
-            >
+          <div class="asset-editable-field">
+            <label for="usage-page-input">Page / Function</label>
+            <input id="usage-page-input" type="text" placeholder="e.g. Website / Offerings or Insights / LinkedIn">
           </div>
 
-          <div>
-            <label for="usage-label-input" style="display:block;margin-bottom:6px;font-weight:700;">Label</label>
-            <input
-              id="usage-label-input"
-              type="text"
-              placeholder="e.g. IXL Korea 7 Offerings PDF"
-              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;"
-            >
+          <div class="asset-editable-field">
+            <label for="usage-label-input">Label</label>
+            <input id="usage-label-input" type="text" placeholder="e.g. IXL Korea 7 Offerings PDF">
           </div>
 
-          <div>
-            <label for="usage-asset-key-select" style="display:block;margin-bottom:6px;font-weight:700;">Asset Key</label>
-            <select
-              id="usage-asset-key-select"
-              style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d5dee8;border-radius:7px;background:#fff;"
-            ></select>
+          <div class="asset-editable-field">
+            <label for="usage-asset-key-select">Asset Key</label>
+            <select id="usage-asset-key-select"></select>
           </div>
 
-          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
+          <div class="asset-form-actions">
             <button type="button" id="usage-save-button" class="library-button primary">Save Usage</button>
           </div>
         </div>
       </div>
     </div>
 
-  
-    <div
-      id="duplicate-modal"
-      style="
-        display:none;
-        position:fixed;
-        inset:0;
-        z-index:5000;
-        background:rgba(7,27,51,0.45);
-        align-items:center;
-        justify-content:center;
-        padding:24px;
-      "
-    >
-      <div
-        style="
-          width:min(760px, 100%);
-          max-height:85vh;
-          overflow:auto;
-          background:#fff;
-          border-radius:12px;
-          box-shadow:0 20px 60px rgba(7,27,51,0.25);
-          padding:24px;
-        "
-      >
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">
+    <div id="duplicate-modal" class="asset-modal" hidden>
+      <div class="asset-modal-card asset-duplicate-card">
+        <div class="asset-panel-head">
           <div>
             <span class="section-eyebrow">DUPLICATE ASSET KEY</span>
-            <h3 style="margin:6px 0 0;">Choose the correct file</h3>
-            <p id="duplicate-modal-key" style="margin:8px 0 0;color:#5f6f82;"></p>
+            <h3>Choose the correct file</h3>
+            <p id="duplicate-modal-key"></p>
           </div>
-
-          <button
-            type="button"
-            id="duplicate-modal-close"
-            class="library-button"
-          >
-            Cancel
-          </button>
+          <button type="button" id="duplicate-modal-close" class="library-button">Cancel</button>
         </div>
-
-        <div
-          id="duplicate-modal-list"
-          style="
-            display:grid;
-            gap:14px;
-            margin-top:22px;
-          "
-        ></div>
+        <div id="duplicate-modal-list" class="asset-duplicate-list"></div>
       </div>
     </div>
-
   </main>
 
-
- <script>
-
-  let allAssets = [];
-  let registryAssets = [];
-  let usageMappings = [];
-
-  function formatFileSize(bytes) {
-    const size = Number(bytes || 0);
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    if (size < 1024 * 1024 * 1024) return `${(size / 1024 / 1024).toFixed(1)} MB`;
-    return `${(size / 1024 / 1024 / 1024).toFixed(2)} GB`;
-  }
-
-  function getFileName(pathname) {
-    const parts = String(pathname || '').split('/');
-    return parts[parts.length - 1] || pathname;
-  }
-
-  function getFolder(pathname) {
-    const parts = String(pathname || '').split('/');
-    if (parts.length <= 1) return 'root';
-    return parts.slice(0, -1).join('/');
-  }
-
-  function getFileType(pathname) {
-    const fileName = getFileName(pathname);
-    const dot = fileName.lastIndexOf('.');
-    if (dot === -1) return 'FILE';
-    return fileName.slice(dot + 1).toUpperCase();
-  }
-
-  function formatUploadedDate(value) {
-    if (!value) return '';
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return '';
-    return date.toLocaleString();
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
-
-  function createAssetKey(value) {
-    return String(value || '')
-      .split('/')
-      .pop()
-      .replace(/\.[^.]+$/, '')
-      .replace(/-[A-Za-z0-9]{20,}$/, '')
-      .normalize('NFKD')
-      .toLowerCase()
-      .replace(/[^a-z0-9가-힣]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
-
-  function getRegistryIndex(asset) {
-    const url = String(asset.url || '');
-    const pathname = String(asset.pathname || '');
-    return registryAssets.findIndex(item =>
-      (item.url && item.url === url) ||
-      (item.pathname && item.pathname === pathname)
-    );
-  }
-
-  function getRegistryItem(asset) {
-    const index = getRegistryIndex(asset);
-    return index >= 0 ? registryAssets[index] : null;
-  }
-
-  function renderFolderFilter() {
-    const select = document.getElementById('asset-folder-filter');
-    const currentValue = select.value;
-    const folders = [
-      ...new Set(allAssets.map(asset => getFolder(asset.pathname)))
-    ].sort();
-
-    select.innerHTML = '<option value="all">All Folders</option>';
-
-    folders.forEach(folder => {
-      const option = document.createElement('option');
-      option.value = folder;
-      option.textContent = folder;
-      select.appendChild(option);
-    });
-
-    if (folders.includes(currentValue)) {
-      select.value = currentValue;
-    }
-  }
-
-  function renderAssets() {
-    const tbody = document.getElementById('asset-table-body');
-    const empty = document.getElementById('library-empty');
-    const search = document.getElementById('asset-search').value.trim().toLowerCase();
-    const folder = document.getElementById('asset-folder-filter').value;
-
-    const filtered = allAssets.filter(asset => {
-      const pathname = String(asset.pathname || '');
-      const registryItem = getRegistryItem(asset);
-      const key = registryItem?.key || createAssetKey(getFileName(pathname));
-
-      const matchesSearch =
-        !search ||
-        pathname.toLowerCase().includes(search) ||
-        key.toLowerCase().includes(search);
-
-      const matchesFolder =
-        folder === 'all' ||
-        getFolder(pathname) === folder;
-
-      return matchesSearch && matchesFolder;
-    });
-
-    document.getElementById('asset-count').textContent = filtered.length;
-
-    tbody.innerHTML = '';
-
-    filtered.forEach(asset => {
-      const row = document.createElement('tr');
-      const pathname = asset.pathname || '';
-      const fileName = getFileName(pathname);
-      const folderName = getFolder(pathname);
-      const viewUrl = asset.url || '';
-      const downloadUrl = asset.downloadUrl || asset.url || '';
-      const registryItem = getRegistryItem(asset);
-      const registryIndex = getRegistryIndex(asset);
-      const assetKey = registryItem?.key || createAssetKey(fileName);
-
-      const duplicateBlobAssets = allAssets.filter(otherAsset => {
-        if (otherAsset === asset) return false;
-        const otherRegistryItem = getRegistryItem(otherAsset);
-        const otherKey =
-          otherRegistryItem?.key ||
-          createAssetKey(getFileName(otherAsset.pathname));
-        return otherKey === assetKey;
-      });
-
-      const hasBlobKeyDuplicate =
-        !registryItem &&
-        duplicateBlobAssets.length > 0;
-
-      const registryButton = registryItem
-        ? `<button type="button" class="library-button" data-edit-registry="${registryIndex}">Edit</button>`
-        : hasBlobKeyDuplicate
-          ? `<button
-               type="button"
-               class="library-button"
-               data-duplicate-key="${escapeHtml(assetKey)}"
-               data-duplicate-path="${escapeHtml(pathname)}"
-             >
-               ⚠ Duplicate Key
-             </button>`
-          : `<button
-               type="button"
-               class="library-button primary"
-               data-register-path="${escapeHtml(pathname)}"
-             >
-               Register
-             </button>`;
-
-      row.innerHTML = `
-        <td>${escapeHtml(fileName)}</td>
-        <td><code>${escapeHtml(assetKey)}</code></td>
-        <td>${escapeHtml(folderName)}</td>
-        <td>${escapeHtml(getFileType(pathname))}</td>
-        <td>${escapeHtml(formatFileSize(asset.size))}</td>
-        <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
-        <td>
-          ${viewUrl
-            ? `<a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer">View</a>`
-            : ''}
-        </td>
-        <td>${registryButton}</td>
-        <td>
-          ${downloadUrl
-            ? `<a href="${escapeHtml(downloadUrl)}">Download</a>`
-            : ''}
-        </td>
-        <td>
-          ${viewUrl
-            ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>`
-            : ''}
-        </td>
-        <td>
-          ${viewUrl
-            ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
-            : ''}
-        </td>
-      `;
-
-      tbody.appendChild(row);
-    });
-
-    empty.style.display = filtered.length ? 'none' : 'block';
-    empty.textContent = allAssets.length ? 'No matching assets.' : 'No assets found.';
-  }
-
-  async function copyAssetUrl(url) {
-    try {
-      await navigator.clipboard.writeText(url);
-      alert('URL copied.');
-    } catch (error) {
-      console.error(error);
-      alert('Could not copy URL.');
-    }
-  }
-
-  async function loadRegistry() {
-    const response = await fetch(
-      '/api/insights-library?resource=assets',
-      {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store'
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to load Asset Registry.');
-    }
-
-    registryAssets = Array.isArray(data) ? data : [];
-  }
-
-
-  async function loadUsageMappings() {
-    const response = await fetch(
-      '/api/insights-library?resource=usage',
-      {
-        method: 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store'
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to load Asset Usage.');
-    }
-
-    usageMappings = Array.isArray(data) ? data : [];
-  }
-
-
-  function findRegistryByKey(key) {
-    return registryAssets.find(
-      item => item.key === key
-    ) || null;
-  }
-
-
-  function renderUsageMappings() {
-    const tbody = document.getElementById('usage-table-body');
-    const empty = document.getElementById('usage-empty');
-
-    tbody.innerHTML = '';
-
-    usageMappings.forEach((usage, index) => {
-      const asset = findRegistryByKey(usage.assetKey);
-      const row = document.createElement('tr');
-
-      row.innerHTML = `
-        <td><code>${escapeHtml(usage.usageKey || '')}</code></td>
-        <td>${escapeHtml(usage.page || '')}</td>
-        <td>${escapeHtml(usage.label || '')}</td>
-        <td><code>${escapeHtml(usage.assetKey || '')}</code></td>
-        <td>
-          ${
-            asset?.url
-              ? `<a href="${escapeHtml(asset.url)}" target="_blank" rel="noopener noreferrer">View</a>`
-              : '<span style="color:#b42318;font-weight:700;">Missing Asset</span>'
-          }
-        </td>
-        <td>
-          <button type="button" class="library-button" data-edit-usage="${index}">
-            Edit
-          </button>
-        </td>
-        <td>
-          <button type="button" class="library-button" data-delete-usage="${index}">
-            Delete
-          </button>
-        </td>
-      `;
-
-      tbody.appendChild(row);
-    });
-
-    empty.style.display = usageMappings.length ? 'none' : 'block';
-    empty.textContent = usageMappings.length
-      ? ''
-      : 'No usage mappings yet.';
-  }
-
-
-  function populateUsageAssetSelect(selectedKey = '') {
-    const select = document.getElementById('usage-asset-key-select');
-    select.innerHTML = '';
-
-    if (!registryAssets.length) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = 'No registered assets available';
-      select.appendChild(option);
-      return;
-    }
-
-    registryAssets
-      .slice()
-      .sort((a, b) => String(a.key).localeCompare(String(b.key)))
-      .forEach(asset => {
-        const option = document.createElement('option');
-        option.value = asset.key;
-        option.textContent = `${asset.key} — ${asset.fileName || asset.name || asset.pathname || ''}`;
-        select.appendChild(option);
-      });
-
-    if (
-      selectedKey &&
-      registryAssets.some(item => item.key === selectedKey)
-    ) {
-      select.value = selectedKey;
-    }
-  }
-
-
-  function openUsageModal(index = null) {
-    const modal = document.getElementById('usage-modal');
-    const title = document.getElementById('usage-modal-title');
-    const editIndex = document.getElementById('usage-edit-index');
-    const usageKeyInput = document.getElementById('usage-key-input');
-    const pageInput = document.getElementById('usage-page-input');
-    const labelInput = document.getElementById('usage-label-input');
-
-    if (index === null) {
-      title.textContent = 'Add Usage';
-      editIndex.value = '';
-      usageKeyInput.value = '';
-      pageInput.value = '';
-      labelInput.value = '';
-      populateUsageAssetSelect('');
-    } else {
-      const usage = usageMappings[index];
-
-      if (!usage) {
-        alert('Usage mapping was not found.');
-        return;
-      }
-
-      title.textContent = 'Edit Usage';
-      editIndex.value = String(index);
-      usageKeyInput.value = usage.usageKey || '';
-      pageInput.value = usage.page || '';
-      labelInput.value = usage.label || '';
-      populateUsageAssetSelect(usage.assetKey || '');
-    }
-
-    modal.style.display = 'flex';
-  }
-
-
-  function closeUsageModal() {
-    document.getElementById('usage-modal').style.display = 'none';
-  }
-
-
-  async function saveUsageMapping() {
-    const button = document.getElementById('usage-save-button');
-    const editIndexValue = document.getElementById('usage-edit-index').value;
-    const usageKey = createAssetKey(
-      document.getElementById('usage-key-input').value
-    );
-    const page = document.getElementById('usage-page-input').value.trim();
-    const label = document.getElementById('usage-label-input').value.trim();
-    const assetKey = document.getElementById('usage-asset-key-select').value;
-
-    if (!usageKey) {
-      alert('Usage Key is required.');
-      return;
-    }
-
-    if (!page) {
-      alert('Page / Function is required.');
-      return;
-    }
-
-    if (!assetKey) {
-      alert('Please select a registered Asset Key.');
-      return;
-    }
-
-    if (!findRegistryByKey(assetKey)) {
-      alert(`Asset Key "${assetKey}" is not registered.\n\nReload the Asset Library and select a registered Asset Key.`);
-      return;
-    }
-
-    const isEdit = editIndexValue !== '';
-    const payload = {
-      usageKey,
-      page,
-      label,
-      assetKey
-    };
-
-    if (isEdit) {
-      payload.index = Number(editIndexValue);
-    }
-
-    try {
-      button.disabled = true;
-      button.textContent = 'Saving...';
-
-      const response = await fetch(
-        '/api/insights-library?resource=usage',
-        {
-          method: isEdit ? 'PATCH' : 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          credentials: 'same-origin',
-          body: JSON.stringify(payload)
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (response.status === 409 && data.duplicate) {
-          throw new Error(`Usage Key "${usageKey}" already exists.`);
-        }
-
-        throw new Error(data.error || 'Failed to save Asset Usage.');
-      }
-
-      if (isEdit) {
-          usageMappings[data.index] = data.item;
-      } else {
-          usageMappings.push(data.item);
-      }
-
-      closeUsageModal();
-      renderUsageMappings();
-
-      alert(
-          isEdit
-              ? 'Usage mapping updated.'
-              : 'Usage mapping added.'
-      );
-
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Failed to save Asset Usage.');
-    } finally {
-      button.disabled = false;
-      button.textContent = 'Save Usage';
-    }
-  }
-
-
-  async function deleteUsageMapping(index) {
-    const usage = usageMappings[index];
-
-    if (!usage) {
-      alert('Usage mapping was not found.');
-      return;
-    }
-
-    const confirmed = confirm(
-      `Delete this usage mapping?\n\n` +
-      `${usage.usageKey}\n` +
-      `${usage.page || ''}\n` +
-      `Asset Key: ${usage.assetKey || ''}`
-    );
-
-    if (!confirmed) return;
-
-    const response = await fetch(
-      '/api/insights-library?resource=usage',
-      {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ index })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to delete Asset Usage.');
-    }
-
-    await loadUsageMappings();
-    renderUsageMappings();
-  }
-
-
-  async function loadAssets() {
-    const empty = document.getElementById('library-empty');
-    empty.style.display = 'block';
-    empty.textContent = 'Loading assets...';
-
-    try {
-      const [blobResponse] = await Promise.all([
-        fetch(
-          '/api/insights-upload',
-          {
-            method: 'GET',
-            credentials: 'same-origin',
-            cache: 'no-store'
-          }
-        ),
-        loadRegistry(),
-        loadUsageMappings()
-      ]);
-
-      const data = await blobResponse.json();
-
-      if (!blobResponse.ok) {
-        throw new Error(data.error || 'Failed to load assets.');
-      }
-
-      allAssets = Array.isArray(data.blobs) ? data.blobs : [];
-
-      document.getElementById('asset-count').textContent = allAssets.length;
-
-      renderFolderFilter();
-      renderAssets();
-      renderUsageMappings();
-
-    } catch (error) {
-      console.error(error);
-      empty.style.display = 'block';
-      empty.textContent = error.message || 'Failed to load assets.';
-    }
-  }
-
-  async function registerAsset(asset) {
-    const fileName = getFileName(asset.pathname);
-    const defaultKey = createAssetKey(fileName);
-
-    const enteredKey = prompt(
-      'Asset Key',
-      defaultKey
-    );
-
-    if (enteredKey === null) return;
-
-    const key = createAssetKey(enteredKey);
-
-    if (!key) {
-      alert('A valid Asset Key is required.');
-      return;
-    }
-
-    const payload = {
-      key,
-      name: fileName,
-      fileName,
-      folder: getFolder(asset.pathname),
-      pathname: asset.pathname || '',
-      url: asset.url || '',
-      downloadUrl: asset.downloadUrl || asset.url || '',
-      type: getFileType(asset.pathname).toLowerCase(),
-      size: Number(asset.size || 0),
-      uploadedAt: asset.uploadedAt || ''
-    };
-
-    let response = await fetch(
-      '/api/insights-library?resource=assets',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      }
-    );
-
-    let data = await response.json();
-
-    if (response.status === 409 && data.duplicate) {
-      const existing = data.existingItem || {};
-
-      if (
-        existing.url &&
-        confirm(
-          `Key "${key}" already exists.\n\n` +
-          `Existing file:\n${existing.fileName || existing.pathname || existing.name || ''}\n\n` +
-          `Open the existing file before choosing Update or Add?`
-        )
-      ) {
-        window.open(existing.url, '_blank', 'noopener');
-      }
-
-      const action = prompt(
-        'Duplicate Key\n\n' +
-        'Type UPDATE to use this Key for the new file.\n' +
-        'Type ADD to keep the existing file and create a numbered Key.\n' +
-        'Leave blank or Cancel to stop.',
-        'UPDATE'
-      );
-
-      if (!action) return;
-
-      const normalizedAction = action.trim().toUpperCase();
-
-      if (normalizedAction === 'ADD') {
-        response = await fetch(
-          '/api/insights-library?resource=assets',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-              ...payload,
-              onDuplicate: 'add'
-            })
-          }
-        );
-
-        data = await response.json();
-
-      } else if (normalizedAction === 'UPDATE') {
-        const affectedUsages = usageMappings.filter(usage => usage.assetKey === existing.key);
-        if (affectedUsages.length) {
-          const usageList = affectedUsages.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
-          const confirmed = confirm(
-            `Asset Key "${existing.key}" is used by ${affectedUsages.length} Usage mapping(s):\n\n${usageList}\n\n` +
-            'UPDATE will make all of these usages point to the newly uploaded file. Continue?'
-          );
-          if (!confirmed) return;
-        }
-
-        response = await fetch(
-          '/api/insights-library?resource=assets',
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({
-              ...payload,
-              uploadedAt: existing.uploadedAt || payload.uploadedAt,
-              index: data.existingIndex
-            })
-          }
-        );
-
-        data = await response.json();
-
-      } else {
-        return;
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to register asset.');
-    }
-
-    alert(`Asset registered.\n\nKey: ${data.item?.key || key}`);
-    await loadAssets();
-  }
-
-  async function editRegistry(index) {
-    const item = registryAssets[index];
-
-    if (!item) {
-      alert('Registry item was not found.');
-      return;
-    }
-
-    if (
-      item.url &&
-      confirm(
-        `Current Key: ${item.key}\n\n` +
-        `Current File:\n${item.fileName || item.pathname || item.name || ''}\n\n` +
-        `Open the current file before editing the Key?`
-      )
-    ) {
-      window.open(item.url, '_blank', 'noopener');
-    }
-
-    const enteredKey = prompt(
-      'Edit Asset Key',
-      item.key || ''
-    );
-
-    if (enteredKey === null) return;
-
-    const key = createAssetKey(enteredKey);
-
-    if (!key) {
-      alert('A valid Asset Key is required.');
-      return;
-    }
-
-    let thumbnailTime = item.thumbnailTime;
-
-    if (
-      ['video', 'mp4', 'webm'].includes(
-        String(item.type || '').toLowerCase()
-      )
-    ) {
-      const enteredThumbnailTime = prompt(
-        'Thumbnail Time (seconds)',
-        item.thumbnailTime ?? 0.1
-      );
-
-      if (enteredThumbnailTime === null) return;
-
-      const parsedThumbnailTime = Number(enteredThumbnailTime);
-
-      if (
-        !Number.isFinite(parsedThumbnailTime) ||
-        parsedThumbnailTime < 0
-      ) {
-        alert('Thumbnail Time must be 0 or greater.');
-        return;
-      }
-
-      thumbnailTime = parsedThumbnailTime;
-    }
-
-    const affectedUsages = usageMappings.filter(usage => usage.assetKey === item.key);
-    let confirmUsageKeyChange = false;
-
-    if (key !== item.key && affectedUsages.length) {
-      const usageList = affectedUsages.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
-      const confirmed = confirm(
-        `Asset Key "${item.key}" is currently used by ${affectedUsages.length} Usage mapping(s):\n\n` +
-        `${usageList}\n\nChange the Asset Key to "${key}" and update all of these Usage mappings automatically?`
-      );
-      if (!confirmed) return;
-      confirmUsageKeyChange = true;
-    }
-
-    let response = await fetch(
-      '/api/insights-library?resource=assets',
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ ...item, key, thumbnailTime, index, confirmUsageKeyChange })
-      }
-    );
-
-    let data = await response.json();
-
-    if (response.status === 409 && data.usageConflict) {
-      const affected = Array.isArray(data.affectedUsages) ? data.affectedUsages : [];
-      const usageList = affected.map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`).join('\n');
-      const confirmed = confirm(`${data.error}\n\n${usageList}\n\nUpdate all affected Usage mappings to "${key}" and continue?`);
-      if (!confirmed) return;
-      response = await fetch('/api/insights-library?resource=assets', {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-        body: JSON.stringify({ ...item, key, thumbnailTime, index, confirmUsageKeyChange: true })
-      });
-      data = await response.json();
-    }
-
-    if (response.status === 409 && data.duplicate) {
-      const existing = data.existingItem || {};
-
-      if (
-        existing.url &&
-        confirm(
-          `Key "${key}" is already used by another asset.\n\n` +
-          `${existing.fileName || existing.pathname || existing.name || ''}\n\n` +
-          `View that file?`
-        )
-      ) {
-        window.open(existing.url, '_blank', 'noopener');
-      }
-
-      alert('That Key cannot be used because it already exists.');
-      return;
-    }
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to update Asset Registry.');
-    }
-
-    const affectedCount = Number(data.affectedUsageCount || 0);
-    alert(
-      `Asset Key updated.\n\n${data.item?.key || key}` +
-      (affectedCount ? `\n\n${affectedCount} Usage mapping(s) updated automatically.` : '')
-    );
-    await loadAssets();
-  }
-
-
-  function closeDuplicateModal() {
-    const modal =
-      document.getElementById(
-        'duplicate-modal'
-      );
-
-    modal.style.display = 'none';
-
-    document.getElementById(
-      'duplicate-modal-list'
-    ).innerHTML = '';
-  }
-
-
-  function showDuplicateModal(key) {
-
-    const modal =
-      document.getElementById(
-        'duplicate-modal'
-      );
-
-    const keyLabel =
-      document.getElementById(
-        'duplicate-modal-key'
-      );
-
-    const list =
-      document.getElementById(
-        'duplicate-modal-list'
-      );
-
-    const matches =
-      allAssets.filter(asset => {
-
-        const registryItem =
-          getRegistryItem(asset);
-
-        const candidateKey =
-          registryItem?.key ||
-          createAssetKey(
-            getFileName(
-              asset.pathname
-            )
-          );
-
-        return candidateKey === key;
-      });
-
-
-    keyLabel.textContent =
-      `Key: ${key}`;
-
-    list.innerHTML = '';
-
-
-    matches.forEach(asset => {
-
-      const card =
-        document.createElement('div');
-
-      card.style.cssText =
-        'border:1px solid #dbe3ec;' +
-        'border-radius:10px;' +
-        'padding:16px;' +
-        'display:grid;' +
-        'grid-template-columns:minmax(0,1fr) auto;' +
-        'gap:16px;' +
-        'align-items:center;';
-
-
-      const fileName =
-        getFileName(
-          asset.pathname
-        );
-
-
-      card.innerHTML = `
-        <div style="min-width:0;">
-          <strong style="display:block;word-break:break-word;">
-            ${escapeHtml(fileName)}
-          </strong>
-
-          <div
-            style="
-              margin-top:8px;
-              display:flex;
-              flex-wrap:wrap;
-              gap:8px 16px;
-              color:#5f6f82;
-              font-size:14px;
-            "
-          >
-            <span>
-              Folder:
-              <strong>${escapeHtml(getFolder(asset.pathname))}</strong>
-            </span>
-
-            <span>
-              Size:
-              <strong>${escapeHtml(formatFileSize(asset.size))}</strong>
-            </span>
-
-            <span>
-              Type:
-              <strong>${escapeHtml(getFileType(asset.pathname))}</strong>
-            </span>
-          </div>
-        </div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-          ${
-            asset.url
-              ? `<a
-                   href="${escapeHtml(asset.url)}"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="library-button"
-                 >
-                   View
-                 </a>`
-              : ''
-          }
-
-          <button
-            type="button"
-            class="library-button primary"
-            data-use-duplicate-path="${escapeHtml(asset.pathname || '')}"
-          >
-            Use This
-          </button>
-        </div>
-      `;
-
-
-      list.appendChild(
-        card
-      );
-    });
-
-
-    modal.style.display =
-      'flex';
-  }
-
-
-  document.getElementById(
-    'duplicate-modal-close'
-  ).addEventListener(
-    'click',
-    closeDuplicateModal
-  );
-
-
-  document.getElementById(
-    'duplicate-modal'
-  ).addEventListener(
-    'click',
-    event => {
-
-      if (
-        event.target.id ===
-        'duplicate-modal'
-      ) {
-        closeDuplicateModal();
-      }
-    }
-  );
-
-
-  document.getElementById(
-    'duplicate-modal-list'
-  ).addEventListener(
-    'click',
-    async event => {
-
-      const useButton =
-        event.target.closest(
-          '[data-use-duplicate-path]'
-        );
-
-      if (!useButton) {
-        return;
-      }
-
-
-      const asset =
-        allAssets.find(
-          item =>
-            item.pathname ===
-            useButton.dataset.useDuplicatePath
-        );
-
-
-      if (!asset) {
-
-        alert(
-          'Asset was not found.'
-        );
-
-        return;
-      }
-
-
-      const confirmed =
-        confirm(
-          `Use this file for the Asset Registry?\n\n` +
-          `${getFileName(asset.pathname)}\n` +
-          `Folder: ${getFolder(asset.pathname)}`
-        );
-
-
-      if (!confirmed) {
-        return;
-      }
-
-
-      closeDuplicateModal();
-
-
-      try {
-
-        await registerAsset(
-          asset
-        );
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          error.message ||
-          'Failed to register asset.'
-        );
-      }
-    }
-  );
-
-
-
-  document.getElementById('usage-add-button').addEventListener(
-    'click',
-    () => openUsageModal(null)
-  );
-
-  document.getElementById('usage-modal-cancel').addEventListener(
-    'click',
-    closeUsageModal
-  );
-
-  document.getElementById('usage-modal').addEventListener(
-    'click',
-    event => {
-      if (event.target.id === 'usage-modal') {
-        closeUsageModal();
-      }
-    }
-  );
-
-  document.getElementById('usage-save-button').addEventListener(
-    'click',
-    saveUsageMapping
-  );
-
-  document.getElementById('usage-table-body').addEventListener(
-    'click',
-    async event => {
-      const editButton = event.target.closest('[data-edit-usage]');
-
-      if (editButton) {
-        openUsageModal(Number(editButton.dataset.editUsage));
-        return;
-      }
-
-      const deleteButton = event.target.closest('[data-delete-usage]');
-
-      if (!deleteButton) return;
-
-      try {
-        deleteButton.disabled = true;
-        await deleteUsageMapping(Number(deleteButton.dataset.deleteUsage));
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Failed to delete Asset Usage.');
-      } finally {
-        deleteButton.disabled = false;
-      }
-    }
-  );
-
-
-  document.getElementById('asset-search').addEventListener('input', renderAssets);
-
-  document.getElementById('asset-folder-filter').addEventListener('change', renderAssets);
-
-  document.getElementById('asset-table-body').addEventListener(
-    'click',
-    async event => {
-
-      const copyButton = event.target.closest('[data-copy-url]');
-
-      if (copyButton) {
-        copyAssetUrl(copyButton.dataset.copyUrl);
-        return;
-      }
-
-      const duplicateButton = event.target.closest('[data-duplicate-key]');
-
-      if (duplicateButton) {
-        showDuplicateModal(
-          duplicateButton.dataset.duplicateKey
-        );
-        return;
-      }
-
-
-      const registerButton = event.target.closest('[data-register-path]');
-
-      if (registerButton) {
-        const asset = allAssets.find(
-          item =>
-            item.pathname === registerButton.dataset.registerPath
-        );
-
-        if (!asset) {
-          alert('Asset was not found.');
-          return;
-        }
-
-        try {
-          registerButton.disabled = true;
-          await registerAsset(asset);
-        } catch (error) {
-          console.error(error);
-          alert(error.message || 'Failed to register asset.');
-        } finally {
-          registerButton.disabled = false;
-        }
-
-        return;
-      }
-
-      const editButton = event.target.closest('[data-edit-registry]');
-
-      if (editButton) {
-        try {
-          editButton.disabled = true;
-          await editRegistry(
-            Number(editButton.dataset.editRegistry)
-          );
-        } catch (error) {
-          console.error(error);
-          alert(error.message || 'Failed to update Asset Registry.');
-        } finally {
-          editButton.disabled = false;
-        }
-
-        return;
-      }
-
-      const deleteButton = event.target.closest('[data-delete-url]');
-
-      if (!deleteButton) return;
-
-      const url = deleteButton.dataset.deleteUrl;
-      const fileName = deleteButton.dataset.deleteName;
-
-      const registryIndex = registryAssets.findIndex(
-        item =>
-          item.url === url
-      );
-
-      if (registryIndex >= 0) {
-        alert(
-          'This file is registered in Asset Registry.\n\n' +
-          'Update or remove the Registry reference before deleting the Blob file.'
-        );
-        return;
-      }
-
-      const confirmed = confirm(
-        `Delete this asset?\n\n${fileName}`
-      );
-
-      if (!confirmed) return;
-
-      try {
-        deleteButton.disabled = true;
-        deleteButton.textContent = 'Deleting...';
-
-        const response = await fetch(
-          '/api/insights-upload',
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin',
-            body: JSON.stringify({ url })
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to delete asset.');
-        }
-
-        alert('Asset deleted.');
-        await loadAssets();
-
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Failed to delete asset.');
-        deleteButton.disabled = false;
-        deleteButton.textContent = 'Delete';
-      }
-    }
-  );
-
-  document.getElementById('asset-upload-toggle').addEventListener(
-    'click',
-    () => {
-      const panel = document.getElementById('asset-upload-panel');
-
-      panel.style.display =
-        panel.style.display === 'none'
-          ? 'flex'
-          : 'none';
-    }
-  );
-
-  document.getElementById('asset-upload-button').addEventListener(
-    'click',
-    async () => {
-
-      const fileInput = document.getElementById('asset-upload-file');
-      const folderSelect = document.getElementById('asset-upload-folder');
-      const button = document.getElementById('asset-upload-button');
-      const file = fileInput.files[0];
-
-      if (!file) {
-        alert('Please select a file first.');
-        return;
-      }
-
-      try {
-        button.disabled = true;
-        button.textContent = 'Uploading...';
-
-        if (!window.vercelBlobUpload) {
-          throw new Error('Blob upload module is not loaded.');
-        }
-
-        const safeFileName =
-          file.name.replace(
-            /[^a-zA-Z0-9._-]/g,
-            '-'
-          );
-
-        const pathname =
-          `${folderSelect.value}/${safeFileName}`;
-
-        const uploaded =
-          await window.vercelBlobUpload(
-            pathname,
-            file,
-            {
-              access: 'public',
-              handleUploadUrl: '/api/insights-upload',
-              multipart: true,
-              clientPayload:
-                JSON.stringify({
-                  originalFileName: file.name
-                })
-            }
-          );
-
-        await loadAssets();
-
-        const registerNow = confirm(
-          'Upload completed.\n\n' +
-          'Register this file in Asset Registry now?'
-        );
-
-        if (registerNow) {
-          const uploadedAsset =
-            allAssets.find(item => item.url === uploaded.url) ||
-            allAssets.find(item => item.pathname === uploaded.pathname);
-
-          if (uploadedAsset) {
-            await registerAsset(uploadedAsset);
-          } else {
-            alert(
-              'Upload succeeded, but the uploaded asset could not be found in the refreshed Blob list. You can register it from the table.'
-            );
-          }
-        }
-
-        fileInput.value = '';
-
-      } catch (error) {
-        console.error(error);
-        alert(error.message || 'Upload failed.');
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Upload';
-      }
-    }
-  );
-
-
-  document.getElementById('repository-asset-register').addEventListener('click', async () => {
-    const pathInput = document.getElementById('repository-asset-path');
-    const typeSelect = document.getElementById('repository-asset-type');
-    const button = document.getElementById('repository-asset-register');
-    const pathname = String(pathInput.value || '').trim().replace(/^\/+/, '');
-
-    if (!pathname) {
-      alert('Repository asset path is required.');
-      return;
-    }
-
-    const fileName = pathname.split('/').pop() || pathname;
-    const url = '/' + pathname;
-
-    try {
-      button.disabled = true;
-      const response = await fetch('/api/insights-library?resource=assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({
-          key: createAssetKey(fileName),
-          name: fileName,
-          fileName,
-          folder: pathname.includes('/') ? pathname.split('/').slice(0, -1).join('/') : '',
-          pathname,
-          url,
-          type: typeSelect.value,
-          uploadedAt: new Date().toISOString()
-        })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Repository asset could not be registered.');
-      alert(`Repository asset registered.\n\nKey: ${data.item?.key || createAssetKey(fileName)}`);
-      pathInput.value = '';
-      await loadAssets();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Repository asset registration failed.');
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  loadAssets();
-
-</script>
-
+  <script src="asset-library.js"></script>
 </body>
 </html>
