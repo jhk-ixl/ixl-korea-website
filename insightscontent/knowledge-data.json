@@ -77,21 +77,22 @@
       "tags": [],
       "externalSources": [],
       "access": "Public",
+      "publicationStatus": "Draft",
       "date": "2024-05-01",
       "dateLabel": "MAY 2024",
-      "title": "Identifying and Developing Innovation Talent",
-      "summary": "How organizations can evaluate innovation potential, understand different innovation profiles and place people where they can contribute most effectively to innovation.",
+      "title": "AI시대 혁신 인재 발굴 및 육성",
+      "summary": "조직이 혁신 잠재력을 평가하고 다양한 혁신 프로필을 이해하여 구성원을 혁신에 가장 효과적으로 기여할 수 있는 역할에 배치하는 방법을 살펴봅니다.",
       "slug": "identifying-and-developing-innovation-talent",
       "author": "IXL Korea",
       "source": "GIM Institute · Innovation Potential Assessment · May 2024",
-      "body": "\\## Why Innovation Talent Matters\n\n\n\nInnovation depends on more than technical expertise. Organizations need to understand the behaviors, mindset and practical innovation capabilities of their people in order to identify who can lead, join or prepare for innovation work.\n\n\n\n\\## Mindset + Knowledge & Tools\n\n\n\nThe Innovation Potential Assessment evaluates two dimensions: Innovation Mindset and Knowledge & Tools. Together they provide a quantitative view of an individual's readiness to contribute to innovation outcomes.\n\n\n\n\\## Seven Innovation Profiles\n\n\n\nThe combination of mindset and innovation know-how maps individuals into seven profiles — from Rule Follower and Rule Executor to Diamond in the Rough, Optimistic Executor, Rule Challenger, Rule Breaker and Rule Maker.\n\n\n\n\\## Put the Aces in the Right Places\n\n\n\nAssessment results can help organizations identify who is ready to lead innovation projects, who can join innovation teams and who would benefit most from additional training.\n\n\n\n\\## Build Customized Development Journeys\n\n\n\nIndividual and aggregate results can be translated into tailored development paths by profile, role and seniority — helping organizations build capability while improving innovation results.",
-      "url": "insightscontent/About-IPA-presentation.pdf",
-      "asset": "companyprofile/IPA-profile-SerSy06nhST6XhMTmQ2xXKJZf8lvY0.pdf",
-      "assetKey": "ipa-profile",
+      "body": "",
+      "url": "",
+      "asset": "",
+      "assetKey": "",
       "versions": {
         "ko": {
           "title": "AI시대 혁신 인재 발굴 및 육성",
-          "summary": "",
+          "summary": "조직이 혁신 잠재력을 평가하고 다양한 혁신 프로필을 이해하여 구성원을 혁신에 가장 효과적으로 기여할 수 있는 역할에 배치하는 방법을 살펴봅니다.",
           "body": "",
           "contentSource": {
             "type": "builder-markdown",
@@ -123,7 +124,6 @@
           "assetKey": "ipa-profile"
         }
       },
-      "publicationStatus": "Published",
       "featured": true
     },
     {
