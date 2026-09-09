@@ -35,6 +35,31 @@ export default async function handler(req, res) {
       arrayKey: 'types'
     },
 
+    topics: {
+      path: 'insightscontent/topics.json',
+      arrayKey: 'topics'
+    },
+
+    industries: {
+      path: 'insightscontent/industries.json',
+      arrayKey: 'industries'
+    },
+
+    programs: {
+      path: 'insightscontent/programs.json',
+      arrayKey: 'programs'
+    },
+
+    tags: {
+      path: 'insightscontent/tags.json',
+      arrayKey: 'tags'
+    },
+
+    accesslevels: {
+      path: 'insightscontent/access-levels.json',
+      arrayKey: 'accessLevels'
+    },
+
     usage: {
       path: 'insightscontent/asset-usage.json',
       arrayKey: 'usages'
@@ -359,7 +384,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, knowledge, assets, usage, knowledgetypes or externalsources.'
+          'Invalid resource. Use insights, knowledge, assets, usage, knowledgetypes, topics, industries, programs, tags, accesslevels or externalsources.'
       });
   }
 
@@ -1408,6 +1433,70 @@ export default async function handler(req, res) {
   }
 
 
+
+  const GOVERNANCE_RESOURCES =
+    new Set([
+      'topics',
+      'industries',
+      'programs',
+      'tags',
+      'accesslevels'
+    ]);
+
+
+  function normalizeGovernanceItem(
+    body,
+    existingItem = null,
+    list = []
+  ) {
+
+    const name =
+      cleanString(
+        body.name
+      );
+
+    const description =
+      cleanString(
+        body.description
+      );
+
+    if (!name) {
+      const error =
+        new Error(
+          'Name is required.'
+        );
+
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const duplicateName =
+      list.some(
+        item =>
+          item !== existingItem &&
+          cleanString(
+            item?.name
+          ).toLowerCase() ===
+            name.toLowerCase()
+      );
+
+    if (duplicateName) {
+      const error =
+        new Error(
+          `"${name}" already exists.`
+        );
+
+      error.statusCode = 409;
+      throw error;
+    }
+
+    return {
+      name,
+      description
+    };
+  }
+
+
   function createKnowledgeId() {
     return (
       'kn_' +
@@ -1511,6 +1600,18 @@ export default async function handler(req, res) {
 
 
     if (
+      GOVERNANCE_RESOURCES.has(resource)
+    ) {
+
+      return normalizeGovernanceItem(
+        body,
+        existingItem,
+        list
+      );
+    }
+
+
+    if (
       resource === 'assets'
     ) {
 
@@ -1561,6 +1662,17 @@ export default async function handler(req, res) {
       return (
         item.name ||
         `Knowledge Type ${index}`
+      );
+    }
+
+
+    if (
+      GOVERNANCE_RESOURCES.has(resource)
+    ) {
+
+      return (
+        item.name ||
+        `Governance Item ${index}`
       );
     }
 
@@ -2320,6 +2432,87 @@ export default async function handler(req, res) {
             });
         }
       }
+
+      if (
+        GOVERNANCE_RESOURCES.has(resource)
+      ) {
+        const deletedName =
+          cleanString(
+            deletedItem?.name
+          );
+
+        const [
+          knowledgeCurrent,
+          insightsCurrent
+        ] =
+          await Promise.all([
+            loadRelatedDataFile('knowledge'),
+            loadRelatedDataFile('insights')
+          ]);
+
+        const fieldByResource = {
+          topics: 'topics',
+          industries: 'industries',
+          programs: 'programs',
+          tags: 'tags',
+          accesslevels: 'access'
+        };
+
+        const field =
+          fieldByResource[resource];
+
+        const itemUsesValue =
+          item => {
+            if (resource === 'accesslevels') {
+              return (
+                cleanString(
+                  item?.[field]
+                ).toLowerCase() ===
+                deletedName.toLowerCase()
+              );
+            }
+
+            return (
+              Array.isArray(
+                item?.[field]
+              ) &&
+              item[field]
+                .some(
+                  value =>
+                    cleanString(
+                      value
+                    ).toLowerCase() ===
+                    deletedName.toLowerCase()
+                )
+            );
+          };
+
+        const affectedKnowledge =
+          knowledgeCurrent.list
+            .filter(itemUsesValue);
+
+        const affectedInsights =
+          insightsCurrent.list
+            .filter(itemUsesValue);
+
+        const affectedCount =
+          affectedKnowledge.length +
+          affectedInsights.length;
+
+        if (affectedCount) {
+          return res
+            .status(409)
+            .json({
+              error:
+                `${deletedName} is used by ${affectedKnowledge.length} Knowledge item(s) and ${affectedInsights.length} Public Insights item(s). Reclassify those items before deleting this Governance value.`,
+              governanceConflict: true,
+              resource,
+              value: deletedName,
+              affectedCount
+            });
+        }
+      }
+
 
       if (resource === 'assets') {
         const usageCurrent = await loadRelatedDataFile('usage');

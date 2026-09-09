@@ -1375,6 +1375,8 @@
     };
 
     let legacyDraft = null;
+    let builderReturnToLibrary = false;
+    let builderReturnId = '';
     let assetPickerFolder = '';
     let assetPickerView = 'details';
 
@@ -2297,6 +2299,8 @@
 
         renderInsights();
 
+        openRequestedKnowledgeEdit();
+
       } catch (error) {
 
         console.error(error);
@@ -2551,6 +2555,33 @@
       );
     }
 
+
+    function getDetailBody(item) {
+      return (
+        getVersion(item, 'ko').body ||
+        getVersion(item, 'other').body ||
+        item.body ||
+        ''
+      );
+    }
+
+    function renderBuilderBodyFirstPage(host, item) {
+      const body = getDetailBody(item);
+      if (!body.trim()) {
+        host.innerHTML = '<div class="knowledge-media-text">TEXT</div>';
+        return;
+      }
+
+      host.innerHTML = `
+        <div class="knowledge-body-page">
+          <div class="knowledge-body-page-paper">
+            <h3>${escapeHtml(getDisplayTitle(item))}</h3>
+            <div class="knowledge-body-page-text">${escapeHtml(body)}</div>
+          </div>
+        </div>
+      `;
+    }
+
     function getDetailMedia(item) {
       const representative = item?.representativeMedia || {};
       const preferredVersion = chooseInitialKnowledgeVersion(item);
@@ -2608,7 +2639,7 @@
       host.dataset.thumbnailTime = String(media.thumbnailTime ?? 0.1);
 
       if ((!source && !media.asset) || kind === 'none') {
-        host.innerHTML = '<div class="knowledge-media-text">TEXT</div>';
+        renderBuilderBodyFirstPage(host, item);
         return;
       }
 
@@ -2711,7 +2742,7 @@
       document.getElementById('knowledge-detail-title').textContent = detailTitle;
       document.getElementById('knowledge-detail-meta-title').textContent = detailTitle;
       document.getElementById('knowledge-detail-type').textContent = getKnowledgeTypeName(item.type);
-      document.getElementById('knowledge-detail-date').textContent = item.dateLabel || item.date || '—';
+      document.getElementById('knowledge-detail-date').textContent = item.date || '—';
       document.getElementById('knowledge-detail-access').textContent = item.access || 'Public';
       document.getElementById('knowledge-detail-author').textContent = item.author || '—';
       document.getElementById('knowledge-detail-source').textContent = item.source || '—';
@@ -3044,7 +3075,21 @@
           'success'
         );
         await loadInsights();
-        setTimeout(() => closeEditor(), 700);
+
+        if (
+          builderReturnToLibrary &&
+          builderReturnId
+        ) {
+          setTimeout(() => {
+            window.location.href =
+              `knowledge-library.html?detail=${encodeURIComponent(builderReturnId)}`;
+          }, 500);
+        } else {
+          setTimeout(
+            () => closeEditor(),
+            700
+          );
+        }
       } catch (error) {
         console.error(error);
         showMessage(error.message, 'error');
@@ -3148,14 +3193,54 @@
 
 
     function openRequestedKnowledgeEdit() {
-      const requested = new URLSearchParams(window.location.search).get('edit');
-      if (!requested) return;
-      const item = insightsItems.find(entry =>
-        String(entry.knowledgeId || '') === requested ||
-        String(entry.slug || '') === requested ||
-        String(entry._sourceIndex) === requested
-      );
-      if (item) openKnowledgeDetail(item._sourceIndex);
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const requested =
+        params.get('edit');
+
+      if (!requested) return false;
+
+      const item =
+        insightsItems.find(entry =>
+          String(entry.knowledgeId || '') === requested ||
+          String(entry.slug || '') === requested ||
+          String(entry._sourceIndex) === requested
+        );
+
+      if (!item) return false;
+
+      builderReturnToLibrary =
+        params.get('from') === 'library';
+
+      builderReturnId =
+        params.get('return') ||
+        requested;
+
+      pendingEditIndex =
+        item._sourceIndex;
+
+      if (builderReturnToLibrary) {
+        openEditEditor(
+          item._sourceIndex,
+          false
+        );
+
+        document.getElementById(
+          'editor-back-button'
+        ).textContent =
+          'Back to Knowledge Library';
+
+      } else {
+        openKnowledgeDetail(
+          item._sourceIndex,
+          false
+        );
+      }
+
+      return true;
     }
 
     /* =========================================
@@ -3182,6 +3267,12 @@
     });
 
     document.getElementById('editor-back-button').addEventListener('click', () => {
+      if (builderReturnToLibrary && builderReturnId) {
+        window.location.href =
+          `knowledge-library.html?detail=${encodeURIComponent(builderReturnId)}`;
+        return;
+      }
+
       if (editingIndex !== null && pendingEditIndex !== null) {
         if (history.state?.builderView === 'edit') {
           history.back();
@@ -3424,12 +3515,7 @@
       'DOMContentLoaded',
       loadInsights
     );
-
-  
-    window.addEventListener('load', () => {
-      setTimeout(openRequestedKnowledgeEdit, 250);
-    });
-  </script>
+</script>
 
 </body>
 </html>

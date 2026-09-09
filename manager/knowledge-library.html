@@ -168,6 +168,7 @@
             <dt>Type</dt><dd id="library-detail-type">—</dd>
             <dt>Date</dt><dd id="library-detail-date">—</dd>
             <dt>Access</dt><dd id="library-detail-access">—</dd>
+            <dt>SNS</dt><dd id="library-detail-sns">—</dd>
             <dt>Topics</dt><dd id="library-detail-topics">—</dd>
             <dt>Industries</dt><dd id="library-detail-industries">—</dd>
             <dt>Programs</dt><dd id="library-detail-programs">—</dd>
@@ -175,7 +176,12 @@
           </dl>
           <div class="knowledge-detail-summary">
             <h4>Summary</h4>
-            <p id="library-detail-summary">—</p>
+            <div id="library-detail-summary" class="knowledge-summary-preview">—</div>
+            <button type="button" id="library-summary-more" class="knowledge-summary-more" hidden>자세히...</button>
+          </div>
+          <div class="knowledge-detail-summary" id="library-sns-detail" hidden>
+            <h4>SNS Distribution</h4>
+            <div id="library-sns-detail-body">—</div>
           </div>
         </div>
       </div>
@@ -195,6 +201,7 @@
             <th><button type="button" class="manager-sort-button" data-sort-key="programs">Programs <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="tags">Tags <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
+            <th><button type="button" class="manager-sort-button" data-sort-key="sns">SNS <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th>Detail</th>
           </tr>
         </thead>
@@ -219,6 +226,7 @@
 
     let allKnowledgeItems = [];
     let assetRegistry = [];
+    let distributionItems = [];
 
 
     function getKnowledgeUrl(item) {
@@ -281,12 +289,185 @@
         return [];
     }
 
+
+    function getKnowledgeStableId(item, index = null) {
+      return String(
+        item?.knowledgeId ||
+        item?.slug ||
+        (
+          index !== null
+            ? index
+            : allKnowledgeItems.indexOf(item)
+        )
+      );
+    }
+
+
+    function formatKnowledgeDate(value) {
+      const clean = String(value || '').trim();
+      if (!clean) return '—';
+
+      const match =
+        clean.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+      if (match) {
+        return `${match[1]}-${match[2]}-${match[3]}`;
+      }
+
+      const date =
+        new Date(clean);
+
+      if (!Number.isNaN(date.getTime())) {
+        return date
+          .toISOString()
+          .slice(0, 10);
+      }
+
+      return clean;
+    }
+
+
+    function getKnowledgeBody(item) {
+      return (
+        item?.versions?.ko?.body ||
+        item?.versions?.other?.body ||
+        item?.body ||
+        ''
+      );
+    }
+
+
+    function getKnowledgeSnsRecords(item) {
+      const id =
+        String(item?.knowledgeId || '').trim();
+
+      if (!id) return [];
+
+      return distributionItems.filter(record =>
+        String(record?.knowledgeId || '').trim() === id
+      );
+    }
+
+
+    function getKnowledgeSnsStatus(item) {
+      const records =
+        getKnowledgeSnsRecords(item);
+
+      if (!records.length) {
+        return {
+          published: false,
+          label: 'No',
+          detail: 'No SNS distribution records.'
+        };
+      }
+
+      const published =
+        records.filter(record =>
+          String(record?.status || '')
+            .trim()
+            .toLowerCase() === 'published'
+        );
+
+      const channels =
+        [...new Set(
+          published
+            .map(record =>
+              String(
+                record?.channel ||
+                record?.platform ||
+                record?.destination ||
+                ''
+              ).trim()
+            )
+            .filter(Boolean)
+        )];
+
+      return {
+        published:
+          published.length > 0,
+        label:
+          published.length
+            ? `Yes${channels.length ? ` · ${channels.join(', ')}` : ''}`
+            : 'No',
+        detail:
+          records
+            .map(record => {
+              const channel =
+                record?.channel ||
+                record?.platform ||
+                record?.destination ||
+                'SNS';
+
+              const status =
+                record?.status ||
+                'Unknown';
+
+              const date =
+                record?.publishedAt ||
+                record?.updatedAt ||
+                record?.createdAt ||
+                '';
+
+              return `${channel}: ${status}${date ? ` · ${formatKnowledgeDate(date)}` : ''}`;
+            })
+            .join('\n') ||
+          'No SNS distribution records.'
+      };
+    }
+
+
+    function escapeLibraryHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+
+    function renderBodyFirstPage(host, item) {
+      const body =
+        getKnowledgeBody(item);
+
+      if (!body.trim()) {
+        host.innerHTML =
+          '<div class="knowledge-media-text">TEXT</div>';
+        return false;
+      }
+
+      const title =
+        getKnowledgeDisplayTitle(item);
+
+      host.innerHTML = `
+        <button
+          type="button"
+          class="knowledge-body-page"
+          aria-label="Knowledge body first-page preview"
+        >
+          <div class="knowledge-body-page-paper">
+            <h3>${escapeLibraryHtml(title)}</h3>
+            <div class="knowledge-body-page-text">${escapeLibraryHtml(body)}</div>
+          </div>
+        </button>
+      `;
+
+      host.dataset.mediaKind = 'body';
+      host.dataset.mediaSource = '';
+
+      return true;
+    }
+
+
     function createRow(item) {
 
       const url = getKnowledgeUrl(item);
 
       const access =
         item.access || 'Public';
+
+      const sns =
+        getKnowledgeSnsStatus(item);
 
 
       const topics =
@@ -353,7 +534,7 @@
         <tr>
 
           <td>
-            ${item.dateLabel || item.date || ''}
+            ${formatKnowledgeDate(item.date)}
           </td>
 
 
@@ -365,7 +546,7 @@
 
 
           <td class="knowledge-title">
-            ${item.title || ''}
+            ${getKnowledgeDisplayTitle(item)}
           </td>
 
 
@@ -387,10 +568,15 @@
             ${tagsHtml}
             </td>
 
-          <td>
+          <td data-sort-value="${access}">
             ${access}
           </td>
 
+          <td data-sort-value="${sns.published ? 'yes' : 'no'}">
+            <span class="manager-status-pill ${sns.published ? 'published' : 'not-published'}">
+              ${sns.published ? 'Yes' : 'No'}
+            </span>
+          </td>
 
           <td>
             ${openLink}
@@ -675,8 +861,7 @@
         String(media.thumbnailTime ?? .1);
 
       if (!source || type === 'none') {
-        host.innerHTML =
-          '<div class="knowledge-media-text">TEXT</div>';
+        renderBodyFirstPage(host, item);
         return;
       }
 
@@ -912,15 +1097,38 @@
       document.getElementById(
         'library-detail-date'
       ).textContent =
-        item.dateLabel ||
-        item.date ||
-        '—';
+        formatKnowledgeDate(item.date);
 
       document.getElementById(
         'library-detail-access'
       ).textContent =
         item.access ||
         'Public';
+
+
+      const snsStatus =
+        getKnowledgeSnsStatus(item);
+
+      document.getElementById(
+        'library-detail-sns'
+      ).textContent =
+        snsStatus.label;
+
+      const snsDetail =
+        document.getElementById(
+          'library-sns-detail'
+        );
+
+      const snsDetailBody =
+        document.getElementById(
+          'library-sns-detail-body'
+        );
+
+      snsDetail.hidden =
+        !getKnowledgeSnsRecords(item).length;
+
+      snsDetailBody.textContent =
+        snsStatus.detail;
 
       document.getElementById(
         'library-detail-topics'
@@ -950,19 +1158,42 @@
           .join(', ') ||
         '—';
 
-      document.getElementById(
-        'library-detail-summary'
-      ).textContent =
+      const summaryElement =
+        document.getElementById(
+          'library-detail-summary'
+        );
+
+      summaryElement.textContent =
         getKnowledgeDisplaySummary(item);
+
+      summaryElement.classList.remove(
+        'expanded'
+      );
+
+      const summaryMore =
+        document.getElementById(
+          'library-summary-more'
+        );
+
+      requestAnimationFrame(() => {
+        const needsMore =
+          summaryElement.scrollHeight >
+          summaryElement.clientHeight + 2;
+
+        summaryMore.hidden =
+          !needsMore;
+
+        summaryMore.textContent =
+          '자세히...';
+      });
+
+      const stableId =
+        getKnowledgeStableId(item, index);
 
       document.getElementById(
         'library-detail-edit'
       ).href =
-        `insights-library.html?edit=${encodeURIComponent(
-          item.knowledgeId ||
-          item.slug ||
-          index
-        )}`;
+        `insights-library.html?edit=${encodeURIComponent(stableId)}&from=library&return=${encodeURIComponent(stableId)}`;
 
       renderLibraryMedia(item);
 
@@ -1474,12 +1705,21 @@
 
 
         const [
-          knowledgeTypes
+          knowledgeTypes,
+          distributionData
         ] =
           await Promise.all([
             loadKnowledgeTypes(),
-            loadKnowledgeAssetRegistry()
+            fetchJson('/api/distribution-queue')
+              .catch(() => [])
           ]);
+
+        await loadKnowledgeAssetRegistry();
+
+        distributionItems =
+          getResourceItems(
+            distributionData
+          );
 
 
         buildTypeFilter(
@@ -1495,6 +1735,28 @@
         await loadKnowledgeOverview(
           allKnowledgeItems
         );
+
+        const requestedDetail =
+          new URLSearchParams(
+            window.location.search
+          ).get('detail');
+
+        if (requestedDetail) {
+          const requestedIndex =
+            allKnowledgeItems.findIndex(
+              (item, index) =>
+                getKnowledgeStableId(
+                  item,
+                  index
+                ) === requestedDetail
+            );
+
+          if (requestedIndex >= 0) {
+            openLibraryDetail(
+              requestedIndex
+            );
+          }
+        }
 
 
         document
@@ -1529,6 +1791,28 @@
           'Knowledge data could not be loaded.';
       }
     }
+
+
+    document
+      .getElementById('library-summary-more')
+      .addEventListener('click', () => {
+        const summary =
+          document.getElementById(
+            'library-detail-summary'
+          );
+
+        const expanded =
+          summary.classList.toggle(
+            'expanded'
+          );
+
+        document.getElementById(
+          'library-summary-more'
+        ).textContent =
+          expanded
+            ? '접기'
+            : '자세히...';
+      });
 
 
     document

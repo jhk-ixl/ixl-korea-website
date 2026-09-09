@@ -2997,3 +2997,169 @@ a.manager-utilization-item:hover {
   max-height: none !important;
 }
 
+
+
+/* =========================================
+   KNOWLEDGE LIBRARY / DETAIL STANDARD V8
+   ========================================= */
+
+/* Four-line summary rule with explicit detail expansion. */
+.knowledge-summary-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  white-space: pre-line;
+  line-height: 1.65;
+  color: #44515f;
+}
+
+.knowledge-summary-preview.expanded {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.knowledge-summary-more {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #075ea8;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#library-sns-detail-body {
+  white-space: pre-line;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* Body-only Knowledge gets a first-page document preview instead of TEXT only. */
+.knowledge-body-page {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+  border: 0;
+  background: #eef2f6;
+  cursor: default;
+}
+
+.knowledge-body-page-paper {
+  width: min(92%, 500px);
+  height: 430px;
+  overflow: hidden;
+  padding: 34px 36px 46px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 1px solid #dbe3ec;
+  box-shadow: 0 7px 22px rgba(7,27,51,.08);
+  text-align: left;
+}
+
+.knowledge-body-page-paper h3 {
+  margin: 0 0 20px;
+  color: #071b33;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.knowledge-body-page-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: #344054;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Knowledge list owns a predictable full width so no field is clipped. */
+#knowledge-library-table {
+  width: 1680px !important;
+  min-width: 1680px !important;
+  table-layout: fixed;
+}
+
+#knowledge-library-table th:nth-child(1),
+#knowledge-library-table td:nth-child(1) { width: 110px; }
+
+#knowledge-library-table th:nth-child(2),
+#knowledge-library-table td:nth-child(2) { width: 125px; }
+
+#knowledge-library-table th:nth-child(3),
+#knowledge-library-table td:nth-child(3) { width: 330px; }
+
+#knowledge-library-table th:nth-child(4),
+#knowledge-library-table td:nth-child(4) { width: 230px; }
+
+#knowledge-library-table th:nth-child(5),
+#knowledge-library-table td:nth-child(5) { width: 180px; }
+
+#knowledge-library-table th:nth-child(6),
+#knowledge-library-table td:nth-child(6) { width: 180px; }
+
+#knowledge-library-table th:nth-child(7),
+#knowledge-library-table td:nth-child(7) { width: 230px; }
+
+#knowledge-library-table th:nth-child(8),
+#knowledge-library-table td:nth-child(8) { width: 100px; }
+
+#knowledge-library-table th:nth-child(9),
+#knowledge-library-table td:nth-child(9) { width: 90px; }
+
+#knowledge-library-table th:nth-child(10),
+#knowledge-library-table td:nth-child(10) { width: 105px; }
+
+#knowledge-library-table td {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+#knowledge-library-table .knowledge-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#knowledge-library-table .knowledge-topics,
+#knowledge-library-table .knowledge-industries,
+#knowledge-library-table .knowledge-programs,
+#knowledge-library-table .knowledge-tags {
+  white-space: normal;
+}
+
+#knowledge-library-table .topic-tag,
+#knowledge-library-table .industry-tag,
+#knowledge-library-table .program-tag,
+#knowledge-library-table .tag-tag {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.manager-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.manager-status-pill.published {
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.manager-status-pill.not-published {
+  color: #667085;
+  background: #f2f4f7;
+}
