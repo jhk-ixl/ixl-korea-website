@@ -2464,13 +2464,13 @@
 
               <td class="insights-actions">
 
-                <a
-                  href="#knowledge-detail-panel"
+                <button
+                  type="button"
                   class="insights-small-btn edit-insight"
                   data-index="${item._sourceIndex}"
                 >
                   Edit
-                </a>
+                </button>
 
                 <button
                   type="button"
@@ -3321,11 +3321,17 @@
 
           if (editButton) {
 
-            openKnowledgeDetail(
+            event.preventDefault();
+            event.stopPropagation();
+
+            const sourceIndex =
               Number(
                 editButton.dataset.index
-              )
-            );
+              );
+
+            if (Number.isFinite(sourceIndex)) {
+              openKnowledgeDetail(sourceIndex);
+            }
 
             return;
 

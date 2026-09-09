@@ -203,7 +203,7 @@
   function initCanonicalScrollTable(wrap) {
     if (!wrap || wrap.dataset.managerAutoScrollBound) return;
 
-    // Asset Library already owns its split header/body scroll system.
+    // Asset Library already has the canonical split-header implementation.
     if (
       wrap.classList.contains('asset-table-wrap') ||
       wrap.closest('.asset-grid-sticky') ||
@@ -216,46 +216,187 @@
     const table = wrap.querySelector('table.manager-canonical-table');
     if (!table) return;
 
-    let top = wrap.previousElementSibling;
-    if (!top || !top.classList.contains('manager-auto-top-scroll')) {
-      top = document.createElement('div');
-      top.className = 'manager-auto-top-scroll';
-      top.setAttribute('aria-label', 'Horizontal table scroll');
+    const sourceHead = table.tHead;
+    if (!sourceHead) return;
 
-      const inner = document.createElement('div');
-      inner.className = 'manager-auto-top-scroll-inner';
-      top.appendChild(inner);
+    // Build one sticky unit: top horizontal scrollbar + separate header viewport.
+    const sticky = document.createElement('div');
+    sticky.className = 'manager-canonical-sticky';
 
-      wrap.parentNode.insertBefore(top, wrap);
+    const top = document.createElement('div');
+    top.className = 'manager-auto-top-scroll';
+    top.setAttribute('aria-label', 'Horizontal table scroll');
+
+    const inner = document.createElement('div');
+    inner.className = 'manager-auto-top-scroll-inner';
+    top.appendChild(inner);
+
+    const headerViewport = document.createElement('div');
+    headerViewport.className = 'manager-canonical-header-viewport';
+
+    const headerTable = document.createElement('table');
+    headerTable.className = `${table.className} manager-canonical-header-table`;
+    headerTable.removeAttribute('id');
+    headerTable.removeAttribute('data-manager-sortable');
+    headerTable.removeAttribute('data-default-sort-key');
+    headerTable.removeAttribute('data-default-sort-direction');
+
+    // Preserve colgroup if the source table has one.
+    const sourceColgroup = table.querySelector(':scope > colgroup');
+    if (sourceColgroup) {
+      headerTable.appendChild(sourceColgroup.cloneNode(true));
     }
 
-    const inner = top.querySelector('.manager-auto-top-scroll-inner');
+    const clonedHead = sourceHead.cloneNode(true);
+    clonedHead.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+    headerTable.appendChild(clonedHead);
+
+    headerViewport.appendChild(headerTable);
+    sticky.appendChild(top);
+    sticky.appendChild(headerViewport);
+    wrap.parentNode.insertBefore(sticky, wrap);
+
+    table.classList.add('manager-canonical-body-table');
+
+    let currentLeft = 0;
+
+    const syncIndicatorState = () => {
+      const originalButtons =
+        sourceHead.querySelectorAll('[data-sort-key]');
+      const clonedButtons =
+        clonedHead.querySelectorAll('[data-sort-key]');
+
+      clonedButtons.forEach(clone => {
+        const key = clone.dataset.sortKey;
+        const original =
+          [...originalButtons].find(button => button.dataset.sortKey === key);
+
+        clone.dataset.sortDirection =
+          original?.dataset.sortDirection || '';
+
+        const originalTh = original?.closest('th');
+        const cloneTh = clone.closest('th');
+
+        if (cloneTh && originalTh) {
+          cloneTh.setAttribute(
+            'aria-sort',
+            originalTh.getAttribute('aria-sort') || 'none'
+          );
+        }
+      });
+    };
 
     const applyHorizontalPosition = () => {
-      const maxLeft = Math.max(0, table.scrollWidth - wrap.clientWidth);
-      const left = Math.min(top.scrollLeft, maxLeft);
-      table.style.setProperty('--manager-table-x', `${-left}px`);
+      const maxLeft =
+        Math.max(0, table.scrollWidth - wrap.clientWidth);
+
+      currentLeft =
+        Math.max(0, Math.min(top.scrollLeft, maxLeft));
+
+      table.style.transform =
+        `translateX(${-currentLeft}px)`;
+
+      headerTable.style.transform =
+        `translateX(${-currentLeft}px)`;
     };
 
-    const update = () => {
-      if (!inner) return;
-      inner.style.width = `${Math.max(table.scrollWidth, wrap.clientWidth)}px`;
+    const alignColumns = () => {
+      // Temporarily clear translation for stable measurement.
+      table.style.transform = 'translateX(0px)';
+      headerTable.style.transform = 'translateX(0px)';
+
+      const sourceCells = sourceHead.rows[0]
+        ? [...sourceHead.rows[0].cells]
+        : [];
+      const cloneCells = clonedHead.rows[0]
+        ? [...clonedHead.rows[0].cells]
+        : [];
+
+      const widths = sourceCells.map(cell => {
+        const rect = cell.getBoundingClientRect();
+        return Math.max(1, rect.width);
+      });
+
+      const totalWidth =
+        Math.max(
+          table.scrollWidth,
+          widths.reduce((sum, width) => sum + width, 0),
+          wrap.clientWidth
+        );
+
+      table.style.width = `${totalWidth}px`;
+      table.style.minWidth = `${totalWidth}px`;
+      headerTable.style.width = `${totalWidth}px`;
+      headerTable.style.minWidth = `${totalWidth}px`;
+
+      cloneCells.forEach((cell, index) => {
+        if (!widths[index]) return;
+        cell.style.width = `${widths[index]}px`;
+        cell.style.minWidth = `${widths[index]}px`;
+        cell.style.maxWidth = `${widths[index]}px`;
+        cell.style.boxSizing = 'border-box';
+      });
+
+      inner.style.width = `${totalWidth}px`;
+
+      top.scrollLeft = Math.min(currentLeft, Math.max(0, totalWidth - wrap.clientWidth));
       applyHorizontalPosition();
+      syncIndicatorState();
     };
 
-    top.addEventListener('scroll', applyHorizontalPosition, { passive: true });
-    window.addEventListener('resize', update);
+    // Header clone forwards sorting to the real source header.
+    clonedHead.addEventListener('click', event => {
+      const cloneButton = event.target.closest('[data-sort-key]');
+      if (!cloneButton) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const originalButton =
+        sourceHead.querySelector(
+          `[data-sort-key="${CSS.escape(cloneButton.dataset.sortKey)}"]`
+        );
+
+      if (originalButton) {
+        originalButton.click();
+        requestAnimationFrame(() => {
+          alignColumns();
+          syncIndicatorState();
+        });
+      }
+    });
+
+    top.addEventListener(
+      'scroll',
+      applyHorizontalPosition,
+      { passive: true }
+    );
+
+    window.addEventListener('resize', alignColumns);
 
     if (window.ResizeObserver) {
-      const observer = new ResizeObserver(update);
+      const observer =
+        new ResizeObserver(() => requestAnimationFrame(alignColumns));
       observer.observe(table);
       observer.observe(wrap);
     }
 
-    wrap.dataset.managerAutoScrollBound = 'true';
-    table.dataset.managerCanonicalFrozen = 'true';
+    const mutationObserver =
+      new MutationObserver(syncIndicatorState);
 
-    requestAnimationFrame(update);
+    mutationObserver.observe(sourceHead, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-sort-direction', 'aria-sort']
+    });
+
+    wrap.dataset.managerAutoScrollBound = 'true';
+    sticky.dataset.managerCanonicalSticky = 'true';
+
+    requestAnimationFrame(() => {
+      alignColumns();
+      syncIndicatorState();
+    });
   }
 
   function initManagerUi(root = document) {

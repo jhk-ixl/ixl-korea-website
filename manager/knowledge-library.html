@@ -1086,6 +1086,40 @@
     }
 
 
+    document
+      .getElementById('knowledge-table-body')
+      .addEventListener('click', event => {
+        const button =
+          event.target.closest('.knowledge-deep-button');
+
+        if (!button) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const index =
+          Number(button.dataset.knowledgeIndex);
+
+        if (Number.isFinite(index) && index >= 0) {
+          openLibraryDetail(index);
+        }
+      });
+
+
+    document
+      .getElementById('library-detail-back')
+      .addEventListener('click', closeLibraryDetail);
+
+
+    document
+      .getElementById('library-detail-preview')
+      .addEventListener('click', event => {
+        if (event.target.closest('#library-media-thumb')) {
+          activateLibraryMedia();
+        }
+      });
+
+
     document.addEventListener(
       'DOMContentLoaded',
       loadKnowledgeLibrary

@@ -36,7 +36,7 @@
 
   <main class="manager-main">
 
-    <section class="manager-intro">
+    <section class="manager-intro" id="type-list-intro">
       <span class="section-eyebrow">KNOWLEDGE MANAGEMENT</span>
 
       <h2>Knowledge Types</h2>
@@ -49,7 +49,7 @@
       </p>
     </section>
 
-    <section class="type-toolbar">
+    <section class="type-toolbar" id="type-list-toolbar">
 
       <div>
         <strong id="type-count">0</strong>
@@ -75,7 +75,7 @@
 
     </section>
 
-    <section class="manager-master-list manager-canonical-table-wrap">
+    <section class="manager-master-list manager-canonical-table-wrap" id="type-list-wrap">
 
       <table class="manager-master-table manager-canonical-table">
 
@@ -92,6 +92,56 @@
 
       </table>
 
+    </section>
+
+
+    <section id="type-edit-mode" class="manager-detail-screen" hidden>
+      <div class="manager-detail-header">
+        <div>
+          <span class="section-eyebrow">KNOWLEDGE GOVERNANCE</span>
+          <h2 id="type-edit-title">Knowledge Type</h2>
+          <p id="type-edit-subtitle">Review and edit this Knowledge Type.</p>
+        </div>
+        <div class="library-actions">
+          <button type="button" id="type-edit-back" class="library-button">Back to Knowledge Types</button>
+        </div>
+      </div>
+
+      <div class="manager-detail-layout">
+        <div class="manager-detail-preview-card">
+          <div class="asset-preview-label">Preview</div>
+          <div class="knowledge-media-text">TEXT</div>
+          <div class="asset-preview-note">Knowledge Type classification</div>
+        </div>
+
+        <form id="type-edit-form" class="manager-detail-form">
+          <input type="hidden" id="type-edit-index">
+
+          <div class="manager-editable-field">
+            <label for="type-edit-name">Name *</label>
+            <input type="text" id="type-edit-name" required>
+          </div>
+
+          <div class="manager-editable-field">
+            <label for="type-edit-description">Description</label>
+            <textarea id="type-edit-description" rows="6"></textarea>
+          </div>
+
+          <div class="manager-detail-system-info">
+            <h3>System Information</h3>
+            <dl>
+              <div><dt>Internal ID</dt><dd id="type-info-id">—</dd></div>
+              <div><dt>Order</dt><dd id="type-info-order">—</dd></div>
+              <div class="full"><dt>Value</dt><dd id="type-info-value">—</dd></div>
+            </dl>
+          </div>
+
+          <div class="manager-detail-actions">
+            <button type="submit" class="library-button primary">Save Changes</button>
+            <button type="button" id="type-edit-cancel" class="library-button">Cancel</button>
+          </div>
+        </form>
+      </div>
     </section>
 
   </main>
@@ -284,39 +334,104 @@
     }
 
 
-    async function addKnowledgeType() {
-      const name =
-        window.prompt(
-          'Enter a new Knowledge Type name:'
-        );
+    function showTypeEditor(index = null) {
+      const isEdit = index !== null;
+      const current = isEdit ? knowledgeTypes[index] : null;
 
-      if (
-        !name ||
-        !name.trim()
-      ) {
+      document.getElementById('type-list-intro').hidden = true;
+      document.getElementById('type-list-toolbar').hidden = true;
+      document.getElementById('type-list-wrap').hidden = true;
+
+      const sticky =
+        document.getElementById('type-list-wrap').previousElementSibling;
+      if (sticky?.classList.contains('manager-canonical-sticky')) {
+        sticky.hidden = true;
+      }
+
+      document.getElementById('type-edit-mode').hidden = false;
+      document.getElementById('type-edit-index').value =
+        isEdit ? String(index) : '';
+
+      document.getElementById('type-edit-title').textContent =
+        isEdit ? (current?.name || 'Edit Knowledge Type') : 'Add Knowledge Type';
+
+      document.getElementById('type-edit-subtitle').textContent =
+        isEdit
+          ? 'Review and edit this Knowledge Type.'
+          : 'Create a new Knowledge Type.';
+
+      document.getElementById('type-edit-name').value =
+        current?.name || '';
+
+      document.getElementById('type-edit-description').value =
+        current?.description || '';
+
+      document.getElementById('type-info-id').textContent =
+        current?.id ?? current?.typeId ?? 'Generated automatically';
+
+      document.getElementById('type-info-order').textContent =
+        current?.order ?? (isEdit ? index + 1 : knowledgeTypes.length + 1);
+
+      document.getElementById('type-info-value').textContent =
+        current?.value || current?.slug || 'Generated from Name';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    function closeTypeEditor() {
+      document.getElementById('type-edit-mode').hidden = true;
+      document.getElementById('type-list-intro').hidden = false;
+      document.getElementById('type-list-toolbar').hidden = false;
+      document.getElementById('type-list-wrap').hidden = false;
+
+      const sticky =
+        document.getElementById('type-list-wrap').previousElementSibling;
+      if (sticky?.classList.contains('manager-canonical-sticky')) {
+        sticky.hidden = false;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    async function saveKnowledgeType(event) {
+      event.preventDefault();
+
+      const indexValue =
+        document.getElementById('type-edit-index').value;
+
+      const isEdit =
+        indexValue !== '';
+
+      const name =
+        document.getElementById('type-edit-name').value.trim();
+
+      const description =
+        document.getElementById('type-edit-description').value.trim();
+
+      if (!name) {
+        alert('Name is required.');
         return;
       }
 
-      const description =
-        window.prompt(
-          'Enter the Knowledge Type description:',
-          ''
-        );
-
       try {
+        const body = {
+          name,
+          description
+        };
+
+        if (isEdit) {
+          body.index = Number(indexValue);
+        }
+
         await apiRequest(
-          'POST',
-          {
-            name:
-              name.trim(),
-            description:
-              String(
-                description || ''
-              ).trim()
-          }
+          isEdit ? 'PATCH' : 'POST',
+          body
         );
 
         await loadKnowledgeTypes();
+        closeTypeEditor();
 
       } catch (error) {
         alert(error.message);
@@ -324,56 +439,14 @@
     }
 
 
-    async function editKnowledgeType(index) {
-      const current =
-        knowledgeTypes[index];
+    function addKnowledgeType() {
+      showTypeEditor(null);
+    }
 
-      if (!current) {
-        return;
-      }
 
-      const name =
-        window.prompt(
-          'Edit Knowledge Type name:',
-          current.name || ''
-        );
-
-      if (
-        !name ||
-        !name.trim()
-      ) {
-        return;
-      }
-
-      const description =
-        window.prompt(
-          'Edit Knowledge Type description:',
-          current.description || ''
-        );
-
-      if (description === null) {
-        return;
-      }
-
-      try {
-        await apiRequest(
-          'PATCH',
-          {
-            index,
-            name:
-              name.trim(),
-            description:
-              String(
-                description || ''
-              ).trim()
-          }
-        );
-
-        await loadKnowledgeTypes();
-
-      } catch (error) {
-        alert(error.message);
-      }
+    function editKnowledgeType(index) {
+      if (!knowledgeTypes[index]) return;
+      showTypeEditor(index);
     }
 
 
@@ -419,6 +492,19 @@
         'click',
         addKnowledgeType
       );
+
+
+    document
+      .getElementById('type-edit-form')
+      .addEventListener('submit', saveKnowledgeType);
+
+    document
+      .getElementById('type-edit-back')
+      .addEventListener('click', closeTypeEditor);
+
+    document
+      .getElementById('type-edit-cancel')
+      .addEventListener('click', closeTypeEditor);
 
 
     document
