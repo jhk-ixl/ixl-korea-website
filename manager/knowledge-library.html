@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="manager.css">
 
   <script src="manager-common.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="manager-guard.js"></script>
 </head>
 
@@ -38,7 +39,7 @@
 
   <main class="manager-main">
 
-    <section class="manager-intro">
+    <section class="manager-intro" id="knowledge-library-intro">
 
       <span class="section-eyebrow">
         KNOWLEDGE MANAGEMENT
@@ -55,7 +56,7 @@
     </section>
 
 
-    <section class="manager-library-overview" aria-label="Knowledge management overview">
+    <section class="manager-library-overview" id="knowledge-library-overview" aria-label="Knowledge management overview">
 
       <article class="manager-overview-card">
         <span class="manager-overview-label">TOTAL KNOWLEDGE</span>
@@ -84,7 +85,7 @@
     </section>
 
 
-    <section class="library-toolbar">
+    <section class="library-toolbar" id="knowledge-library-toolbar">
 
       <div class="library-count">
 
@@ -109,7 +110,7 @@
     </section>
 
 
-    <section class="library-filters manager-filter-bar">
+    <section class="library-filters manager-filter-bar" id="knowledge-library-filters">
 
       <div class="library-search manager-field">
 
@@ -217,6 +218,7 @@
   <script>
 
     let allKnowledgeItems = [];
+    let assetRegistry = [];
 
 
     function getKnowledgeUrl(item) {
@@ -408,20 +410,221 @@
       return item?.versions?.ko?.summary || item?.versions?.other?.summary || item.summary || '—';
     }
 
-    function getKnowledgeMedia(item) {
-      const rep = item?.representativeMedia || {};
-      const media = rep.ko || rep.other || {};
+
+    async function loadKnowledgeAssetRegistry() {
+      const response =
+        await fetch(
+          '/api/insights-library?resource=assets',
+          { cache: 'no-store' }
+        );
+
+      const data =
+        await response.json()
+          .catch(() => []);
+
+      if (!response.ok) {
+        console.warn(
+          'Knowledge Library Asset Registry could not be loaded:',
+          data?.error || response.status
+        );
+        assetRegistry = [];
+        return;
+      }
+
+      assetRegistry =
+        Array.isArray(data)
+          ? data
+          : [];
+    }
+
+
+    function getLibraryAssetByKey(key) {
+      const clean = String(key || '').trim();
+      if (!clean) return null;
+
+      return (
+        assetRegistry.find(
+          asset =>
+            String(asset?.key || '').trim() === clean
+        ) ||
+        null
+      );
+    }
+
+
+    function getLibraryAssetSource(asset) {
+      return String(
+        asset?.url ||
+        asset?.downloadUrl ||
+        asset?.path ||
+        asset?.pathname ||
+        ''
+      ).trim();
+    }
+
+
+    function getLibraryMediaSource(media) {
+      const asset =
+        media?.assetKey
+          ? getLibraryAssetByKey(media.assetKey)
+          : null;
+
+      const registrySource =
+        getLibraryAssetSource(asset);
+
+      if (registrySource) {
+        return {
+          source: registrySource,
+          asset
+        };
+      }
+
       return {
-        type: rep.type || '',
-        url: media.url || item.url || '',
-        asset: media.asset || item.asset || '',
-        assetKey: media.assetKey || item.assetKey || '',
+        source:
+          String(
+            media?.asset ||
+            media?.url ||
+            ''
+          ).trim(),
+        asset
+      };
+    }
+
+
+    async function renderLibraryPdfThumbnail(canvas, source) {
+      if (!canvas || !source || !window.pdfjsLib) return;
+
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const pdfUrl =
+          source.startsWith('blob:')
+            ? source
+            : `/api/insights-library?resource=assetproxy&url=${encodeURIComponent(source)}`;
+
+        const pdf =
+          await window.pdfjsLib
+            .getDocument(pdfUrl)
+            .promise;
+
+        const page =
+          await pdf.getPage(1);
+
+        const base =
+          page.getViewport({ scale: 1 });
+
+        const host =
+          canvas.parentElement;
+
+        const maxWidth =
+          Math.max(
+            160,
+            host?.clientWidth || 520
+          );
+
+        const maxHeight =
+          Math.max(
+            160,
+            host?.clientHeight || 360
+          );
+
+        const scale =
+          Math.min(
+            maxWidth / base.width,
+            maxHeight / base.height
+          );
+
+        const viewport =
+          page.getViewport({
+            scale: Math.max(scale, .2)
+          });
+
+        const ratio =
+          Math.min(
+            window.devicePixelRatio || 1,
+            2
+          );
+
+        canvas.width =
+          Math.floor(viewport.width * ratio);
+
+        canvas.height =
+          Math.floor(viewport.height * ratio);
+
+        canvas.style.width =
+          `${viewport.width}px`;
+
+        canvas.style.height =
+          `${viewport.height}px`;
+
+        const context =
+          canvas.getContext('2d');
+
+        await page.render({
+          canvasContext: context,
+          viewport,
+          transform:
+            ratio === 1
+              ? null
+              : [ratio, 0, 0, ratio, 0, 0]
+        }).promise;
+
+      } catch (error) {
+        console.warn(
+          'Knowledge Library PDF thumbnail unavailable:',
+          error
+        );
+
+        const host =
+          canvas.parentElement;
+
+        if (host) {
+          host.innerHTML =
+            '<div class="knowledge-media-text">PDF</div>';
+        }
+      }
+    }
+
+
+    function getKnowledgeMedia(item) {
+      const rep =
+        item?.representativeMedia || {};
+
+      const media =
+        rep.ko ||
+        rep.other ||
+        {};
+
+      const assetKey =
+        media.assetKey ||
+        item.assetKey ||
+        '';
+
+      const registryAsset =
+        getLibraryAssetByKey(assetKey);
+
+      return {
+        type:
+          rep.type ||
+          '',
+        url:
+          media.url ||
+          item.url ||
+          '',
+        asset:
+          media.asset ||
+          item.asset ||
+          '',
+        assetKey,
         thumbnailTime:
           Number.isFinite(Number(media.thumbnailTime))
             ? Number(media.thumbnailTime)
             : Number.isFinite(Number(rep.thumbnailTime))
               ? Number(rep.thumbnailTime)
-              : 0.1
+              : Number.isFinite(Number(registryAsset?.thumbnailTime))
+                ? Number(registryAsset.thumbnailTime)
+                : .1
       };
     }
 
@@ -435,137 +638,374 @@
     }
 
     function renderLibraryMedia(item) {
-      const host = document.getElementById('library-detail-preview');
-      const media = getKnowledgeMedia(item);
-      const source = media.asset || media.url || '';
-      const type = media.type || inferLibraryMediaType(media);
+      const host =
+        document.getElementById(
+          'library-detail-preview'
+        );
+
+      const media =
+        getKnowledgeMedia(item);
+
+      const resolved =
+        getLibraryMediaSource(media);
+
+      const source =
+        resolved.source;
+
+      const registryAsset =
+        resolved.asset;
+
+      const type =
+        media.type ||
+        inferLibraryMediaType({
+          asset:
+            registryAsset?.pathname ||
+            registryAsset?.path ||
+            media.asset,
+          url:
+            source
+        });
 
       host.classList.remove('is-playing');
-      host.dataset.mediaKind = type || 'none';
-      host.dataset.mediaSource = source || '';
+      host.dataset.mediaKind =
+        type || 'none';
+      host.dataset.mediaSource =
+        source || '';
+      host.dataset.thumbnailTime =
+        String(media.thumbnailTime ?? .1);
 
       if (!source || type === 'none') {
-        host.innerHTML = '<div class="knowledge-media-text">TEXT</div>';
+        host.innerHTML =
+          '<div class="knowledge-media-text">TEXT</div>';
         return;
       }
 
-      const finalUrl =
-        /^https?:\/\//.test(source)
-          ? source
-          : '../' + source.replace(/^\/+/, '');
-
-      const safe = finalUrl
-        .replace(/&/g,'&amp;')
-        .replace(/"/g,'&quot;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
+      const safe =
+        source
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
 
       let preview = '';
 
       if (type === 'video') {
-        const thumbnailTime =
-          Number.isFinite(Number(media.thumbnailTime))
-            ? Number(media.thumbnailTime)
-            : 0.1;
-        host.dataset.thumbnailTime = String(thumbnailTime);
-        preview = `<video src="${safe}#t=${thumbnailTime}" muted preload="metadata"></video>`;
+        preview =
+          `<video src="${safe}#t=${Number(media.thumbnailTime || .1)}" muted preload="metadata"></video>`;
+
       } else if (type === 'image') {
-        preview = `<img src="${safe}" alt="">`;
+        preview =
+          `<img src="${safe}" alt="">`;
+
       } else if (type === 'pdf') {
-        preview = '<div class="knowledge-media-text">PDF</div>';
-      } else if (type === 'markdown' || type === 'document') {
-        preview = '<div class="knowledge-media-text">TEXT</div>';
-      } else if (type === 'presentation') {
-        preview = '<div class="knowledge-media-text">PPT</div>';
+        preview =
+          `<canvas class="pdf-thumbnail" id="library-pdf-thumbnail" aria-label="PDF first page thumbnail"></canvas>`;
+
+      } else if (
+        type === 'markdown' ||
+        type === 'document'
+      ) {
+        preview =
+          '<div class="knowledge-media-text">TEXT</div>';
+
+      } else if (
+        type === 'presentation'
+      ) {
+        preview =
+          '<div class="knowledge-media-text">PPT</div>';
+
       } else {
-        preview = '<div class="knowledge-media-text">VIEW</div>';
+        preview =
+          '<div class="knowledge-media-text">VIEW</div>';
       }
 
       host.innerHTML = `
-        <button type="button" class="knowledge-media-thumb" id="library-media-thumb">
+        <button
+          type="button"
+          class="knowledge-media-thumb"
+          id="library-media-thumb"
+        >
           ${preview}
-          <span class="knowledge-media-action">${type === 'video' ? 'PLAY' : 'VIEW'}</span>
+          <span class="knowledge-media-action">
+            ${type === 'video' ? 'PLAY' : 'VIEW'}
+          </span>
         </button>
       `;
+
+      if (type === 'pdf') {
+        requestAnimationFrame(() => {
+          renderLibraryPdfThumbnail(
+            document.getElementById('library-pdf-thumbnail'),
+            source
+          );
+        });
+      }
     }
 
+
     function activateLibraryMedia() {
-      const host = document.getElementById('library-detail-preview');
-      const type = host.dataset.mediaKind || 'none';
-      const source = host.dataset.mediaSource || '';
-      if (!source || type === 'none') return;
+      const host =
+        document.getElementById(
+          'library-detail-preview'
+        );
 
-      const finalUrl =
-        /^https?:\/\//.test(source)
-          ? source
-          : '../' + source.replace(/^\/+/, '');
+      const type =
+        host.dataset.mediaKind ||
+        'none';
 
-      if (type === 'video') {
-        const thumbnailTime = Number(host.dataset.thumbnailTime || 0.1);
-        const safe = finalUrl
-          .replace(/&/g,'&amp;')
-          .replace(/"/g,'&quot;')
-          .replace(/</g,'&lt;')
-          .replace(/>/g,'&gt;');
+      const source =
+        host.dataset.mediaSource ||
+        '';
 
-        host.classList.add('is-playing');
-        host.innerHTML = `
-          <video id="library-detail-player" src="${safe}#t=${thumbnailTime}" controls autoplay preload="metadata"></video>
-        `;
-        const player = document.getElementById('library-detail-player');
-        if (player) {
-          player.addEventListener('loadedmetadata', () => {
-            try {
-              if (thumbnailTime > 0 && player.currentTime < thumbnailTime) {
-                player.currentTime = thumbnailTime;
-              }
-            } catch (error) {}
-            player.play().catch(() => {});
-          }, { once: true });
-        }
+      if (!source || type === 'none') {
         return;
       }
 
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      if (type === 'video') {
+        const thumbnailTime =
+          Number(
+            host.dataset.thumbnailTime ||
+            .1
+          );
+
+        const safe =
+          source
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        host.classList.add('is-playing');
+
+        host.innerHTML = `
+          <video
+            id="library-detail-player"
+            src="${safe}#t=${thumbnailTime}"
+            controls
+            autoplay
+            preload="metadata"
+          ></video>
+        `;
+
+        const player =
+          document.getElementById(
+            'library-detail-player'
+          );
+
+        if (player) {
+          player.addEventListener(
+            'loadedmetadata',
+            () => {
+              try {
+                if (
+                  thumbnailTime > 0 &&
+                  player.currentTime < thumbnailTime
+                ) {
+                  player.currentTime =
+                    thumbnailTime;
+                }
+              } catch (error) {}
+
+              player
+                .play()
+                .catch(() => {});
+            },
+            { once: true }
+          );
+        }
+
+        return;
+      }
+
+      // Registry URLs are already public/Blob URLs.
+      // Only truly relative legacy paths are normalized to the site root.
+      const finalUrl =
+        /^https?:\/\//i.test(source)
+          ? source
+          : source.startsWith('/')
+            ? source
+            : '../' + source.replace(/^\/+/, '');
+
+      window.open(
+        finalUrl,
+        '_blank',
+        'noopener,noreferrer'
+      );
     }
+
+
+    function setKnowledgeLibraryListVisible(visible) {
+      [
+        'knowledge-library-intro',
+        'knowledge-library-overview',
+        'knowledge-library-toolbar',
+        'knowledge-library-filters',
+        'knowledge-table-scroll-wrap',
+        'library-empty'
+      ].forEach(id => {
+        const element =
+          document.getElementById(id);
+
+        if (!element) return;
+
+        if (id === 'library-empty') {
+          if (!visible) {
+            element.dataset.previousDisplay =
+              element.style.display || '';
+            element.style.display = 'none';
+          } else if (
+            element.dataset.previousDisplay !== undefined
+          ) {
+            element.style.display =
+              element.dataset.previousDisplay;
+          }
+          return;
+        }
+
+        element.hidden =
+          !visible;
+      });
+
+      const wrap =
+        document.getElementById(
+          'knowledge-table-scroll-wrap'
+        );
+
+      const sticky =
+        wrap?.previousElementSibling;
+
+      if (
+        sticky?.classList.contains(
+          'manager-canonical-sticky'
+        )
+      ) {
+        sticky.hidden =
+          !visible;
+      }
+    }
+
 
     function openLibraryDetail(index) {
-      const item = allKnowledgeItems[index];
+      const item =
+        allKnowledgeItems[index];
+
       if (!item) return;
-      const detailTitle = getKnowledgeDisplayTitle(item);
-      document.getElementById('library-detail-title').textContent = detailTitle;
-      document.getElementById('library-detail-meta-title').textContent = detailTitle;
-      document.getElementById('library-detail-type').textContent = getKnowledgeTypeName(item.type);
-      document.getElementById('library-detail-date').textContent = item.dateLabel || item.date || '—';
-      document.getElementById('library-detail-access').textContent = item.access || 'Public';
-      document.getElementById('library-detail-topics').textContent = getKnowledgeTopics(item).join(', ') || '—';
-      document.getElementById('library-detail-industries').textContent = getKnowledgeIndustries(item).join(', ') || '—';
-      document.getElementById('library-detail-programs').textContent = getKnowledgePrograms(item).join(', ') || '—';
-      document.getElementById('library-detail-tags').textContent = getKnowledgeTags(item).join(', ') || '—';
-      document.getElementById('library-detail-summary').textContent = getKnowledgeDisplaySummary(item);
-      document.getElementById('library-detail-edit').href =
-        `insights-library.html?edit=${encodeURIComponent(item.knowledgeId || item.slug || index)}`;
+
+      const detailTitle =
+        getKnowledgeDisplayTitle(item);
+
+      document.getElementById(
+        'library-detail-title'
+      ).textContent =
+        detailTitle;
+
+      document.getElementById(
+        'library-detail-meta-title'
+      ).textContent =
+        detailTitle;
+
+      document.getElementById(
+        'library-detail-type'
+      ).textContent =
+        getKnowledgeTypeName(item.type);
+
+      document.getElementById(
+        'library-detail-date'
+      ).textContent =
+        item.dateLabel ||
+        item.date ||
+        '—';
+
+      document.getElementById(
+        'library-detail-access'
+      ).textContent =
+        item.access ||
+        'Public';
+
+      document.getElementById(
+        'library-detail-topics'
+      ).textContent =
+        getKnowledgeTopics(item)
+          .join(', ') ||
+        '—';
+
+      document.getElementById(
+        'library-detail-industries'
+      ).textContent =
+        getKnowledgeIndustries(item)
+          .join(', ') ||
+        '—';
+
+      document.getElementById(
+        'library-detail-programs'
+      ).textContent =
+        getKnowledgePrograms(item)
+          .join(', ') ||
+        '—';
+
+      document.getElementById(
+        'library-detail-tags'
+      ).textContent =
+        getKnowledgeTags(item)
+          .join(', ') ||
+        '—';
+
+      document.getElementById(
+        'library-detail-summary'
+      ).textContent =
+        getKnowledgeDisplaySummary(item);
+
+      document.getElementById(
+        'library-detail-edit'
+      ).href =
+        `insights-library.html?edit=${encodeURIComponent(
+          item.knowledgeId ||
+          item.slug ||
+          index
+        )}`;
+
       renderLibraryMedia(item);
 
-      document.querySelector('.manager-library-overview').hidden = true;
-      document.querySelector('.library-toolbar').hidden = true;
-      document.querySelector('.library-filters').hidden = true;
-      document.getElementById('knowledge-table-scroll-wrap').hidden = true;
-      const autoTop = document.getElementById('knowledge-table-scroll-wrap').previousElementSibling;
-      if (autoTop?.classList.contains('manager-auto-top-scroll')) autoTop.hidden = true;
-      document.getElementById('library-knowledge-detail').classList.add('open');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setKnowledgeLibraryListVisible(false);
+
+      const detail =
+        document.getElementById(
+          'library-knowledge-detail'
+        );
+
+      detail.classList.add('open');
+
+      requestAnimationFrame(() => {
+        detail.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      });
     }
 
+
     function closeLibraryDetail() {
-      document.getElementById('library-knowledge-detail').classList.remove('open');
-      document.querySelector('.manager-library-overview').hidden = false;
-      document.querySelector('.library-toolbar').hidden = false;
-      document.querySelector('.library-filters').hidden = false;
-      document.getElementById('knowledge-table-scroll-wrap').hidden = false;
-      const autoTop = document.getElementById('knowledge-table-scroll-wrap').previousElementSibling;
-      if (autoTop?.classList.contains('manager-auto-top-scroll')) autoTop.hidden = false;
+      const detail =
+        document.getElementById(
+          'library-knowledge-detail'
+        );
+
+      detail.classList.remove('open');
+
+      setKnowledgeLibraryListVisible(true);
+
+      requestAnimationFrame(() => {
+        document
+          .getElementById(
+            'knowledge-library-intro'
+          )
+          ?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+      });
     }
+
 
     function renderKnowledge(items) {
 
@@ -1033,8 +1473,13 @@
         );
 
 
-        const knowledgeTypes =
-          await loadKnowledgeTypes();
+        const [
+          knowledgeTypes
+        ] =
+          await Promise.all([
+            loadKnowledgeTypes(),
+            loadKnowledgeAssetRegistry()
+          ]);
 
 
         buildTypeFilter(

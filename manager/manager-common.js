@@ -301,36 +301,51 @@
     };
 
     const alignColumns = () => {
-      // Temporarily clear translation for stable measurement.
+      // Measure the source table at its natural CSS width every time.
+      // Never feed a previously computed width back into the next measurement.
       table.style.transform = 'translateX(0px)';
+      table.style.removeProperty('width');
+      table.style.removeProperty('min-width');
+
       headerTable.style.transform = 'translateX(0px)';
+      headerTable.style.removeProperty('width');
+      headerTable.style.removeProperty('min-width');
 
       const sourceCells = sourceHead.rows[0]
         ? [...sourceHead.rows[0].cells]
         : [];
+
       const cloneCells = clonedHead.rows[0]
         ? [...clonedHead.rows[0].cells]
         : [];
 
-      const widths = sourceCells.map(cell => {
-        const rect = cell.getBoundingClientRect();
-        return Math.max(1, rect.width);
+      // Allow the clone cells to be re-measured cleanly.
+      cloneCells.forEach(cell => {
+        cell.style.removeProperty('width');
+        cell.style.removeProperty('min-width');
+        cell.style.removeProperty('max-width');
       });
 
       const totalWidth =
         Math.max(
           table.scrollWidth,
-          widths.reduce((sum, width) => sum + width, 0),
           wrap.clientWidth
         );
 
-      table.style.width = `${totalWidth}px`;
-      table.style.minWidth = `${totalWidth}px`;
+      const widths =
+        sourceCells.map(cell =>
+          Math.max(
+            1,
+            cell.getBoundingClientRect().width
+          )
+        );
+
       headerTable.style.width = `${totalWidth}px`;
       headerTable.style.minWidth = `${totalWidth}px`;
 
       cloneCells.forEach((cell, index) => {
         if (!widths[index]) return;
+
         cell.style.width = `${widths[index]}px`;
         cell.style.minWidth = `${widths[index]}px`;
         cell.style.maxWidth = `${widths[index]}px`;
@@ -339,7 +354,14 @@
 
       inner.style.width = `${totalWidth}px`;
 
-      top.scrollLeft = Math.min(currentLeft, Math.max(0, totalWidth - wrap.clientWidth));
+      currentLeft =
+        Math.min(
+          currentLeft,
+          Math.max(0, totalWidth - wrap.clientWidth)
+        );
+
+      top.scrollLeft = currentLeft;
+
       applyHorizontalPosition();
       syncIndicatorState();
     };
@@ -377,8 +399,23 @@
     if (window.ResizeObserver) {
       const observer =
         new ResizeObserver(() => requestAnimationFrame(alignColumns));
-      observer.observe(table);
       observer.observe(wrap);
+    }
+
+    const bodyObserver =
+      new MutationObserver(() =>
+        requestAnimationFrame(alignColumns)
+      );
+
+    if (table.tBodies[0]) {
+      bodyObserver.observe(
+        table.tBodies[0],
+        {
+          childList: true,
+          subtree: true,
+          characterData: true
+        }
+      );
     }
 
     const mutationObserver =
