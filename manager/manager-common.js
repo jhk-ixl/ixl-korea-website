@@ -200,65 +200,10 @@
 
 
 
-  function ensureCanonicalStickyStyles() {
-    if (document.getElementById('manager-native-sticky-table-styles')) return;
-
-    const style = document.createElement('style');
-    style.id = 'manager-native-sticky-table-styles';
-    style.textContent = `
-      .manager-canonical-sticky {
-        position: sticky;
-        top: 0;
-        z-index: 30;
-        background: #fff;
-      }
-
-      .manager-auto-top-scroll {
-        overflow-x: auto;
-        overflow-y: hidden;
-        height: 18px;
-        scrollbar-gutter: stable;
-        background: #fff;
-      }
-
-      .manager-auto-top-scroll-inner {
-        height: 1px;
-      }
-
-      .manager-native-sticky-wrap {
-        overflow: hidden !important;
-      }
-
-      .manager-native-sticky-table {
-        border-collapse: separate;
-        border-spacing: 0;
-      }
-
-      .manager-native-sticky-table thead th {
-        position: sticky;
-        top: 18px;
-        z-index: 20;
-        background: #f8fafc;
-      }
-
-      .manager-native-sticky-table thead th::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: -1px;
-        height: 1px;
-        background: #dbe3ec;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
-
   function initCanonicalScrollTable(wrap) {
     if (!wrap || wrap.dataset.managerAutoScrollBound) return;
 
-    // Asset Library has its own split-grid implementation.
+    // Asset Library already has the canonical split-header implementation.
     if (
       wrap.classList.contains('asset-table-wrap') ||
       wrap.closest('.asset-grid-sticky') ||
@@ -268,20 +213,13 @@
       return;
     }
 
-    const table = wrap.querySelector(
-      'table.manager-canonical-table, table.library-table'
-    );
-    if (!table || !table.tHead) return;
+    const table = wrap.querySelector('table.manager-canonical-table, table.library-table');
+    if (!table) return;
 
-    ensureCanonicalStickyStyles();
+    const sourceHead = table.tHead;
+    if (!sourceHead) return;
 
-    /*
-      Canonical list geometry:
-      - ONE real table only (thead + tbody stay together)
-      - top horizontal scrollbar drives the table's X transform
-      - the real thead is sticky during page scroll
-      Because header and rows remain in the same table, columns cannot drift.
-    */
+    // Build one sticky unit: top horizontal scrollbar + separate header viewport.
     const sticky = document.createElement('div');
     sticky.className = 'manager-canonical-sticky';
 
@@ -291,55 +229,200 @@
 
     const inner = document.createElement('div');
     inner.className = 'manager-auto-top-scroll-inner';
-
     top.appendChild(inner);
+
+    const headerViewport = document.createElement('div');
+    headerViewport.className = 'manager-canonical-header-viewport';
+
+    const headerTable = document.createElement('table');
+    headerTable.className = `${table.className} manager-canonical-header-table`;
+    headerTable.removeAttribute('id');
+    headerTable.removeAttribute('data-manager-sortable');
+    headerTable.removeAttribute('data-default-sort-key');
+    headerTable.removeAttribute('data-default-sort-direction');
+
+    // Preserve colgroup if the source table has one.
+    const sourceColgroup = table.querySelector(':scope > colgroup');
+    if (sourceColgroup) {
+      headerTable.appendChild(sourceColgroup.cloneNode(true));
+    }
+
+    const clonedHead = sourceHead.cloneNode(true);
+    clonedHead.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+    headerTable.appendChild(clonedHead);
+
+    headerViewport.appendChild(headerTable);
     sticky.appendChild(top);
+    sticky.appendChild(headerViewport);
     wrap.parentNode.insertBefore(sticky, wrap);
 
-    wrap.classList.add('manager-native-sticky-wrap');
-    table.classList.add('manager-native-sticky-table');
-
-    // Remove legacy cloned-header state if this function is re-run on a page
-    // that still contains old generated markup.
-    const previousHeaderViewport =
-      sticky.querySelector('.manager-canonical-header-viewport');
-    if (previousHeaderViewport) previousHeaderViewport.remove();
+    table.classList.add('manager-canonical-body-table');
 
     let currentLeft = 0;
 
-    const getTotalWidth = () =>
-      Math.max(
-        table.scrollWidth,
-        table.getBoundingClientRect().width,
-        wrap.clientWidth
-      );
+    const syncIndicatorState = () => {
+      const originalButtons =
+        sourceHead.querySelectorAll('[data-sort-key]');
+      const clonedButtons =
+        clonedHead.querySelectorAll('[data-sort-key]');
+
+      clonedButtons.forEach(clone => {
+        const key = clone.dataset.sortKey;
+        const original =
+          [...originalButtons].find(button => button.dataset.sortKey === key);
+
+        clone.dataset.sortDirection =
+          original?.dataset.sortDirection || '';
+
+        const originalTh = original?.closest('th');
+        const cloneTh = clone.closest('th');
+
+        if (cloneTh && originalTh) {
+          cloneTh.setAttribute(
+            'aria-sort',
+            originalTh.getAttribute('aria-sort') || 'none'
+          );
+        }
+      });
+    };
 
     const applyHorizontalPosition = () => {
-      const totalWidth = getTotalWidth();
-      const maxLeft = Math.max(0, totalWidth - wrap.clientWidth);
+      const maxLeft =
+        Math.max(0, table.scrollWidth - wrap.clientWidth);
 
-      currentLeft = Math.max(
-        0,
-        Math.min(top.scrollLeft, maxLeft)
-      );
+      currentLeft =
+        Math.max(0, Math.min(top.scrollLeft, maxLeft));
 
-      table.style.transform = `translateX(${-currentLeft}px)`;
-      table.style.transformOrigin = 'top left';
+      table.style.transform =
+        `translateX(${-currentLeft}px)`;
+
+      headerTable.style.transform =
+        `translateX(${-currentLeft}px)`;
     };
 
-    const alignTable = () => {
-      // Temporarily reset X transform so natural table width is measured.
+    const alignColumns = () => {
+      // Measure from the real BODY, then force BOTH tables to use
+      // the exact same colgroup geometry.
       table.style.transform = 'translateX(0px)';
+      headerTable.style.transform = 'translateX(0px)';
 
-      const totalWidth = getTotalWidth();
+      const sourceCells = sourceHead.rows[0]
+        ? [...sourceHead.rows[0].cells]
+        : [];
+
+      const cloneCells = clonedHead.rows[0]
+        ? [...clonedHead.rows[0].cells]
+        : [];
+
+      const bodyRow =
+        table.tBodies?.[0]?.rows?.[0] || null;
+
+      const geometryCells =
+        bodyRow && bodyRow.cells.length === sourceCells.length
+          ? [...bodyRow.cells]
+          : sourceCells;
+
+      if (!geometryCells.length) return;
+
+      const widths =
+        geometryCells.map(cell =>
+          Math.max(
+            1,
+            cell.getBoundingClientRect().width
+          )
+        );
+
+      const measuredWidth =
+        widths.reduce((sum, width) => sum + width, 0);
+
+      const totalWidth =
+        Math.max(
+          measuredWidth,
+          table.scrollWidth,
+          wrap.clientWidth
+        );
+
+      const applyColgroup = targetTable => {
+        let colgroup =
+          targetTable.querySelector(':scope > colgroup');
+
+        if (!colgroup) {
+          colgroup = document.createElement('colgroup');
+          targetTable.insertBefore(
+            colgroup,
+            targetTable.firstChild
+          );
+        }
+
+        while (colgroup.children.length < widths.length) {
+          colgroup.appendChild(document.createElement('col'));
+        }
+
+        while (colgroup.children.length > widths.length) {
+          colgroup.lastElementChild?.remove();
+        }
+
+        [...colgroup.children].forEach((col, index) => {
+          const width = widths[index];
+          col.style.width = `${width}px`;
+          col.style.minWidth = `${width}px`;
+          col.style.maxWidth = `${width}px`;
+        });
+      };
+
+      applyColgroup(table);
+      applyColgroup(headerTable);
+
+      table.style.width = `${totalWidth}px`;
+      table.style.minWidth = `${totalWidth}px`;
+      table.style.tableLayout = 'fixed';
+
+      headerTable.style.width = `${totalWidth}px`;
+      headerTable.style.minWidth = `${totalWidth}px`;
+      headerTable.style.tableLayout = 'fixed';
+
+      [...sourceCells, ...cloneCells].forEach(cell => {
+        cell.style.removeProperty('width');
+        cell.style.removeProperty('min-width');
+        cell.style.removeProperty('max-width');
+        cell.style.boxSizing = 'border-box';
+      });
+
       inner.style.width = `${totalWidth}px`;
 
-      const maxLeft = Math.max(0, totalWidth - wrap.clientWidth);
-      currentLeft = Math.min(currentLeft, maxLeft);
+      currentLeft =
+        Math.min(
+          currentLeft,
+          Math.max(0, totalWidth - wrap.clientWidth)
+        );
 
       top.scrollLeft = currentLeft;
+
       applyHorizontalPosition();
+      syncIndicatorState();
     };
+
+    // Header clone forwards sorting to the real source header.
+    clonedHead.addEventListener('click', event => {
+      const cloneButton = event.target.closest('[data-sort-key]');
+      if (!cloneButton) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const originalButton =
+        sourceHead.querySelector(
+          `[data-sort-key="${CSS.escape(cloneButton.dataset.sortKey)}"]`
+        );
+
+      if (originalButton) {
+        originalButton.click();
+        requestAnimationFrame(() => {
+          alignColumns();
+          syncIndicatorState();
+        });
+      }
+    });
 
     top.addEventListener(
       'scroll',
@@ -347,83 +430,65 @@
       { passive: true }
     );
 
-    window.addEventListener(
-      'resize',
-      () => requestAnimationFrame(alignTable)
-    );
+    window.addEventListener('resize', alignColumns);
 
     if (window.ResizeObserver) {
       const observer =
-        new ResizeObserver(() =>
-          requestAnimationFrame(alignTable)
-        );
-
+        new ResizeObserver(() => requestAnimationFrame(alignColumns));
       observer.observe(wrap);
-      observer.observe(table);
     }
 
-    if (window.MutationObserver) {
-      const bodyObserver =
-        new MutationObserver(() =>
-          requestAnimationFrame(alignTable)
-        );
+    const bodyObserver =
+      new MutationObserver(() =>
+        requestAnimationFrame(alignColumns)
+      );
 
-      if (table.tBodies[0]) {
-        bodyObserver.observe(
-          table.tBodies[0],
-          {
-            childList: true,
-            subtree: true,
-            characterData: true
-          }
-        );
-      }
+    if (table.tBodies[0]) {
+      bodyObserver.observe(
+        table.tBodies[0],
+        {
+          childList: true,
+          subtree: true,
+          characterData: true
+        }
+      );
     }
+
+    const mutationObserver =
+      new MutationObserver(syncIndicatorState);
+
+    mutationObserver.observe(sourceHead, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['data-sort-direction', 'aria-sort']
+    });
 
     wrap.dataset.managerAutoScrollBound = 'true';
     sticky.dataset.managerCanonicalSticky = 'true';
     sticky.dataset.managerCanonicalFor = wrap.id || '';
 
     const syncVisibility = () => {
-      sticky.hidden = Boolean(
-        wrap.hidden ||
-        wrap.closest('[hidden]')
-      );
+      sticky.hidden = Boolean(wrap.hidden || wrap.closest('[hidden]'));
     };
 
-    if (window.MutationObserver) {
-      const visibilityObserver =
-        new MutationObserver(syncVisibility);
-
-      visibilityObserver.observe(
-        wrap,
-        {
-          attributes: true,
-          attributeFilter: ['hidden', 'class', 'style']
-        }
-      );
-
-      let ancestor = wrap.parentElement;
-
-      while (
-        ancestor &&
-        ancestor !== document.body
-      ) {
-        visibilityObserver.observe(
-          ancestor,
-          {
-            attributes: true,
-            attributeFilter: ['hidden', 'class', 'style']
-          }
-        );
-
-        ancestor = ancestor.parentElement;
-      }
+    const visibilityObserver = new MutationObserver(syncVisibility);
+    visibilityObserver.observe(wrap, {
+      attributes: true,
+      attributeFilter: ['hidden', 'class', 'style']
+    });
+    let ancestor = wrap.parentElement;
+    while (ancestor && ancestor !== document.body) {
+      visibilityObserver.observe(ancestor, {
+        attributes: true,
+        attributeFilter: ['hidden', 'class', 'style']
+      });
+      ancestor = ancestor.parentElement;
     }
 
     requestAnimationFrame(() => {
       syncVisibility();
-      alignTable();
+      alignColumns();
+      syncIndicatorState();
     });
   }
 
