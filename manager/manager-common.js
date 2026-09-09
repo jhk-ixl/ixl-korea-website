@@ -319,36 +319,75 @@
         ? [...clonedHead.rows[0].cells]
         : [];
 
-      // Allow the clone cells to be re-measured cleanly.
-      cloneCells.forEach(cell => {
-        cell.style.removeProperty('width');
-        cell.style.removeProperty('min-width');
-        cell.style.removeProperty('max-width');
-      });
+      // The body row is the geometry authority.
+      // Measuring only TH cells can drift from TD widths when the body
+      // contains different content/padding. Use the first rendered body row.
+      const bodyRow =
+        table.tBodies?.[0]?.rows?.[0] || null;
 
-      const totalWidth =
-        Math.max(
-          table.scrollWidth,
-          wrap.clientWidth
-        );
+      const geometryCells =
+        bodyRow && bodyRow.cells.length === sourceCells.length
+          ? [...bodyRow.cells]
+          : sourceCells;
 
       const widths =
-        sourceCells.map(cell =>
+        geometryCells.map(cell =>
           Math.max(
             1,
             cell.getBoundingClientRect().width
           )
         );
 
+      const measuredWidth =
+        widths.reduce((sum, width) => sum + width, 0);
+
+      const totalWidth =
+        Math.max(
+          measuredWidth,
+          table.getBoundingClientRect().width,
+          table.scrollWidth,
+          wrap.clientWidth
+        );
+
       headerTable.style.width = `${totalWidth}px`;
       headerTable.style.minWidth = `${totalWidth}px`;
+      headerTable.style.tableLayout = 'fixed';
 
-      cloneCells.forEach((cell, index) => {
-        if (!widths[index]) return;
+      // Synchronize the cloned COLGROUP to the actual body cell widths.
+      // This makes the cloned sticky header use the exact same column grid
+      // as the source BODY rather than independently calculating TH widths.
+      let headerColgroup =
+        headerTable.querySelector(':scope > colgroup');
 
-        cell.style.width = `${widths[index]}px`;
-        cell.style.minWidth = `${widths[index]}px`;
-        cell.style.maxWidth = `${widths[index]}px`;
+      if (!headerColgroup) {
+        headerColgroup = document.createElement('colgroup');
+        headerTable.insertBefore(
+          headerColgroup,
+          headerTable.firstChild
+        );
+      }
+
+      while (headerColgroup.children.length < widths.length) {
+        headerColgroup.appendChild(document.createElement('col'));
+      }
+
+      while (headerColgroup.children.length > widths.length) {
+        headerColgroup.lastElementChild?.remove();
+      }
+
+      [...headerColgroup.children].forEach((col, index) => {
+        const width = widths[index];
+        if (!width) return;
+        col.style.width = `${width}px`;
+        col.style.minWidth = `${width}px`;
+        col.style.maxWidth = `${width}px`;
+      });
+
+      // TH inline widths conflict with COLGROUP widths in fixed layout.
+      cloneCells.forEach(cell => {
+        cell.style.removeProperty('width');
+        cell.style.removeProperty('min-width');
+        cell.style.removeProperty('max-width');
         cell.style.boxSizing = 'border-box';
       });
 
