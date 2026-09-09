@@ -19,6 +19,8 @@
   </script>
 
   <style>
+    .insights-editor [hidden] { display: none !important; }
+
 
     /* =========================================
        KNOWLEDGE BUILDER
@@ -928,6 +930,7 @@
             <dt>Type</dt><dd id="knowledge-detail-type">—</dd>
             <dt>Date</dt><dd id="knowledge-detail-date">—</dd>
             <dt>Access</dt><dd id="knowledge-detail-access">—</dd>
+            <dt>Publication Status</dt><dd id="knowledge-detail-publication-status">—</dd>
             <dt>Author</dt><dd id="knowledge-detail-author">—</dd>
             <dt>Source</dt><dd id="knowledge-detail-source">—</dd>
             <dt>Topics</dt><dd id="knowledge-detail-topics">—</dd>
@@ -1148,7 +1151,7 @@
           <input type="text" id="edit-content-path" placeholder="insightscontent/articles/...md">
         </div>
 
-        <div class="insights-field manager-editable-field full">
+        <div class="insights-field manager-editable-field full" id="builder-markdown-body-field">
           <label for="edit-version-body"><span id="version-body-label">Korean</span> Markdown Body</label>
           <textarea
             id="edit-version-body"
@@ -1350,7 +1353,6 @@
             <th><button type="button" class="manager-sort-button" data-sort-key="date">Date <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="type">Type <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="title">Title <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
-            <th><button type="button" class="manager-sort-button" data-sort-key="label">Display Label <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th><button type="button" class="manager-sort-button" data-sort-key="access">Access <span class="manager-sort-indicator" aria-hidden="true"></span></button></th>
             <th>Actions</th>
           </tr>
@@ -2257,6 +2259,7 @@
       document.getElementById('cms-article-picker-field').hidden = !isCms;
       document.getElementById('cms-ref-field').hidden = !isCms;
       document.getElementById('cms-path-field').hidden = !isCms;
+      document.getElementById('builder-markdown-body-field').hidden = isCms;
       const body = document.getElementById('edit-version-body');
       body.disabled = isCms;
       body.placeholder = isCms
@@ -2559,10 +2562,6 @@
                 ${escapeHtml(getDisplayTitle(item))}
               </td>
 
-              <td data-sort-value="${escapeHtml(item.dateLabel || '')}">
-                ${escapeHtml(item.dateLabel || '—')}
-              </td>
-
               <td data-sort-value="${escapeHtml(item.access || 'Public')}">
                 ${escapeHtml(item.access || 'Public')}
               </td>
@@ -2648,22 +2647,14 @@
     }
 
     function getDetailSummary(item) {
-      return (
-        getVersion(item, 'ko').summary ||
-        getVersion(item, 'other').summary ||
-        item.summary ||
-        '—'
-      );
+      const versionKey = chooseInitialKnowledgeVersion(item);
+      return String(getVersion(item, versionKey).summary || '').trim() || '—';
     }
 
 
     function getDetailBody(item) {
-      return (
-        getVersion(item, 'ko').body ||
-        getVersion(item, 'other').body ||
-        item.body ||
-        ''
-      );
+      const versionKey = chooseInitialKnowledgeVersion(item);
+      return String(getVersion(item, versionKey).body || '');
     }
 
     function renderBuilderBodyFirstPage(host, item) {
@@ -2845,6 +2836,7 @@
       document.getElementById('knowledge-detail-type').textContent = getKnowledgeTypeName(item.type);
       document.getElementById('knowledge-detail-date').textContent = item.date || '—';
       document.getElementById('knowledge-detail-access').textContent = item.access || 'Public';
+      document.getElementById('knowledge-detail-publication-status').textContent = item.publicationStatus || 'Draft';
       document.getElementById('knowledge-detail-author').textContent = item.author || '—';
       document.getElementById('knowledge-detail-source').textContent = item.source || '—';
       document.getElementById('knowledge-detail-topics').textContent = (item.topics || []).join(', ') || '—';
@@ -3160,9 +3152,9 @@
         return;
       }
 
-      if ((koHasAny && (!versions.ko.title || !versions.ko.summary)) ||
-          (otherHasAny && (!versions.other.title || !versions.other.summary))) {
-        showMessage('Each used version requires both Title and Summary.', 'error');
+      if ((koHasAny && !versions.ko.title) ||
+          (otherHasAny && !versions.other.title)) {
+        showMessage('Each used version requires a Title.', 'error');
         return;
       }
 
