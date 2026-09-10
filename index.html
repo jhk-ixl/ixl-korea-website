@@ -2051,7 +2051,7 @@ let assetUsage = [];
                 assetsResponse,
                 usageResponse
             ] = await Promise.all([
-                fetch('insightscontent/knowledge-data.json', {
+                fetch('/api/insights-library?resource=public-knowledge', {
                     cache: 'no-store'
                 }),
                 fetch('insightscontent/asset-registry.json', {
