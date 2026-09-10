@@ -1119,9 +1119,9 @@ export default async function handler(req, res) {
         throw error;
       }
 
-      if ((koHasAny && (!versions.ko.title || !versions.ko.summary)) ||
-          (otherHasAny && (!versions.other.title || !versions.other.summary))) {
-        const error = new Error('Each used Knowledge version requires Title and Summary.');
+      if ((koHasAny && !versions.ko.title) ||
+          (otherHasAny && !versions.other.title)) {
+        const error = new Error('Each used Knowledge version requires a Title.');
         error.statusCode = 400;
         throw error;
       }
