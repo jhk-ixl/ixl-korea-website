@@ -1,4 +1,4 @@
-/* =========================================
+﻿/* =========================================
    IXL KOREA MANAGER
    COMMON UTILITIES
    Asset Management is the canonical UI/UX pattern.
@@ -301,8 +301,10 @@
     };
 
     const alignColumns = () => {
-      // Measure from the real BODY, then force BOTH tables to use
-      // the exact same colgroup geometry.
+      // Always measure from a clean, natural table geometry.
+      // This prevents widths applied by a previous alignment pass
+      // from becoming the input of the next pass.
+
       table.style.transform = 'translateX(0px)';
       headerTable.style.transform = 'translateX(0px)';
 
@@ -314,6 +316,40 @@
         ? [...clonedHead.rows[0].cells]
         : [];
 
+      if (!sourceCells.length) return;
+
+      const resetColgroup = targetTable => {
+        const colgroup =
+          targetTable.querySelector(':scope > colgroup');
+
+        if (!colgroup) return;
+
+        [...colgroup.children].forEach(col => {
+          col.style.removeProperty('width');
+          col.style.removeProperty('min-width');
+          col.style.removeProperty('max-width');
+        });
+      };
+
+      // Remove geometry imposed by the previous alignment run.
+      resetColgroup(table);
+      resetColgroup(headerTable);
+
+      table.style.removeProperty('width');
+      table.style.removeProperty('min-width');
+      table.style.removeProperty('table-layout');
+
+      headerTable.style.removeProperty('width');
+      headerTable.style.removeProperty('min-width');
+      headerTable.style.removeProperty('table-layout');
+
+      [...sourceCells, ...cloneCells].forEach(cell => {
+        cell.style.removeProperty('width');
+        cell.style.removeProperty('min-width');
+        cell.style.removeProperty('max-width');
+        cell.style.boxSizing = 'border-box';
+      });
+
       const bodyRow =
         table.tBodies?.[0]?.rows?.[0] || null;
 
@@ -324,21 +360,26 @@
 
       if (!geometryCells.length) return;
 
-      const widths =
-        geometryCells.map(cell =>
-          Math.max(
-            1,
-            cell.getBoundingClientRect().width
-          )
-        );
+      // Measure only after the old forced geometry has been removed.
+      const widths = geometryCells.map(cell =>
+        Math.max(
+          1,
+          Math.ceil(cell.getBoundingClientRect().width)
+        )
+      );
 
       const measuredWidth =
         widths.reduce((sum, width) => sum + width, 0);
 
+      // At this point scrollWidth represents the natural table,
+      // not the width imposed by the previous alignment pass.
+      const naturalScrollWidth =
+        Math.ceil(table.scrollWidth);
+
       const totalWidth =
         Math.max(
           measuredWidth,
-          table.scrollWidth,
+          naturalScrollWidth,
           wrap.clientWidth
         );
 
@@ -364,6 +405,7 @@
 
         [...colgroup.children].forEach((col, index) => {
           const width = widths[index];
+
           col.style.width = `${width}px`;
           col.style.minWidth = `${width}px`;
           col.style.maxWidth = `${width}px`;
@@ -380,13 +422,6 @@
       headerTable.style.width = `${totalWidth}px`;
       headerTable.style.minWidth = `${totalWidth}px`;
       headerTable.style.tableLayout = 'fixed';
-
-      [...sourceCells, ...cloneCells].forEach(cell => {
-        cell.style.removeProperty('width');
-        cell.style.removeProperty('min-width');
-        cell.style.removeProperty('max-width');
-        cell.style.boxSizing = 'border-box';
-      });
 
       inner.style.width = `${totalWidth}px`;
 
