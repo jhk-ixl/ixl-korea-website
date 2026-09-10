@@ -89,6 +89,14 @@ export default async function handler(req, res) {
     req.method === 'GET' &&
     resource === 'asset-layout';
 
+  const isPublicKnowledge =
+    req.method === 'GET' &&
+    resource === 'public-knowledge';
+
+  const isPublicReadOnly =
+    isPublicAssetLayout ||
+    isPublicKnowledge;
+
 
   /* =========================================
      REQUIRE MANAGER AUTHENTICATION
@@ -97,7 +105,7 @@ export default async function handler(req, res) {
 
   let manager = null;
 
-  if (!isPublicAssetLayout) {
+  if (!isPublicReadOnly) {
     manager = requireManager(req, res);
 
     if (!manager) {
@@ -289,7 +297,84 @@ export default async function handler(req, res) {
     }
   }
 
+  /* =========================================
+     PUBLIC KNOWLEDGE
+     Public + Published only
+     ========================================= */
 
+  if (isPublicKnowledge) {
+    try {
+      const config = DATA_FILES.knowledge;
+
+      const url =
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+        `/contents/${config.path}`;
+
+      const response = await fetch(
+        `${url}?ref=${GITHUB_BRANCH}`,
+        {
+          headers: githubHeaders,
+          cache: 'no-store'
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          'Public Knowledge data could not be loaded.'
+        );
+      }
+
+      const file = await response.json();
+
+      const data = JSON.parse(
+        Buffer
+          .from(file.content || '', 'base64')
+          .toString('utf8')
+      );
+
+      const items =
+        Array.isArray(data?.[config.arrayKey])
+          ? data[config.arrayKey]
+          : [];
+
+      const publicItems =
+        items.filter(item =>
+          String(item?.access || '')
+            .trim()
+            .toLowerCase() === 'public' &&
+          String(item?.publicationStatus || '')
+            .trim()
+            .toLowerCase() === 'published'
+        );
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+      return res
+        .status(200)
+        .json(publicItems);
+
+    } catch (error) {
+      console.error(
+        'Public Knowledge load failed:',
+        error
+      );
+
+      res.setHeader(
+        'Cache-Control',
+        'no-store, max-age=0'
+      );
+
+      return res
+        .status(500)
+        .json({
+          error:
+            'Public Knowledge could not be loaded.'
+        });
+    }
+  }
 
   /* =========================================
      ASSET PROXY
