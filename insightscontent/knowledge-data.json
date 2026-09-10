@@ -619,6 +619,7 @@
       ],
       "externalSources": [],
       "access": "Public",
+      "publicationStatus": "Draft",
       "date": "2026-09-03",
       "dateLabel": "경영관리 5.0",
       "title": "경영관리 5.0: AI 그리고 미래사업경쟁",
@@ -665,7 +666,6 @@
           "assetKey": ""
         }
       },
-      "publicationStatus": "Published",
       "featured": true
     },
     {
