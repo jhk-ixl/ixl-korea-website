@@ -1949,19 +1949,50 @@ let assetUsage = [];
         });
     }
 
+    function hasPublicKnowledgeVersionContent(version) {
+        if (!version) return false;
+
+        const contentSource = version.contentSource || {};
+        const hasCmsSource =
+            contentSource.type === 'cms-markdown' &&
+            Boolean(contentSource.ref || contentSource.path);
+
+        return Boolean(
+            String(version.title || '').trim() ||
+            String(version.summary || '').trim() ||
+            String(version.body || '').trim() ||
+            hasCmsSource
+        );
+    }
+
     function getPublicKnowledgeVersion(item) {
         const versions = item && item.versions ? item.versions : {};
         const isKorean = document.documentElement.lang === 'ko';
-        const preferred = isKorean ? versions.ko : versions.other;
-        const fallback = isKorean ? versions.other : versions.ko;
 
-        if (preferred && (preferred.title || preferred.summary || preferred.body || preferred.contentSource)) {
-            return { key: isKorean ? 'ko' : 'other', value: preferred };
+        const preferredKey = isKorean ? 'ko' : 'other';
+        const fallbackKey = isKorean ? 'other' : 'ko';
+
+        const preferred = versions[preferredKey];
+        const fallback = versions[fallbackKey];
+
+        if (hasPublicKnowledgeVersionContent(preferred)) {
+            return {
+                key: preferredKey,
+                value: preferred
+            };
         }
-        if (fallback && (fallback.title || fallback.summary || fallback.body || fallback.contentSource)) {
-            return { key: isKorean ? 'other' : 'ko', value: fallback };
+
+        if (hasPublicKnowledgeVersionContent(fallback)) {
+            return {
+                key: fallbackKey,
+                value: fallback
+            };
         }
-        return { key: '', value: {} };
+
+        return {
+            key: '',
+            value: {}
+        };
     }
 
     function normalizeKnowledgeForPublic(item) {
