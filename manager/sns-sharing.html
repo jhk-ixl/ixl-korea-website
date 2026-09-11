@@ -1342,8 +1342,9 @@
 
       fields.detail.value = isWebsitePublished
         ? window.location.origin +
-          '/insight.html?id=' +
-          encodeURIComponent(selectedKnowledgeId)
+          '/index.html?insight=' +
+          encodeURIComponent(selectedKnowledgeId) +
+          '#insights'
         : '';
 
       fields.external.value = '';
