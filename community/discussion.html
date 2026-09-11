@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IXL Korea Community Discussion</title>
+  <link rel="stylesheet" href="community.css">
+  <link rel="stylesheet" href="discussion.css">
+</head>
+<body class="discussion-page">
+  <header class="community-header">
+    <a class="community-brand" href="/" aria-label="IXL Korea Home">
+      <img src="../ixl-korea-logo.png" alt="IXL Korea">
+    </a>
+    <div class="community-home-actions">
+      <a class="discussion-back-link" href="/community/community-hub.html">Community Hub</a>
+      <span id="community-user-name" class="community-user-name">Member</span>
+      <button id="community-signout" type="button">Sign Out</button>
+    </div>
+  </header>
+
+  <main class="discussion-main">
+    <section class="discussion-intro">
+      <p class="eyebrow">COMMUNITY / DISCUSSION</p>
+      <div class="discussion-intro-row">
+        <div>
+          <h1>Discussion</h1>
+          <p>Discuss innovation issues, trends, methods and cases with other members.</p>
+        </div>
+        <button id="discussion-new-toggle" class="discussion-primary-button" type="button">New Discussion</button>
+      </div>
+    </section>
+
+    <section id="discussion-composer" class="discussion-composer" hidden>
+      <div class="discussion-section-heading">
+        <div>
+          <p class="eyebrow">CREATE POST</p>
+          <h2>Start a discussion</h2>
+        </div>
+        <button id="discussion-cancel" class="discussion-text-button" type="button">Cancel</button>
+      </div>
+
+      <form id="discussion-form">
+        <label for="discussion-title">Title</label>
+        <input id="discussion-title" name="title" type="text" maxlength="180" required placeholder="What would you like to discuss?">
+
+        <label for="discussion-body">Discussion</label>
+        <textarea id="discussion-body" name="body" rows="7" maxlength="10000" required placeholder="Add context, a question, an observation or an idea."></textarea>
+
+        <div class="discussion-form-actions">
+          <span id="discussion-form-message" class="discussion-form-message" role="status"></span>
+          <button id="discussion-submit" class="discussion-primary-button" type="submit">Publish Discussion</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="discussion-feed-section">
+      <div class="discussion-section-heading">
+        <div>
+          <p class="eyebrow">LATEST</p>
+          <h2>Community discussions</h2>
+        </div>
+        <span id="discussion-count" class="discussion-count"></span>
+      </div>
+
+      <div id="discussion-state" class="discussion-state">Loading discussions…</div>
+      <div id="discussion-list" class="discussion-list" hidden></div>
+    </section>
+
+    <footer class="community-footer">© 2026 IXL Korea. All rights reserved.</footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-discussion-api.js"></script>
+  <script src="/community/discussion.js"></script>
+</body>
+</html>

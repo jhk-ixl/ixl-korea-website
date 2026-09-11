@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge | IXL Korea Community</title>
+  <link rel="stylesheet" href="/community/community.css">
+  <link rel="stylesheet" href="/community/knowledge-list.css">
+</head>
+<body class="community-knowledge-list-page">
+
+  <header class="community-header">
+
+    <a
+      class="community-brand"
+      href="/"
+      aria-label="IXL Korea Home"
+    >
+      <img
+        src="../ixl-korea-logo.png"
+        alt="IXL Korea"
+      >
+    </a>
+
+    <div class="community-home-actions">
+
+      <a
+        class="knowledge-back-link"
+        href="/community/knowledge.html"
+      >
+        Knowledge Hub
+      </a>
+
+      <span
+        id="community-user-name"
+        class="community-user-name"
+      >
+        Member
+      </span>
+
+      <button
+        id="community-signout"
+        type="button"
+      >
+        Sign Out
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="knowledge-list-main">
+    <section class="knowledge-list-intro">
+      <p class="eyebrow">KNOWLEDGE HUB</p>
+      <h1 id="knowledge-list-title">Knowledge</h1>
+      <p id="knowledge-list-description">Explore curated innovation knowledge.</p>
+    </section>
+
+    <section class="knowledge-list-section" aria-live="polite">
+      <div class="knowledge-list-toolbar">
+        <p id="knowledge-list-count">Loading Knowledge...</p>
+      </div>
+      <div id="knowledge-list" class="knowledge-list"></div>
+    </section>
+  </main>
+
+  <footer class="community-footer">
+    © 2026 IXL Korea. All rights reserved.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-knowledge-api.js"></script>
+  <script src="/community/knowledge-list.js"></script>
+</body>
+</html>

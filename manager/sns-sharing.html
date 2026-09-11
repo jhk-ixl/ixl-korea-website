@@ -423,6 +423,22 @@
         </div>
 
         <div class="sns-compose-field">
+          <label for="share-knowledge-media">Knowledge Media</label>
+          <select id="share-knowledge-media">
+            <option value="">No Media</option>
+          </select>
+          <small>Select one Knowledge Media resource for this transaction, or leave No Media.</small>
+        </div>
+
+        <div class="sns-compose-field">
+          <label for="share-asset-library">Other Asset Library Media</label>
+          <select id="share-asset-library">
+            <option value="">None</option>
+          </select>
+          <small>Optional SNS-only media. <a href="asset-library.html" target="_blank" rel="noopener">Upload / manage assets ↗</a></small>
+        </div>
+
+        <div class="sns-compose-field">
 
           <label for="share-media-type">
             Media Type
@@ -592,336 +608,8 @@
 
 
     /* =========================================
-       SELECTION
+       CHANNEL / LANGUAGE
        ========================================= */
-
-    function updateSelectedCount() {
-
-      document
-        .getElementById(
-          'selected-count'
-        )
-        .textContent =
-          selectedItems.size;
-    }
-
-
-
-    function updateShareContent() {
-      const titleField = document.getElementById('share-title');
-      const textField = document.getElementById('share-text');
-      const detailLinkField = document.getElementById('share-detail-link');
-      const externalLinkField = document.getElementById('share-external-link');
-      const mediaTypeField = document.getElementById('share-media-type');
-      const mediaFileField = document.getElementById('share-media-file');
-
-      if (selectedItems.size === 0) {
-        titleField.value = '';
-        textField.value = '';
-        detailLinkField.value = '';
-        externalLinkField.value = '';
-        mediaTypeField.value = 'None';
-        mediaFileField.value = '';
-        selectedAssetKey = '';
-        selectedKnowledgeId = '';
-        return;
-      }
-
-      const item = allKnowledgeItems[[...selectedItems][0]];
-      if (!item) return;
-
-      selectedKnowledgeId = String(item.knowledgeId || '').trim();
-
-      titleField.value = item.title || '';
-      textField.value = item.summary || '';
-
-      const slug = String(item.slug || '').trim();
-      detailLinkField.value = slug
-        ? window.location.origin + '/insight.html?slug=' + encodeURIComponent(slug)
-        : '';
-
-      const url = String(item.url || '').trim();
-      externalLinkField.value = url;
-
-      const asset = String(item.asset || '').trim();
-      selectedAssetKey = String(item.assetKey || '').trim();
-
-      const mediaSource = asset || url;
-      const lowerAsset = mediaSource.toLowerCase().split('?')[0].split('#')[0];
-
-      let mediaType = 'None';
-      let mediaFile = '';
-
-      if (/\.(jpg|jpeg|png|webp|gif)$/i.test(lowerAsset)) {
-        mediaType = 'Image';
-        mediaFile = mediaSource;
-      } else if (/\.pdf$/i.test(lowerAsset)) {
-        mediaType = 'Document';
-        mediaFile = mediaSource;
-      } else if (/\.(mp4|mov|m4v|webm)$/i.test(lowerAsset)) {
-        mediaType = 'Video';
-        mediaFile = mediaSource;
-      }
-
-      mediaTypeField.value = mediaType;
-      mediaFileField.value = mediaFile;
-
-      /*
-      * Avoid duplicate SNS resources.
-      * If External Link and Primary Media point to the same resource,
-      * keep it only as Media.
-      */
-      if (
-        externalLinkField.value &&
-        mediaFile &&
-        IXLManager.sameUrl(externalLinkField.value, mediaFile)
-      ) {
-        externalLinkField.value = '';
-      }
-
-    }
-
-
-    function clearSelection() {
-
-      selectedItems.clear();
-
-
-      updateSelectedCount();
-
-      updateShareContent();
-
-      filterKnowledge();
-
-    }
-
-
-
-    /* =========================================
-       KNOWLEDGE CARDS
-       ========================================= */
-
-    function createKnowledgeCard(item, index) {
-      const topics = normalizeArray(item.topics);
-      const industries = normalizeArray(item.industries);
-      const programs = normalizeArray(item.programs);
-      const tags = normalizeArray(item.tags);
-      const checked = selectedItems.has(index) ? 'checked' : '';
-      const classification = [...topics, ...industries, ...programs, ...tags]
-        .filter(Boolean)
-        .map(value => `<span class="manager-inline-tag">${value}</span>`)
-        .join(' ');
-
-      return `
-        <tr>
-          <td>
-            <input type="checkbox" class="sns-item-checkbox" data-index="${index}" ${checked} aria-label="Select knowledge item">
-          </td>
-          <td data-sort-value="${item.type || 'Unclassified'}">${item.type || 'Unclassified'}</td>
-          <td data-sort-value="${item.date || item.dateLabel || ''}">${item.dateLabel || item.date || ''}</td>
-          <td data-sort-value="${item.title || ''}"><strong>${item.title || ''}</strong><br><small>${item.summary || ''}</small></td>
-          <td>${classification || '—'}</td>
-          <td data-sort-value="${item.access || 'Public'}">${item.access || 'Public'}</td>
-        </tr>
-      `;
-    }
-
-
-    function renderKnowledge(items) {
-
-      const container =
-        document.getElementById(
-          'sns-knowledge-list'
-        );
-
-
-
-      const empty = document.getElementById('sns-knowledge-empty');
-
-      if (!items.length) {
-        container.innerHTML = '';
-        if (empty) {
-          empty.style.display = 'block';
-          empty.textContent = 'No knowledge matches your search.';
-        }
-        return;
-      }
-
-      if (empty) empty.style.display = 'none';
-
-
-
-      container.innerHTML =
-        items
-          .map(
-            entry =>
-              createKnowledgeCard(
-                entry.item,
-                entry.originalIndex
-              )
-          )
-          .join('');
-
-
-
-      document
-        .querySelectorAll(
-          '.sns-item-checkbox'
-        )
-        .forEach(
-          checkbox => {
-
-            checkbox.addEventListener(
-              'change',
-              event => {
-
-                const index =
-                  Number(
-                    event
-                      .target
-                      .dataset
-                      .index
-                  );
-
-
-
-                if (
-                  event.target.checked
-                ) {
-
-                  selectedItems.add(
-                    index
-                  );
-
-                } else {
-
-                  selectedItems.delete(
-                    index
-                  );
-
-                }
-
-
-
-                updateSelectedCount();
-
-                updateShareContent();
-
-              }
-            );
-
-          }
-        );
-
-    }
-
-
-
-    /* =========================================
-       KNOWLEDGE FILTER
-       ========================================= */
-
-    function filterKnowledge() {
-
-      const searchValue =
-        document
-          .getElementById(
-            'sns-search'
-          )
-          .value
-          .trim()
-          .toLowerCase();
-
-
-
-      const selectedType =
-        document
-          .getElementById(
-            'sns-type-filter'
-          )
-          .value;
-
-
-
-      const filtered =
-        allKnowledgeItems
-
-          .map(
-            (
-              item,
-              originalIndex
-            ) => ({
-              item,
-              originalIndex
-            })
-          )
-
-          .filter(
-            entry => {
-
-              const item =
-                entry.item;
-
-
-              const type =
-                (
-                  item.type || ''
-                )
-                  .toLowerCase();
-
-
-
-              const matchesType =
-                selectedType === 'all' ||
-                type === selectedType;
-
-
-
-              const matchesSearch =
-                !searchValue ||
-                getSearchText(item)
-                  .includes(
-                    searchValue
-                  );
-
-
-
-              return (
-                matchesType &&
-                matchesSearch
-              );
-
-            }
-          );
-
-
-
-      renderKnowledge(
-        filtered
-      );
-
-    }
-
-
-
-    /* =========================================
-       CHANNEL
-       ========================================= */
-
-    function getSelectedChannel() {
-
-      const selected =
-        document.querySelector(
-          'input[name="sns-channel"]:checked'
-        );
-
-
-      return selected
-        ? selected.value
-        : 'LinkedIn';
-
-    }
-
 
     function getSelectedLanguage() {
 
@@ -937,72 +625,7 @@
     }
 
 
-    function getLanguageLabel(value) {
 
-      return value === 'ko'
-        ? 'Korean'
-        : 'Other';
-
-    }
-
-
-
-    /* =========================================
-       PREVIEW
-       ========================================= */
-
-    function preparePreview() {
-      const title = document.getElementById('share-title').value.trim();
-      const text = document.getElementById('share-text').value.trim();
-      const detailLink = document.getElementById('share-detail-link').value.trim();
-      const externalLink = document.getElementById('share-external-link').value.trim();
-      const mediaType = document.getElementById('share-media-type').value;
-      const mediaFile = document.getElementById('share-media-file').value.trim();
-      const channel = getSelectedChannel();
-      const language = getSelectedLanguage();
-
-      document.getElementById('preview-channel').textContent =
-        channel + ' · ' + getLanguageLabel(language) + ' Preview';
-      document.getElementById('preview-title').textContent = title || 'Untitled Post';
-      document.getElementById('preview-text').textContent = text;
-
-      const setLink = (id, value, label) => {
-        const el = document.getElementById(id);
-        if (!value) {
-          el.textContent = '';
-          el.removeAttribute('href');
-          el.style.display = 'none';
-          return;
-        }
-        el.textContent = label + ': ' + value;
-        el.href = IXLManager.toUrl(value);
-        el.style.display = 'inline-block';
-      };
-
-      setLink('preview-detail-link', detailLink, 'IXL Detail');
-      setLink('preview-external-link', externalLink, 'External');
-
-      const previewMedia = document.getElementById('preview-media');
-      const previewMediaType = document.getElementById('preview-media-type');
-      const previewMediaFile = document.getElementById('preview-media-file');
-
-      if (mediaType !== 'None' && mediaFile) {
-        previewMedia.hidden = false;
-        previewMediaType.textContent = mediaType;
-        previewMediaFile.textContent = mediaFile;
-        previewMediaFile.href = IXLManager.toUrl(mediaFile);
-      } else {
-        previewMedia.hidden = true;
-        previewMediaType.textContent = '';
-        previewMediaFile.textContent = '';
-        previewMediaFile.removeAttribute('href');
-      }
-
-      document.getElementById('sns-preview-section').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-    }
 /* =========================================
    ADD TO DISTRIBUTION QUEUE
    ========================================= */
@@ -1227,7 +850,7 @@
         const response =
           await fetch(
 
-            '../insightscontent/knowledge-data.json',
+            '/api/insights-library?resource=knowledge',
 
             {
               cache: 'no-store'
@@ -1254,11 +877,13 @@
 
 
         allKnowledgeItems =
-          Array.isArray(
-            data.items
-          )
-            ? data.items
-            : [];
+          Array.isArray(data)
+            ? data
+            : (
+                Array.isArray(data.items)
+                  ? data.items
+                  : []
+              );
 
 
 
@@ -1405,32 +1030,89 @@
       return assetRegistry.find(asset => String(asset?.key || '').trim() === wanted) || null;
     }
 
-    function resolveKnowledgeMedia(item, language) {
-      const rep = item?.representativeMedia || {};
-      const lang = rep?.[language] || {};
-      const key = String(lang.assetKey || ((!item?.representativeMedia && inferBaseLanguage(item) === language) ? item.assetKey : '') || '').trim();
-      const registered = findAssetByKey(key);
-      if (registered?.url) {
-        return {
-          url: String(registered.url).trim(),
-          assetKey: key,
-          type: String(registered.type || rep.type || '').trim().toLowerCase(),
-          thumbnailTime: registered.thumbnailTime
-        };
-      }
+    function populateAssetLibraryOptions(selectedKey = '') {
+      const select = document.getElementById('share-asset-library');
+      if (!select) return;
+      select.innerHTML = '<option value="">None</option>' + assetRegistry.map(asset => {
+        const key = String(asset?.key || '').trim();
+        const label = String(asset?.name || asset?.fileName || key).trim();
+        return key ? `<option value="${escapeHtml(key)}">${escapeHtml(label)} · ${escapeHtml(asset.type || 'asset')}</option>` : '';
+      }).join('');
+      select.value = selectedKey || '';
+    }
 
-      const direct = String(lang.asset || lang.url || ((!item?.representativeMedia && inferBaseLanguage(item) === language) ? (item.asset || item.url || '') : '') || '').trim();
+    function applyAssetLibrarySelection(assetKey) {
+      const asset = findAssetByKey(assetKey);
+      if (!asset) {
+        if (!assetKey) {
+          selectedAssetKey = '';
+          document.getElementById('share-media-type').value = 'None';
+          document.getElementById('share-media-file').value = '';
+        }
+        return;
+      }
+      const type = String(asset.type || '').toLowerCase();
+      const typeMap = { image: 'Image', video: 'Video', pdf: 'Document', markdown: 'Document', presentation: 'Document', document: 'Document' };
+      selectedAssetKey = String(asset.key || '').trim();
+      document.getElementById('share-media-type').value = typeMap[type] || 'None';
+      document.getElementById('share-media-file').value = asset.url || asset.pathname || '';
+      document.getElementById('share-knowledge-media').value = '';
+    }
+
+    function getKnowledgeMediaItems(item, language) {
+      const list = Array.isArray(item?.media) ? item.media : [];
+      return list.filter(media => media && (media.language === language || media.language === 'common'));
+    }
+
+    function resolveMediaItem(media) {
+      const entry = media || {};
+      const key = String(entry.assetKey || '').trim();
+      const registered = findAssetByKey(key);
+      const url = String(
+        registered?.url || registered?.pathname || entry.asset || entry.url || ''
+      ).trim();
       return {
-        url: direct,
+        ...entry,
+        url,
         assetKey: key,
-        type: String(rep.type || '').trim().toLowerCase(),
-        thumbnailTime: null
+        type: String(entry.type || registered?.type || '').trim().toLowerCase(),
+        thumbnailTime: registered?.thumbnailTime ?? null
       };
     }
 
-    function getRepresentativeMedia(item, language) {
-      return resolveKnowledgeMedia(item, language).url;
+    function getDefaultReviewMedia(item, language) {
+      const list = getKnowledgeMediaItems(item, language);
+      return list.length ? resolveMediaItem(list[0]).url : '';
     }
+
+    function populateKnowledgeMediaOptions(item, language, selectedIndex = '') {
+      const select = document.getElementById('share-knowledge-media');
+      if (!select) return;
+      const list = getKnowledgeMediaItems(item, language);
+      select.innerHTML = '<option value="">No Media</option>' + list.map((media, index) => {
+        const label = media.title || media.assetKey || media.url || media.asset || `${media.type || 'Media'} ${index + 1}`;
+        return `<option value="${index}">${escapeHtml(label)} · ${escapeHtml(media.type || 'resource')}</option>`;
+      }).join('');
+      select.value = String(selectedIndex ?? '');
+    }
+
+    function applyKnowledgeMediaSelection(item, language, indexValue) {
+      const mediaTypeField = document.getElementById('share-media-type');
+      const mediaFileField = document.getElementById('share-media-file');
+      if (indexValue === '' || indexValue === null || indexValue === undefined) {
+        selectedAssetKey = '';
+        mediaTypeField.value = 'None';
+        mediaFileField.value = '';
+        return;
+      }
+      const list = getKnowledgeMediaItems(item, language);
+      const media = resolveMediaItem(list[Number(indexValue)] || {});
+      const typeMap = { image: 'Image', video: 'Video', pdf: 'Document', markdown: 'Document', presentation: 'Document', document: 'Document' };
+      selectedAssetKey = media.assetKey || '';
+      mediaTypeField.value = typeMap[media.type] || 'None';
+      mediaFileField.value = mediaTypeField.value === 'None' ? '' : media.url;
+    }
+
 
     async function loadAssetRegistry() {
       try {
@@ -1443,6 +1125,7 @@
       } catch (error) {
         assetRegistry = [];
       }
+      populateAssetLibraryOptions();
     }
 
     async function loadDistributionHistoryData() {
@@ -1613,31 +1296,66 @@
 
     function updateShareContent() {
       const ctx = getSelectedVersionContext();
-      const fields = {title:document.getElementById('share-title'),text:document.getElementById('share-text'),detail:document.getElementById('share-detail-link'),external:document.getElementById('share-external-link'),mediaType:document.getElementById('share-media-type'),mediaFile:document.getElementById('share-media-file'),language:document.getElementById('share-language')};
-      if(!ctx){ Object.values(fields).forEach(el=>{if(el && el.tagName!=='SELECT') el.value='';}); selectedAssetKey='';selectedKnowledgeId='';document.getElementById('sns-review-screen').hidden=true;return; }
-      const {item,language,version}=ctx;
-      selectedKnowledgeId=String(item.knowledgeId||'').trim();
-      selectedKnowledgeLanguage=language;
-      fields.language.value=language;
-      fields.title.value=version.title||'';
-      fields.text.value=version.summary||'';
-      const slug=String(item.slug||'').trim();
-      fields.detail.value=slug?window.location.origin+'/insight.html?slug='+encodeURIComponent(slug):'';
-      fields.external.value=String(item.url||'').trim();
-      const mediaInfo=resolveKnowledgeMedia(item,language);
-      const media=mediaInfo.url;
-      selectedAssetKey=mediaInfo.assetKey;
-      let mediaType='None';
-      const lower=media.toLowerCase().split('?')[0].split('#')[0];
-      if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower))mediaType='Image';else if(/\.pdf$/i.test(lower))mediaType='Document';else if(/\.(mp4|mov|m4v|webm)$/i.test(lower))mediaType='Video';
-      fields.mediaType.value=mediaType;
-      fields.mediaFile.value=mediaType==='None'?'':media;
-      renderSnsReview(ctx,null);
-    }
 
-    async function loadDistributionHistory(){
-      await loadDistributionHistoryData();
-      renderSnsReview(getSelectedVersionContext(), selectedTransaction);
+      const fields = {
+        title: document.getElementById('share-title'),
+        text: document.getElementById('share-text'),
+        detail: document.getElementById('share-detail-link'),
+        external: document.getElementById('share-external-link'),
+        mediaType: document.getElementById('share-media-type'),
+        mediaFile: document.getElementById('share-media-file'),
+        knowledgeMedia: document.getElementById('share-knowledge-media'),
+        language: document.getElementById('share-language')
+      };
+
+      if (!ctx) {
+        Object.values(fields).forEach(el => {
+          if (el && el.tagName !== 'SELECT') el.value = '';
+        });
+
+        selectedAssetKey = '';
+        selectedKnowledgeId = '';
+
+        const reviewScreen = document.getElementById('sns-review-screen');
+        if (reviewScreen) reviewScreen.hidden = true;
+
+        return;
+      }
+
+      const { item, language, version } = ctx;
+
+      selectedKnowledgeId = String(item.knowledgeId || '').trim();
+      selectedKnowledgeLanguage = language;
+
+      fields.language.value = language;
+      fields.title.value = version.title || '';
+      fields.text.value = version.summary || '';
+
+      const isWebsitePublished =
+        selectedKnowledgeId &&
+        item.access === 'Public' &&
+        item.publicationStatus === 'Published';
+
+      fields.detail.value = isWebsitePublished
+        ? window.location.origin +
+          '/insight.html?id=' +
+          encodeURIComponent(selectedKnowledgeId)
+        : '';
+
+      fields.external.value = '';
+      populateKnowledgeMediaOptions(item, language, '');
+      populateAssetLibraryOptions('');
+      applyKnowledgeMediaSelection(item, language, '');
+
+      if (
+        fields.external.value &&
+        fields.mediaFile.value &&
+        IXLManager.sameUrl(fields.external.value, fields.mediaFile.value)
+      ) {
+        fields.external.value = '';
+      }
+
+      renderSnsReview(ctx, null);
     }
 
     function normalizeLanguage(value){
@@ -1677,7 +1395,7 @@
       document.getElementById('sns-review-access').textContent=item.access||'Public';
       document.getElementById('sns-review-summary-label').textContent=tx?'Post Text':'Summary';
       setReviewSummary(tx?(tx.postText||'—'):(version.summary||'—'));
-      renderMedia(tx?(tx.mediaFile||''):getRepresentativeMedia(item,language));
+      renderMedia(tx?(tx.mediaFile||''):getDefaultReviewMedia(item,language));
       const txs=matchingTransactions(ctx);
       document.getElementById('sns-transaction-list').innerHTML=`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="current" ${!tx?'checked':''}> Current Knowledge · ${language}</label>`+txs.map((x,i)=>`<label class="sns-transaction-item"><input type="radio" name="sns-tx" value="${i}" ${tx===x?'checked':''}> ${escapeHtml((x.publishedDate||x.createdDate||'').slice(0,10)||'—')} · ${escapeHtml(x.channel||'SNS')} · #${escapeHtml(x.serialNo||String(i+1).padStart(3,'0'))} · ${escapeHtml(x.status||'Draft')}</label>`).join('');
       document.querySelectorAll('input[name="sns-tx"]').forEach(r=>r.addEventListener('change',e=>{const v=e.target.value;renderSnsReview(ctx,v==='current'?null:txs[Number(v)]);}));
@@ -1693,6 +1411,8 @@
         document.getElementById('share-detail-link').value=tx.detailLink||tx.link||'';
         document.getElementById('share-external-link').value=tx.externalLink||'';
         document.getElementById('share-media-type').value=tx.mediaType||'None';
+        populateKnowledgeMediaOptions(ctx.item, ctx.language, '');
+        populateAssetLibraryOptions(tx.assetKey||'');
         document.getElementById('share-media-file').value=tx.mediaFile||'';
         selectedAssetKey=tx.assetKey||'';
         const channelRadio=document.querySelector(`input[name="sns-channel"][value="${CSS.escape(tx.channel||'LinkedIn')}"]`);
@@ -1706,6 +1426,16 @@
         : `${ctx.item.knowledgeId||''} · ${ctx.language} — edit the official Knowledge version for this distribution only.`;
       showSnsScreen('editor');
     }
+
+    document.getElementById('share-knowledge-media')?.addEventListener('change', event => {
+      const ctx = getSelectedVersionContext();
+      if (!ctx) return;
+      applyKnowledgeMediaSelection(ctx.item, ctx.language, event.target.value);
+    });
+
+    document.getElementById('share-asset-library')?.addEventListener('change', event => {
+      applyAssetLibrarySelection(event.target.value);
+    });
 
     document.getElementById('sns-review-edit')?.addEventListener('click',populateComposerFromReview);
     document.getElementById('sns-review-back')?.addEventListener('click',()=>{

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>IXL Korea Community Hub</title>
+
+  <link
+    rel="stylesheet"
+    href="community.css"
+  >
+  <link
+    rel="stylesheet"
+    href="community-hub.css"
+  >
+</head>
+
+<body class="community-hub-page">
+
+  <header class="community-header">
+
+    <a
+      class="community-brand"
+      href="/"
+      aria-label="IXL Korea Home"
+    >
+      <img
+        src="../ixl-korea-logo.png"
+        alt="IXL Korea"
+      >
+    </a>
+
+    <div class="community-home-actions">
+
+      <a
+        class="community-hub-back-link"
+        href="/community/home.html"
+      >
+        Community Home
+      </a>
+
+      <span
+        id="community-user-name"
+        class="community-user-name"
+      >
+        Member
+      </span>
+
+      <button
+        id="community-signout"
+        type="button"
+      >
+        Sign Out
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main class="community-hub-main">
+
+    <section class="community-hub-intro">
+
+      <p class="eyebrow">
+        COMMUNITY HUB
+      </p>
+
+      <h1>
+        Connect. Share. Create.
+      </h1>
+
+      <p>
+        Exchange ideas, ask questions, meet experts and turn
+        community conversations into reusable innovation knowledge.
+      </p>
+
+    </section>
+
+
+    <section
+      class="community-hub-grid"
+      aria-label="Community areas"
+    >
+
+      <a
+        class="community-hub-card community-hub-card-link"
+        data-module="discussion"
+        href="/community/discussion.html"
+      >
+        <span class="community-hub-number">01</span>
+        <div>
+          <h2>Discussion</h2>
+          <p>Discuss innovation issues, trends, methods and cases with other members.</p>
+        </div>
+        <span class="community-hub-status">Live</span>
+      </a>
+
+      <article class="community-hub-card" data-module="blog">
+        <span class="community-hub-number">02</span>
+        <div>
+          <h2>Blog / Free Writing</h2>
+          <p>Share observations, field notes and original perspectives from practice.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+      <article class="community-hub-card" data-module="expert-insights">
+        <span class="community-hub-number">03</span>
+        <div>
+          <h2>Expert Insights</h2>
+          <p>Read and exchange perspectives from mentors, practitioners and experts.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+      <article class="community-hub-card" data-module="questions">
+        <span class="community-hub-number">04</span>
+        <div>
+          <h2>Questions &amp; Answers</h2>
+          <p>Ask focused questions and build useful answers with the community.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+      <article
+        id="collaboration"
+        class="community-hub-card"
+        data-module="collaboration"
+      >
+        <span class="community-hub-number">05</span>
+        <div>
+          <h2>Collaboration Opportunities</h2>
+          <p>Find project, research and innovation opportunities that need partners.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+      <article class="community-hub-card" data-module="events">
+        <span class="community-hub-number">06</span>
+        <div>
+          <h2>Events / Announcements</h2>
+          <p>Follow community events, programs, sessions and important announcements.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+      <article class="community-hub-card" data-module="network">
+        <span class="community-hub-number">07</span>
+        <div>
+          <h2>Member / Expert Network</h2>
+          <p>Discover members and experts across the IXL Korea innovation ecosystem.</p>
+        </div>
+        <span class="community-hub-status">Planned</span>
+      </article>
+
+    </section>
+
+
+    <section class="community-hub-flow">
+      <p class="eyebrow">KNOWLEDGE CREATION FLOW</p>
+
+      <div class="community-hub-flow-track">
+        <span>Community Post</span>
+        <strong>→</strong>
+        <span>Discussion / Reaction</span>
+        <strong>→</strong>
+        <span>Curator Selection</span>
+        <strong>→</strong>
+        <span>Promote to Knowledge</span>
+      </div>
+    </section>
+
+
+    <footer class="community-footer">
+      © 2026 IXL Korea. All rights reserved.
+    </footer>
+
+  </main>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-hub.js"></script>
+
+</body>
+</html>

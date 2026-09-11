@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>IXL Korea Knowledge Hub</title>
+
+  <link
+    rel="stylesheet"
+    href="community.css"
+  >
+</head>
+
+<body class="community-knowledge-page">
+
+  <header class="community-header">
+
+    <a
+      class="community-brand"
+      href="/"
+      aria-label="IXL Korea Home"
+    >
+      <img
+        src="../ixl-korea-logo.png"
+        alt="IXL Korea"
+      >
+    </a>
+
+    <div class="community-home-actions">
+
+      <a
+        class="knowledge-back-link"
+        href="/community/knowledge.html"
+      >
+        Knowledge Hub
+      </a>
+
+      <span
+        id="community-user-name"
+        class="community-user-name"
+      >
+        Member
+      </span>
+
+      <button
+        id="community-signout"
+        type="button"
+      >
+        Sign Out
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <main class="knowledge-hub">
+
+    <section class="knowledge-hub-intro">
+
+      <p class="eyebrow">
+        KNOWLEDGE HUB
+      </p>
+
+      <h1>
+        Innovation Knowledge
+      </h1>
+
+      <p>
+        Explore curated innovation knowledge,
+        insights, cases and resources.
+      </p>
+
+    </section>
+
+
+    <section class="knowledge-hub-grid">
+
+      <article class="knowledge-hub-card"
+        data-category="insights"
+      >
+        <span>01</span>
+        <h2>Insights</h2>
+        <p>
+          Articles, news and expert perspectives.
+        </p>
+        <strong
+          class="knowledge-category-count"
+          data-count-for="insights"
+        >
+          0 Knowledge
+        </strong>
+      </article>
+
+      <article class="knowledge-hub-card"
+        data-category="cases"
+      >
+        <span>02</span>
+        <h2>Cases</h2>
+        <p>
+          Innovation cases and project examples.
+        </p>
+        <strong
+          class="knowledge-category-count"
+          data-count-for="cases"
+        >
+          0 Knowledge
+        </strong>
+      </article>
+
+      <article class="knowledge-hub-card"
+        data-category="methods"
+      >
+        <span>03</span>
+        <h2>Methods</h2>
+        <p>
+          Frameworks, tools and innovation methods.
+        </p>
+        <strong
+          class="knowledge-category-count"
+          data-count-for="methods"
+        >
+          0 Knowledge
+        </strong>
+      </article>
+
+      <article class="knowledge-hub-card"
+        data-category="resources"
+      >
+        <span>04</span>
+        <h2>Resources</h2>
+        <p>
+          Documents, references and learning materials.
+        </p>
+        <strong
+          class="knowledge-category-count"
+          data-count-for="resources"
+        >
+          0 Knowledge
+        </strong>
+      </article>
+
+    </section>
+
+    
+
+
+  </main>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-knowledge-api.js"></script>
+
+  <script src="knowledge.js"></script>
+
+</body>
+</html>

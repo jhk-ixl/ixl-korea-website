@@ -1967,20 +1967,24 @@ let assetUsage = [];
     function normalizeKnowledgeForPublic(item) {
         const selected = getPublicKnowledgeVersion(item);
         const version = selected.value || {};
-        const representative = item.representativeMedia || {};
-        const media = selected.key ? (representative[selected.key] || {}) : {};
+        const mediaItems = Array.isArray(item.media) ? item.media : [];
+        const media = mediaItems.find(entry => entry.language === selected.key) ||
+                      mediaItems.find(entry => entry.language === 'common') ||
+                      mediaItems[0] || {};
 
         return {
             ...item,
-            title: version.title || item.title || '',
-            summary: version.summary || item.summary || '',
-            body: version.body || item.body || '',
+            title: version.title || '',
+            summary: version.summary || '',
+            body: version.body || '',
             contentSource: version.contentSource || { type: 'builder-markdown', ref: '', path: '' },
-            url: media.url || item.url || '',
-            asset: media.asset || item.asset || '',
-            assetKey: media.assetKey || item.assetKey || ''
+            selectedMedia: media,
+            url: media.url || '',
+            asset: media.asset || '',
+            assetKey: media.assetKey || ''
         };
     }
+
 
     function renderBooks() {
         const panel = document.querySelector('.insights-panel[data-panel="books"]');

@@ -35,6 +35,10 @@ The desktop main-menu selector is deliberately limited to direct nav links and t
 - Card background uses Home navy #071b33.
 
 
-## CMS — Insights
+## CMS / Knowledge publication
 
-Insights content is now sourced from `insightscontent/insights-data.json`. Use `/admin/` after the GitHub backend is connected. Do not manually maintain both JSON and the legacy JS data file.
+- Decap CMS authoring lives under `/admin/` and writes Markdown articles to `insightscontent/articles/*.md`.
+- Governed public Insights are sourced from Knowledge Master through `/api/insights-library?resource=public-knowledge`.
+- Public exposure requires both `access = Public` and `publicationStatus = Published`.
+- `insightscontent/insights-data.json` remains as legacy/compatibility data for Manager overview and the manager-only `insights` resource; do not treat it as the public website source of truth.
+- Do not recreate or maintain a parallel `insights-data.js` copy.

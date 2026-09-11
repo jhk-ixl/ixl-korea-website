@@ -230,7 +230,10 @@
 
 
     function getKnowledgeUrl(item) {
-      return item.asset || item.url || '';
+      const items = Array.isArray(item?.media) ? item.media : [];
+      const media = items.find(entry => entry.language === 'ko') || items.find(entry => entry.language === 'common') || items.find(entry => entry.language === 'other') || {};
+      const asset = media.assetKey ? getLibraryAssetByKey(media.assetKey) : null;
+      return getLibraryAssetSource(asset) || media.asset || media.url || '';
     }
 
 
@@ -345,13 +348,6 @@
 
       return distributionItems.filter(record =>
         normalizeKnowledgeId(record?.knowledgeId) === id
-      );
-    }
-
-    function getPublishedKnowledgeSnsRecords(item) {
-      return getKnowledgeSnsRecords(item).filter(record =>
-        String(record?.status || '').trim().toLowerCase() === 'published' &&
-        String(record?.publishedDate || '').trim()
       );
     }
 
@@ -801,43 +797,19 @@
 
 
     function getKnowledgeMedia(item) {
-      const rep =
-        item?.representativeMedia || {};
-
-      const media =
-        rep.ko ||
-        rep.other ||
-        {};
-
-      const assetKey =
-        media.assetKey ||
-        item.assetKey ||
-        '';
-
-      const registryAsset =
-        getLibraryAssetByKey(assetKey);
-
+      const items = Array.isArray(item?.media) ? item.media : [];
+      const versionKey = item?.versions?.ko?.title ? 'ko' : 'other';
+      const media = items.find(entry => entry.language === versionKey) ||
+                    items.find(entry => entry.language === 'common') ||
+                    items[0] || {};
+      const assetKey = String(media.assetKey || '').trim();
+      const registryAsset = getLibraryAssetByKey(assetKey);
       return {
-        type:
-          rep.type ||
-          '',
-        url:
-          media.url ||
-          item.url ||
-          '',
-        asset:
-          media.asset ||
-          item.asset ||
-          '',
+        type: String(media.type || '').trim().toLowerCase(),
+        url: String(media.url || '').trim(),
+        asset: String(media.asset || '').trim(),
         assetKey,
-        thumbnailTime:
-          Number.isFinite(Number(media.thumbnailTime))
-            ? Number(media.thumbnailTime)
-            : Number.isFinite(Number(rep.thumbnailTime))
-              ? Number(rep.thumbnailTime)
-              : Number.isFinite(Number(registryAsset?.thumbnailTime))
-                ? Number(registryAsset.thumbnailTime)
-                : .1
+        thumbnailTime: Number.isFinite(Number(registryAsset?.thumbnailTime)) ? Number(registryAsset.thumbnailTime) : .1
       };
     }
 
@@ -1594,7 +1566,7 @@
       const overviewLoads =
         await Promise.allSettled([
           fetchJson(
-            '../insightscontent/insights-data.json'
+            '/api/insights-library?resource=insights'
           ),
           fetchJson(
             '/api/distribution-queue'
@@ -1687,7 +1659,7 @@
 
         const response =
           await fetch(
-            '../insightscontent/knowledge-data.json',
+            '/api/insights-library?resource=knowledge',
             {
               cache: 'no-store'
             }

@@ -45,3 +45,12 @@ node_modules/
 api/insights-library-backup.js.txt
 images/ixl-center cases.png
 insightscontent/Innovation-sweet-spots.pdf
+
+# Local secrets / deployment state
+.env.local
+.env.*.local
+.vercel/
+
+# Generated archives / review copies
+*.zip
+IXLKOREA-review-package/

@@ -349,29 +349,6 @@
       color: #fff;
     }
 
-    .legacy-content-panel {
-      grid-column: 1 / -1;
-      display: none;
-      padding: 14px 16px;
-      border: 1px solid #e0c98b;
-      border-radius: 7px;
-      background: #fffaf0;
-      color: #5e5132;
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .legacy-content-panel.open {
-      display: block;
-    }
-
-    .legacy-content-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
 
     .asset-picker-thumb video {
       width: 100%;
@@ -401,111 +378,6 @@
       font-size: 10px;
       color: #17324d;
     }
-.selected-asset-card {
-      display: none;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 12px 14px;
-      border: 1px solid #d9e1e9;
-      border-radius: 7px;
-      background: #f8fafc;
-    }
-
-    .selected-asset-card.open {
-      display: flex;
-    }
-
-    .selected-asset-title {
-      font-weight: 700;
-      color: #21354a;
-      word-break: break-word;
-    }
-
-    .selected-asset-path {
-      margin-top: 3px;
-      color: #6b7886;
-      font-size: 12px;
-      word-break: break-all;
-    }
-
-
-    .selected-asset-card {
-      display: none;
-      grid-template-columns: 220px minmax(0, 1fr) auto;
-      align-items: stretch;
-      gap: 16px;
-      padding: 14px;
-      min-height: 120px;
-    }
-
-    .selected-asset-card.open {
-      display: grid;
-    }
-
-    .selected-asset-preview {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 150px;
-      border: 1px solid #dde4eb;
-      border-radius: 7px;
-      background: #f4f7fa;
-      overflow: hidden;
-      color: #48627c;
-      font-size: 24px;
-      font-weight: 800;
-      text-align: center;
-    }
-
-    .selected-asset-preview img,
-    .selected-asset-preview video,
-    .selected-asset-preview iframe {
-      width: 100%;
-      height: 150px;
-      border: 0;
-      object-fit: contain;
-      background: #fff;
-    }
-
-    .selected-asset-info {
-      min-width: 0;
-      padding: 2px 0;
-    }
-
-    .selected-asset-label {
-      margin-bottom: 6px;
-      color: #526273;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    .selected-asset-type {
-      display: inline-block;
-      margin-top: 7px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #edf3f8;
-      color: #34536f;
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .selected-asset-key {
-      margin-top: 6px;
-      color: #7a8794;
-      font-size: 11px;
-      word-break: break-all;
-    }
-
-    .selected-asset-clear {
-      align-self: start;
-      margin-right: 0;
-    }
-
     .asset-picker-preview-cell {
       width: 48px;
       height: 38px;
@@ -529,16 +401,6 @@
 
     .asset-picker-name {
       gap: 10px;
-    }
-
-    @media (max-width: 760px) {
-      .selected-asset-card {
-        grid-template-columns: 1fr;
-      }
-
-      .selected-asset-clear {
-        justify-self: start;
-      }
     }
 
     .asset-picker-backdrop {
@@ -795,7 +657,9 @@
 
     }
 
-  </style>
+  
+    .knowledge-media-list{grid-column:1/-1;display:grid;gap:12px}.knowledge-media-toolbar{display:flex;justify-content:flex-end}.knowledge-media-row{border:1px solid #d7e0e8;border-radius:12px;padding:14px;background:#fff;display:grid;grid-template-columns:150px 150px minmax(160px,1fr) auto;gap:10px;align-items:end}.knowledge-media-row .full{grid-column:1/-1}.knowledge-media-row label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#38536d}.knowledge-media-row input,.knowledge-media-row select{width:100%;box-sizing:border-box}.knowledge-media-asset{font-size:12px;color:#526b82;overflow-wrap:anywhere}.knowledge-media-actions{display:flex;gap:8px;align-items:center}.knowledge-media-empty{padding:18px;border:1px dashed #bccbd8;border-radius:10px;color:#667c90;text-align:center}@media(max-width:800px){.knowledge-media-row{grid-template-columns:1fr}.knowledge-media-row .full{grid-column:auto}}
+</style>
 </head>
 
 
@@ -1057,14 +921,6 @@
           <button type="button" class="knowledge-version-tab" data-version="other" aria-selected="false">Other</button>
         </div>
 
-        <div id="legacy-content-panel" class="legacy-content-panel">
-          이 항목은 이전 형식으로 저장된 Knowledge입니다. 기존 내용을 자동으로 Korean/Other에 배정하지 않습니다.
-          <div class="legacy-content-actions">
-            <button type="button" class="insights-btn library-button" id="copy-legacy-ko">Copy Legacy to Korean</button>
-            <button type="button" class="insights-btn library-button" id="copy-legacy-other">Copy Legacy to Other</button>
-          </div>
-        </div>
-
         <div class="insights-field manager-editable-field full">
           <label for="edit-version-title"><span id="version-title-label">Korean</span> Title</label>
           <input type="text" id="edit-version-title">
@@ -1248,42 +1104,13 @@
         </div>
 
 
-        <div class="media-section-heading">MEDIA</div>
+        <div class="media-section-heading">MEDIA / RESOURCES</div>
 
-        <div class="insights-field manager-editable-field full">
-          <label for="edit-media-type">Media Type</label>
-          <select id="edit-media-type">
-            <option value="none">None</option>
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-            <option value="pdf">PDF</option>
-            <option value="markdown">Markdown Article</option>
-            <option value="presentation">Presentation</option>
-            <option value="document">Document</option>
-            <option value="external">External Link</option>
-          </select>
-        </div>
-
-        <div class="insights-field manager-editable-field full" id="media-asset-field">
-          <label><span id="media-version-label">Korean</span> Media Asset</label>
-          <button type="button" class="insights-btn library-button" id="open-asset-picker">Select from Asset Library</button>
-          <div id="selected-asset-card" class="selected-asset-card">
-            <div id="selected-asset-preview" class="selected-asset-preview" aria-hidden="true"></div>
-            <div class="selected-asset-info">
-              <div class="selected-asset-label">Selected Asset</div>
-              <div id="selected-asset-title" class="selected-asset-title"></div>
-              <div id="selected-asset-type" class="selected-asset-type"></div>
-              <div id="selected-asset-path" class="selected-asset-path"></div>
-              <div id="selected-asset-key" class="selected-asset-key"></div>
-            </div>
-            <button type="button" class="insights-small-btn selected-asset-clear" id="clear-selected-asset">Clear</button>
+        <div class="knowledge-media-list manager-editable-field" id="knowledge-media-editor">
+          <div class="knowledge-media-toolbar">
+            <button type="button" class="insights-btn library-button" id="add-media-resource">+ Add Media</button>
           </div>
-        </div>
-
-        <div class="insights-field manager-editable-field full" id="media-url-field">
-          <label for="edit-media-url"><span id="media-url-version-label">Korean</span> External URL</label>
-          <input type="text" id="edit-media-url" placeholder="https://...">
-          <span class="insights-field-hint">External Link 유형에서만 사용합니다.</span>
+          <div id="knowledge-media-rows"></div>
         </div>
       </div>
 
@@ -1421,11 +1248,12 @@
     let activeVersion = 'ko';
 
     let versionDrafts = {
-      ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: { url: '', asset: '', assetKey: '' } },
-      other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: { url: '', asset: '', assetKey: '' } }
+      ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } },
+      other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } }
     };
 
-    let legacyDraft = null;
+    let mediaDrafts = [];
+    let assetPickerTargetIndex = null;
     let builderReturnToLibrary = false;
     let builderReturnId = '';
     let assetPickerFolder = '';
@@ -1540,9 +1368,9 @@
     function getSearchText(item) {
       const ko = getVersion(item, 'ko');
       const other = getVersion(item, 'other');
-      const media = item?.representativeMedia || {};
-      const mediaKo = media.ko || {};
-      const mediaOther = media.other || {};
+      const mediaText = Array.isArray(item?.media)
+        ? item.media.map(media => [media.type, media.language, media.title, media.url, media.asset, media.assetKey].join(' ')).join(' ')
+        : '';
 
       return normalize([
         item.date,
@@ -1552,10 +1380,7 @@
         ko.title, ko.summary, ko.body,
         other.title, other.summary, other.body,
         item.title, item.summary, item.body,
-        media.type,
-        mediaKo.url, mediaKo.asset, mediaKo.assetKey,
-        mediaOther.url, mediaOther.asset, mediaOther.assetKey,
-        item.url, item.asset, item.assetKey,
+        mediaText,
         item.access,
         ...(item.topics || []),
         ...(item.industries || []),
@@ -1583,7 +1408,7 @@
             }
           ),
           fetch(
-            '../insightscontent/access-levels.json',
+            '/api/insights-library?resource=accesslevels',
             {
               cache: 'no-store'
             }
@@ -1651,11 +1476,13 @@
         );
 
       const accessLevels =
-        Array.isArray(
-          accessData.accessLevels
-        )
-          ? accessData.accessLevels
-          : [];
+        Array.isArray(accessData)
+          ? accessData
+          : (
+              Array.isArray(accessData.accessLevels)
+                ? accessData.accessLevels
+                : []
+            );
 
 
       const filterSelect =
@@ -1901,18 +1728,6 @@
       return path.includes('.') ? path.split('.').pop() : 'asset';
     }
 
-    function assetMatchesMediaType(asset, mediaType) {
-      if (!asset || mediaType === 'none' || mediaType === 'external') return false;
-      const h = `${asset.type || ''} ${asset.mimeType || ''} ${asset.fileName || ''} ${asset.pathname || ''} ${asset.path || ''} ${asset.url || ''}`.toLowerCase();
-      if (mediaType === 'pdf') return /pdf|\.pdf(?:$|[?#])/.test(h);
-      if (mediaType === 'video') return /video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/.test(h);
-      if (mediaType === 'image') return /image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/.test(h);
-      if (mediaType === 'markdown') return /markdown|\.md(?:$|[?#])/.test(h);
-      if (mediaType === 'presentation') return /presentation|powerpoint|\.pptx?(?:$|[?#])/.test(h);
-      if (mediaType === 'document') return /document|word|\.docx?(?:$|[?#])|\.txt(?:$|[?#])/.test(h);
-      return true;
-    }
-
     function getChildFolders(assets, folder) {
       const prefix = folder ? `${folder}/` : '';
       const found = new Set();
@@ -1938,10 +1753,6 @@
         html.push(`<button type="button" class="asset-picker-crumb" data-folder="${escapeHtml(path)}">${escapeHtml(part)}</button>`);
       });
       el.innerHTML = html.join('');
-    }
-
-    function isImageAsset(asset) {
-      return /image|\.jpe?g$|\.png$|\.gif$|\.webp$|\.svg$/i.test(`${asset?.type || ''} ${asset?.mimeType || ''} ${getAssetLogicalPath(asset)}`);
     }
 
     function getAssetIconLabel(asset) {
@@ -2183,74 +1994,83 @@
       backdrop.setAttribute('aria-hidden', 'true');
     }
 
-    function chooseAsset(assetKey) {
-      const asset = getAssetByKey(assetKey);
-      if (!asset) return;
-
-      const detectedType = getAssetPreviewKind(asset);
-      const mediaTypeByKind = {
-        image: 'image',
-        video: 'video',
-        pdf: 'pdf',
-        markdown: 'markdown',
-        presentation: 'presentation',
-        document: 'document'
+    function normalizeMediaDraft(value = {}) {
+      return {
+        type: String(value.type || 'image').trim().toLowerCase(),
+        language: ['ko', 'other', 'common'].includes(String(value.language || '').toLowerCase())
+          ? String(value.language).toLowerCase()
+          : 'common',
+        title: String(value.title || '').trim(),
+        assetKey: String(value.assetKey || '').trim(),
+        asset: String(value.asset || '').trim(),
+        url: String(value.url || '').trim()
       };
-
-      const mediaType = mediaTypeByKind[detectedType];
-      if (mediaType) {
-        document.getElementById('edit-media-type').value = mediaType;
-      }
-
-      versionDrafts[activeVersion].media = {
-        url: '',
-        asset: getAssetPath(asset),
-        assetKey: asset.key || ''
-      };
-
-      updateMediaEditorVisibility();
-      renderSelectedAsset();
-      closeAssetPicker();
     }
 
-    function renderSelectedAsset() {
-      const media = versionDrafts[activeVersion].media || {};
-      const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
-      const card = document.getElementById('selected-asset-card');
-      const preview = document.getElementById('selected-asset-preview');
+    function getKnowledgeMediaItems(item) {
+      return Array.isArray(item?.media)
+        ? item.media.map(normalizeMediaDraft)
+        : [];
+    }
 
-      if (!media.assetKey && !media.asset) {
-        card.classList.remove('open');
-        preview.innerHTML = '';
-        document.getElementById('selected-asset-title').textContent = '';
-        document.getElementById('selected-asset-type').textContent = '';
-        document.getElementById('selected-asset-path').textContent = '';
-        document.getElementById('selected-asset-key').textContent = '';
+    function renderMediaEditor() {
+      const host = document.getElementById('knowledge-media-rows');
+      if (!mediaDrafts.length) {
+        host.innerHTML = '<div class="knowledge-media-empty">No media/resource attached. Use + Add Media when this Knowledge needs an image, video, PDF, document or external link.</div>';
         return;
       }
 
-      const displayAsset = asset || {
-        key: media.assetKey || '',
-        path: media.asset || '',
-        url: media.asset || '',
-        title: media.assetKey || 'Selected Asset'
+      host.innerHTML = mediaDrafts.map((media, index) => {
+        const isExternal = media.type === 'external';
+        const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
+        const sourceLabel = media.assetKey
+          ? `${media.assetKey}${asset ? ' · ' + getAssetDisplayName(asset) : ''}`
+          : (media.asset || 'No Asset selected');
+
+        return `<div class="knowledge-media-row" data-media-index="${index}">
+          <div><label>Type</label><select data-media-field="type">
+            ${['image','video','pdf','markdown','presentation','document','external'].map(type => `<option value="${type}" ${media.type===type?'selected':''}>${type === 'external' ? 'External Link' : type.charAt(0).toUpperCase()+type.slice(1)}</option>`).join('')}
+          </select></div>
+          <div><label>Language</label><select data-media-field="language">
+            <option value="common" ${media.language==='common'?'selected':''}>Common</option>
+            <option value="ko" ${media.language==='ko'?'selected':''}>Korean</option>
+            <option value="other" ${media.language==='other'?'selected':''}>Other</option>
+          </select></div>
+          <div><label>Title / Label (optional)</label><input type="text" data-media-field="title" value="${escapeHtml(media.title)}" placeholder="Optional media label"></div>
+          <div class="knowledge-media-actions"><button type="button" class="insights-small-btn" data-media-remove>Remove</button></div>
+          <div class="full" ${isExternal?'hidden':''}>
+            <label>Asset Library</label>
+            <div class="knowledge-media-actions"><button type="button" class="insights-btn library-button" data-media-select>Select from Asset Library</button><span class="knowledge-media-asset">${escapeHtml(sourceLabel)}</span></div>
+          </div>
+          <div class="full" ${isExternal?'':'hidden'}>
+            <label>External URL</label><input type="url" data-media-field="url" value="${escapeHtml(media.url)}" placeholder="https://...">
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function addMediaResource() {
+      mediaDrafts.push(normalizeMediaDraft({ type: 'image', language: 'common' }));
+      renderMediaEditor();
+    }
+
+    function chooseAsset(assetKey) {
+      if (!Number.isInteger(assetPickerTargetIndex) || !mediaDrafts[assetPickerTargetIndex]) return;
+      const asset = getAssetByKey(assetKey);
+      if (!asset) return;
+
+      const kind = getAssetPreviewKind(asset);
+      const allowed = ['image','video','pdf','markdown','presentation','document'];
+      mediaDrafts[assetPickerTargetIndex] = {
+        ...mediaDrafts[assetPickerTargetIndex],
+        type: allowed.includes(kind) ? kind : 'document',
+        assetKey: asset.key || '',
+        asset: getAssetPath(asset),
+        url: ''
       };
-
-      document.getElementById('selected-asset-title').textContent =
-        asset ? getAssetDisplayName(asset) : (media.assetKey || 'Selected Asset');
-
-      document.getElementById('selected-asset-type').textContent =
-        getAssetTypeLabel(displayAsset);
-
-      document.getElementById('selected-asset-path').textContent =
-        media.asset || (asset ? getAssetPath(asset) : '');
-
-      document.getElementById('selected-asset-key').textContent =
-        media.assetKey ? `assetKey: ${media.assetKey}` : '';
-
-      preview.innerHTML = getAssetPreviewMarkup(displayAsset, 'card');
-      card.classList.add('open');
-      hydrateAssetThumbnails(card);
+      renderMediaEditor();
+      closeAssetPicker();
+      assetPickerTargetIndex = null;
     }
 
     function updateContentSourceEditorVisibility() {
@@ -2306,7 +2126,6 @@
         ref: document.getElementById('edit-content-ref').value.trim(),
         path: document.getElementById('edit-content-path').value.trim()
       };
-      draft.media.url = document.getElementById('edit-media-url').value.trim();
     }
 
     function loadActiveVersionIntoEditor() {
@@ -2318,8 +2137,7 @@
       document.getElementById('edit-content-source-type').value = draft.contentSource?.type || 'builder-markdown';
       document.getElementById('edit-content-ref').value = draft.contentSource?.ref || '';
       document.getElementById('edit-content-path').value = draft.contentSource?.path || '';
-      document.getElementById('edit-media-url').value = draft.media?.url || '';
-      ['version-title-label', 'version-summary-label', 'version-body-label', 'content-source-version-label', 'media-version-label', 'media-url-version-label']
+      ['version-title-label', 'version-summary-label', 'version-body-label', 'content-source-version-label']
         .forEach(id => { document.getElementById(id).textContent = label; });
       document.querySelectorAll('.knowledge-version-tab').forEach(button => {
         const isActive = button.dataset.version === activeVersion;
@@ -2330,8 +2148,7 @@
       preview.classList.remove('open');
       preview.innerHTML = '';
       populateCmsArticleOptions();
-      renderSelectedAsset();
-      updateMediaEditorVisibility();
+      renderMediaEditor();
       updateContentSourceEditorVisibility();
     }
 
@@ -2340,12 +2157,6 @@
       syncEditorToActiveVersion();
       activeVersion = nextVersion;
       loadActiveVersionIntoEditor();
-    }
-
-    function updateMediaEditorVisibility() {
-      const mediaType = document.getElementById('edit-media-type').value;
-      document.getElementById('media-asset-field').style.display = ['image', 'video', 'pdf', 'markdown', 'presentation', 'document'].includes(mediaType) ? '' : 'none';
-      document.getElementById('media-url-field').style.display = mediaType === 'external' ? '' : 'none';
     }
 
 
@@ -2675,30 +2486,21 @@
     }
 
     function getDetailMedia(item) {
-      const representative = item?.representativeMedia || {};
       const preferredVersion = chooseInitialKnowledgeVersion(item);
-      const media = representative[preferredVersion] ||
-                    representative.ko ||
-                    representative.other ||
-                    {};
-
-      const assetKey = media.assetKey || item.assetKey || '';
+      const candidates = getKnowledgeMediaItems(item);
+      const media = candidates.find(entry => entry.language === preferredVersion) ||
+                    candidates.find(entry => entry.language === 'common') ||
+                    candidates[0] || {};
+      const assetKey = media.assetKey || '';
       const asset = assetKey ? getAssetByKey(assetKey) : null;
 
       return {
-        type: representative.type || inferMediaType(media),
-        url: media.url || item.url || '',
-        assetPath: media.asset || item.asset || '',
+        type: media.type || inferMediaType(media),
+        url: media.url || '',
+        assetPath: media.asset || '',
         assetKey,
         asset,
-        thumbnailTime:
-          Number.isFinite(Number(media.thumbnailTime))
-            ? Number(media.thumbnailTime)
-            : Number.isFinite(Number(representative.thumbnailTime))
-              ? Number(representative.thumbnailTime)
-              : Number.isFinite(Number(asset?.thumbnailTime))
-                ? Number(asset.thumbnailTime)
-                : 0.1
+        thumbnailTime: Number.isFinite(Number(asset?.thumbnailTime)) ? Number(asset.thumbnailTime) : 0.1
       };
     }
 
@@ -2878,11 +2680,12 @@
     function resetEditor() {
       editingIndex = null;
       activeVersion = 'ko';
-      legacyDraft = null;
       versionDrafts = {
-        ko: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } },
-        other: { title: '', summary: '', body: '', media: { url: '', asset: '', assetKey: '' } }
+        ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } },
+        other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } }
       };
+      mediaDrafts = [];
+      assetPickerTargetIndex = null;
 
       document.getElementById('editor-title').textContent = 'Add Knowledge';
       document.getElementById('editor-back-button').textContent = 'Back to List';
@@ -2900,8 +2703,6 @@
       document.getElementById('edit-programs').value = '';
       document.getElementById('edit-tags').value = '';
       setSelectedExternalSourceIds([]);
-      document.getElementById('edit-media-type').value = 'none';
-      document.getElementById('legacy-content-panel').classList.remove('open');
       loadActiveVersionIntoEditor();
       clearMessage();
     }
@@ -2973,10 +2774,8 @@
       document.getElementById('edit-tags').value = arrayToInput(item.tags);
       setSelectedExternalSourceIds(item.externalSources);
 
-      const representativeMedia = item.representativeMedia || {};
       ['ko', 'other'].forEach(versionKey => {
         const version = getVersion(item, versionKey);
-        const media = representativeMedia[versionKey] || {};
         versionDrafts[versionKey] = {
           title: version.title || '',
           summary: version.summary || '',
@@ -2985,27 +2784,11 @@
             type: version.contentSource?.type || 'builder-markdown',
             ref: version.contentSource?.ref || '',
             path: version.contentSource?.path || ''
-          },
-          media: {
-            url: media.url || '',
-            asset: media.asset || '',
-            assetKey: media.assetKey || ''
           }
         };
       });
 
-      const hasVersions = Boolean(item.versions && (item.versions.ko || item.versions.other));
-      if (!hasVersions && (item.title || item.summary || item.body || item.url || item.asset || item.assetKey)) {
-        legacyDraft = {
-          title: item.title || '',
-          summary: item.summary || '',
-          body: item.body || '',
-          media: { url: item.url || '', asset: item.asset || '', assetKey: item.assetKey || '' }
-        };
-        document.getElementById('legacy-content-panel').classList.add('open');
-      }
-
-      document.getElementById('edit-media-type').value = representativeMedia.type || inferMediaType(legacyDraft?.media || {});
+      mediaDrafts = getKnowledgeMediaItems(item);
       activeVersion = chooseInitialKnowledgeVersion(item);
       loadActiveVersionIntoEditor();
       clearMessage();
@@ -3027,19 +2810,6 @@
     }
 
 
-    function copyLegacyToVersion(targetVersion) {
-      if (!legacyDraft || !['ko', 'other'].includes(targetVersion)) return;
-      syncEditorToActiveVersion();
-      versionDrafts[targetVersion] = {
-        title: legacyDraft.title || '',
-        summary: legacyDraft.summary || '',
-        body: legacyDraft.body || '',
-        media: { ...(legacyDraft.media || { url: '', asset: '', assetKey: '' }) }
-      };
-      activeVersion = targetVersion;
-      loadActiveVersionIntoEditor();
-      showMessage(`Legacy content copied to ${targetVersion === 'ko' ? 'Korean' : 'Other'}. Save to apply.`, 'success');
-    }
 
 
     function closeEditor() {
@@ -3174,11 +2944,7 @@
         tags: inputToArray(document.getElementById('edit-tags').value),
         externalSources: getSelectedExternalSourceIds(),
         versions,
-        representativeMedia: {
-          type: document.getElementById('edit-media-type').value,
-          ko: { ...versionDrafts.ko.media },
-          other: { ...versionDrafts.other.media }
-        }
+        media: mediaDrafts.map(normalizeMediaDraft)
       };
 
       const isEdit = editingIndex !== null;
@@ -3602,12 +3368,48 @@
       () => toggleMarkdownPreview('edit-version-body', 'version-markdown-preview', 'toggle-version-markdown-preview')
     );
 
-    document.getElementById('edit-media-type').addEventListener('change', () => {
-      syncEditorToActiveVersion();
-      updateMediaEditorVisibility();
+
+    document.getElementById('add-media-resource').addEventListener('click', addMediaResource);
+    document.getElementById('knowledge-media-rows').addEventListener('input', event => {
+      const row = event.target.closest('[data-media-index]');
+      const field = event.target.dataset.mediaField;
+      if (!row || !field) return;
+      const index = Number(row.dataset.mediaIndex);
+      if (!mediaDrafts[index]) return;
+      mediaDrafts[index][field] = event.target.value;
+    });
+    document.getElementById('knowledge-media-rows').addEventListener('change', event => {
+      const row = event.target.closest('[data-media-index]');
+      const field = event.target.dataset.mediaField;
+      if (!row || !field) return;
+      const index = Number(row.dataset.mediaIndex);
+      if (!mediaDrafts[index]) return;
+      mediaDrafts[index][field] = event.target.value;
+      if (field === 'type') {
+        if (event.target.value === 'external') {
+          mediaDrafts[index].assetKey = '';
+          mediaDrafts[index].asset = '';
+        } else {
+          mediaDrafts[index].url = '';
+        }
+        renderMediaEditor();
+      }
+    });
+    document.getElementById('knowledge-media-rows').addEventListener('click', event => {
+      const row = event.target.closest('[data-media-index]');
+      if (!row) return;
+      const index = Number(row.dataset.mediaIndex);
+      if (event.target.closest('[data-media-remove]')) {
+        mediaDrafts.splice(index, 1);
+        renderMediaEditor();
+        return;
+      }
+      if (event.target.closest('[data-media-select]')) {
+        assetPickerTargetIndex = index;
+        openAssetPicker();
+      }
     });
 
-    document.getElementById('open-asset-picker').addEventListener('click', openAssetPicker);
     document.getElementById('close-asset-picker').addEventListener('click', closeAssetPicker);
     document.getElementById('asset-picker-search').addEventListener('input', renderAssetPicker);
     document.getElementById('asset-picker-list').addEventListener('click', event => {
@@ -3641,12 +3443,7 @@
     document.getElementById('asset-picker-backdrop').addEventListener('click', event => {
       if (event.target.id === 'asset-picker-backdrop') closeAssetPicker();
     });
-    document.getElementById('clear-selected-asset').addEventListener('click', () => {
-      versionDrafts[activeVersion].media = { url: '', asset: '', assetKey: '' };
-      renderSelectedAsset();
-    });
-    document.getElementById('copy-legacy-ko').addEventListener('click', () => copyLegacyToVersion('ko'));
-    document.getElementById('copy-legacy-other').addEventListener('click', () => copyLegacyToVersion('other'));
+
 
 
     /* =========================================

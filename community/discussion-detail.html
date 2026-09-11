@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IXL Korea Community Discussion</title>
+  <link rel="stylesheet" href="community.css">
+  <link rel="stylesheet" href="discussion.css">
+</head>
+<body class="discussion-page">
+  <header class="community-header">
+    <a class="community-brand" href="/" aria-label="IXL Korea Home">
+      <img src="../ixl-korea-logo.png" alt="IXL Korea">
+    </a>
+    <div class="community-home-actions">
+      <a class="discussion-back-link" href="/community/discussion.html">Discussions</a>
+      <span id="community-user-name" class="community-user-name">Member</span>
+      <button id="community-signout" type="button">Sign Out</button>
+    </div>
+  </header>
+
+  <main class="discussion-main discussion-detail-main">
+    <section id="discussion-detail-state" class="discussion-state">Loading discussion…</section>
+
+    <article id="discussion-detail" class="discussion-detail-card" hidden>
+      <p class="eyebrow">DISCUSSION</p>
+      <h1 id="discussion-detail-title"></h1>
+      <div class="discussion-meta">
+        <span id="discussion-detail-author"></span>
+        <span aria-hidden="true">•</span>
+        <time id="discussion-detail-date"></time>
+      </div>
+      <div id="discussion-detail-body" class="discussion-detail-body"></div>
+      <div id="discussion-knowledge-badge" class="discussion-knowledge-badge" hidden>Promoted to Knowledge</div>
+    </article>
+
+    <section id="discussion-comments-section" class="discussion-comments-section" hidden>
+      <div class="discussion-section-heading">
+        <div>
+          <p class="eyebrow">REACTIONS &amp; RESPONSES</p>
+          <h2>Discussion responses</h2>
+        </div>
+        <span id="discussion-comment-count" class="discussion-count"></span>
+      </div>
+
+      <div id="discussion-comments" class="discussion-comments"></div>
+
+      <form id="discussion-comment-form" class="discussion-comment-form">
+        <label for="discussion-comment-body">Add a response</label>
+        <textarea id="discussion-comment-body" rows="4" maxlength="6000" required placeholder="Share a useful response, perspective or question."></textarea>
+        <div class="discussion-form-actions">
+          <span id="discussion-comment-message" class="discussion-form-message" role="status"></span>
+          <button id="discussion-comment-submit" class="discussion-primary-button" type="submit">Post Response</button>
+        </div>
+      </form>
+    </section>
+
+    <footer class="community-footer">© 2026 IXL Korea. All rights reserved.</footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-discussion-api.js"></script>
+  <script src="/community/discussion-detail.js"></script>
+</body>
+</html>

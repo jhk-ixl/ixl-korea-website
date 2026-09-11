@@ -39,20 +39,20 @@
   function renderMarkdown(markdown){return window.IXLMarkdown&&typeof window.IXLMarkdown.render==='function'?window.IXLMarkdown.render(markdown||''):fallbackMarkdown(markdown||'');}
   function stripFrontmatter(text){return String(text||'').replace(/^---\s*[\r\n]+[\s\S]*?[\r\n]+---\s*[\r\n]?/,'');}
   function selectVersion(item){const versions=item.versions||{};const isKo=document.documentElement.lang==='ko';const first=isKo?versions.ko:versions.other;const second=isKo?versions.other:versions.ko;return (first&&(first.title||first.summary||first.body||first.contentSource))?{key:isKo?'ko':'other',value:first}:{key:isKo?'other':'ko',value:second||{}};}
-  function resolveAssetUrl(item,versionKey,assets){const media=(item.representativeMedia||{})[versionKey]||{};const key=media.assetKey||item.assetKey||'';if(key){const found=assets.find(a=>a.key===key);if(found)return found.url||found.pathname||media.asset||media.url||item.asset||item.url||'';}return media.asset||media.url||item.asset||item.url||'';}
+  function resolveMediaItems(item,versionKey,assets){const list=Array.isArray(item.media)?item.media:[];return list.filter(m=>m.language===versionKey||m.language==='common').map(media=>{const key=media.assetKey||'';const found=key?assets.find(a=>a.key===key):null;return {...media,resolvedUrl:(found&&(found.url||found.pathname))||media.asset||media.url||''};});}
   async function run(){
     try{
-      const [knowledgeResponse,assetsResponse]=await Promise.all([fetch('insightscontent/knowledge-data.json',{cache:'no-store'}),fetch('insightscontent/asset-registry.json',{cache:'no-store'})]);
-      if(!knowledgeResponse.ok)throw new Error('Knowledge could not be loaded.');
+      const [knowledgeResponse,assetsResponse]=await Promise.all([fetch('/api/insights-library?resource=public-knowledge',{cache:'no-store'}),fetch('insightscontent/asset-registry.json',{cache:'no-store'})]);
+      if(!knowledgeResponse.ok)throw new Error('Public Knowledge could not be loaded.');
       const kd=await knowledgeResponse.json(); const list=Array.isArray(kd)?kd:(kd.items||[]);
       const assets=assetsResponse.ok?((await assetsResponse.json()).assets||[]):[];
       const item=list.find(x=>(id&&x.knowledgeId===id)||(!id&&slug&&((x.slug||slugify(x.title))===slug)));
-      if(!item||item.access!=='Public'||item.publicationStatus!=='Published')throw new Error('This Insight is not available.');
+      if(!item)throw new Error('This Insight is not available.');
       const selected=selectVersion(item); const version=selected.value||{}; const title=version.title||item.title||''; const summary=version.summary||item.summary||'';
       let body=version.body||item.body||''; const contentSource=version.contentSource||{};
       if(contentSource.type==='cms-markdown'&&contentSource.path){const r=await fetch(contentSource.path,{cache:'no-store'});if(!r.ok)throw new Error('Linked CMS Markdown article could not be loaded.');body=stripFrontmatter(await r.text());}
       document.title=title+' | IXL Korea'; document.getElementById('detail-type').textContent=item.type||'';document.getElementById('detail-date').textContent=item.dateLabel||item.date||'';document.getElementById('detail-title').textContent=title;document.getElementById('detail-summary').textContent=summary;document.getElementById('detail-body').innerHTML=body?renderMarkdown(body):'';
-      const url=resolveAssetUrl(item,selected.key,assets); if(url){const a=document.createElement('a');a.href=url;a.textContent=/\.pdf(?:$|[?#])/i.test(url)?'View PDF →':/\.(mp4|mov|webm)(?:$|[?#])/i.test(url)?'Watch Video →':'Open Resource →';if(/^https?:\/\//i.test(url)||/\.(pdf|mp4|mov|webm)(?:$|[?#])/i.test(url)){a.target='_blank';a.rel='noopener noreferrer';}document.getElementById('detail-resource').appendChild(a);}
+      const mediaItems=resolveMediaItems(item,selected.key,assets); const resourceHost=document.getElementById('detail-resource'); mediaItems.forEach((media,index)=>{const url=media.resolvedUrl;if(!url)return;const a=document.createElement('a');a.href=url;const defaultLabel=media.type==='pdf'?'View PDF →':media.type==='video'?'Watch Video →':media.type==='image'?'View Image →':'Open Resource →';a.textContent=media.title||defaultLabel;a.style.marginRight='10px';a.style.marginBottom='10px';if(/^https?:\/\//i.test(url)||media.type!=='external'){a.target='_blank';a.rel='noopener noreferrer';}resourceHost.appendChild(a);});
       root.hidden=false;
     }catch(error){errorBox.textContent=error.message||'Insight could not be loaded.';errorBox.hidden=false;}
   }

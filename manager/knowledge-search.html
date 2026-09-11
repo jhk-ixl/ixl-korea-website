@@ -390,6 +390,15 @@
     }
 
 
+
+    function getSearchVersion(item) {
+      return item?.versions?.ko?.title ? item.versions.ko : (item?.versions?.other || {});
+    }
+
+    function getSearchMedia(item) {
+      const list = Array.isArray(item?.media) ? item.media : [];
+      return list.find(entry => entry.language === 'ko') || list.find(entry => entry.language === 'common') || list.find(entry => entry.language === 'other') || {};
+    }
     function renderResults(items) {
       const tbody = document.getElementById('search-results');
       const empty = document.getElementById('search-empty');
@@ -412,7 +421,9 @@
         const programs = normalizeArray(item.programs);
         const tags = normalizeArray(item.tags);
         const access = item.access || 'Public';
-        const url = item.asset || item.url || '';
+        const version = getSearchVersion(item);
+        const media = getSearchMedia(item);
+        const url = media.asset || media.url || '';
         const date = item.dateLabel || item.date || '';
         const type = getKnowledgeTypeName(item.type);
         const classifications = [...topics, ...industries, ...programs, ...tags].filter(Boolean);
@@ -421,7 +432,7 @@
         row.innerHTML = `
           <td data-sort-value="${escapeSearchHtml(item.date || date)}">${escapeSearchHtml(date)}</td>
           <td data-sort-value="${escapeSearchHtml(type)}">${escapeSearchHtml(type)}</td>
-          <td data-sort-value="${escapeSearchHtml(item.title || '')}"><strong>${escapeSearchHtml(item.title || '')}</strong><br><small>${escapeSearchHtml(item.summary || '')}</small></td>
+          <td data-sort-value="${escapeSearchHtml(version.title || '')}"><strong>${escapeSearchHtml(version.title || '')}</strong><br><small>${escapeSearchHtml(version.summary || '')}</small></td>
           <td>${classifications.length ? classifications.map(value => `<span class="manager-inline-tag">${escapeSearchHtml(value)}</span>`).join(' ') : '—'}</td>
           <td data-sort-value="${escapeSearchHtml(access)}">${escapeSearchHtml(access)}</td>
           <td>${url ? `<a class="library-button" href="${escapeSearchHtml(IXLManager.toUrl(url))}" target="_blank" rel="noopener noreferrer">Open ↗</a>` : '—'}</td>
@@ -595,7 +606,7 @@
 
         const response =
           await fetch(
-            '../insightscontent/knowledge-data.json',
+            '/api/insights-library?resource=knowledge',
             {
               cache: 'no-store'
             }
@@ -615,9 +626,13 @@
 
 
         knowledgeItems =
-          Array.isArray(data.items)
-            ? data.items
-            : [];
+          Array.isArray(data)
+            ? data
+            : (
+                Array.isArray(data.items)
+                  ? data.items
+                  : []
+              );
 
 
         knowledgeItems.sort(

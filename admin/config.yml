@@ -22,6 +22,22 @@ collections:
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     summary: "{{date}} · {{title}}"
     fields:
+      - label: "Content Ref"
+        name: "contentRef"
+        widget: "string"
+        hint: "Stable CMS content identifier. Do not change after this article is linked to Knowledge. Example: article-innovation-5-0"
+      - label: "Knowledge ID"
+        name: "knowledgeId"
+        widget: "string"
+        required: false
+        hint: "Optional until this article is linked to a Knowledge Item. After linking, enter the stable kn_... ID."
+      - label: "Language"
+        name: "language"
+        widget: "select"
+        options:
+          - { label: "Korean", value: "ko" }
+          - { label: "Other", value: "other" }
+        default: "other"
       - label: "Title"
         name: "title"
         widget: "string"

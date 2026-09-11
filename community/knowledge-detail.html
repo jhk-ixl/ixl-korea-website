@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Detail | IXL Korea Community</title>
+  <link rel="stylesheet" href="/community/community.css">
+  <link rel="stylesheet" href="/community/knowledge-detail.css">
+</head>
+<body class="community-knowledge-detail-page">
+
+  <header class="community-header">
+
+    <a
+      class="community-brand"
+      href="/"
+      aria-label="IXL Korea Home"
+    >
+      <img
+        src="../ixl-korea-logo.png"
+        alt="IXL Korea"
+      >
+    </a>
+
+    <div class="community-home-actions">
+
+      <a
+        class="knowledge-back-link"
+        href="/community/knowledge.html"
+        id="knowledge-detail-back"
+      >
+        Knowledge Hub
+      </a>
+
+      <span
+        id="community-user-name"
+        class="community-user-name"
+      >
+        Member
+      </span>
+
+      <button
+        id="community-signout"
+        type="button"
+      >
+        Sign Out
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="knowledge-detail-main">
+    <article
+      id="knowledge-detail"
+      class="knowledge-detail"
+      aria-live="polite"
+    >
+      <p class="knowledge-detail-loading">
+        Loading Knowledge...
+      </p>
+    </article>
+  </main>
+
+  <footer class="community-footer">
+    &copy; 2026 IXL Korea. All rights reserved.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/community/community-supabase.js"></script>
+  <script src="/community/community-auth.js"></script>
+  <script src="/community/community-knowledge-api.js"></script>
+  <script src="/markdown-renderer.js"></script>
+  <script src="/community/knowledge-detail.js"></script>
+</body>
+</html>
