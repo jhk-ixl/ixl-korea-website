@@ -1041,6 +1041,28 @@
       select.value = selectedKey || '';
     }
 
+    function resolveSnsMediaType(value) {
+      const type = String(value || '').trim().toLowerCase();
+      const typeMap = {
+        image: 'Image',
+        jpg: 'Image',
+        jpeg: 'Image',
+        png: 'Image',
+        webp: 'Image',
+        gif: 'Image',
+        video: 'Video',
+        mp4: 'Video',
+        mov: 'Video',
+        m4v: 'Video',
+        webm: 'Video',
+        pdf: 'Document',
+        markdown: 'Document',
+        presentation: 'Document',
+        document: 'Document'
+      };
+      return typeMap[type] || 'None';
+    }
+
     function applyAssetLibrarySelection(assetKey) {
       const asset = findAssetByKey(assetKey);
       if (!asset) {
@@ -1052,10 +1074,10 @@
         return;
       }
       const type = String(asset.type || '').toLowerCase();
-      const typeMap = { image: 'Image', video: 'Video', pdf: 'Document', markdown: 'Document', presentation: 'Document', document: 'Document' };
+      const mediaType = resolveSnsMediaType(type);
       selectedAssetKey = String(asset.key || '').trim();
-      document.getElementById('share-media-type').value = typeMap[type] || 'None';
-      document.getElementById('share-media-file').value = asset.url || asset.pathname || '';
+      document.getElementById('share-media-type').value = mediaType;
+      document.getElementById('share-media-file').value = mediaType === 'None' ? '' : (asset.url || asset.pathname || '');
       document.getElementById('share-knowledge-media').value = '';
     }
 
@@ -1111,9 +1133,8 @@
       }
       const list = getKnowledgeMediaItems(item, language);
       const media = resolveMediaItem(list[Number(indexValue)] || {});
-      const typeMap = { image: 'Image', video: 'Video', pdf: 'Document', markdown: 'Document', presentation: 'Document', document: 'Document' };
       selectedAssetKey = media.assetKey || '';
-      mediaTypeField.value = typeMap[media.type] || 'None';
+      mediaTypeField.value = resolveSnsMediaType(media.type);
       mediaFileField.value = mediaTypeField.value === 'None' ? '' : media.url;
     }
 
