@@ -7,55 +7,266 @@
   <link rel="stylesheet" href="style.css">
   <script src="markdown-renderer.js"></script>
   <style>
-    .insight-detail-shell{max-width:980px;margin:0 auto;padding:120px 28px 80px}.insight-detail-back{display:inline-block;margin-bottom:28px;text-decoration:none}.insight-detail-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;letter-spacing:.04em;text-transform:uppercase}.insight-detail-shell h1{font-size:clamp(34px,5vw,58px);line-height:1.08;margin:18px 0}.insight-detail-summary{font-size:20px;line-height:1.65}.insight-detail-body{margin-top:48px;font-size:17px;line-height:1.8}.insight-detail-body h2,.insight-detail-body h3{margin-top:1.8em}.insight-detail-body img{max-width:100%;height:auto}.insight-detail-resource{margin-top:36px}.insight-detail-resource a{display:inline-block;padding:12px 18px;border:1px solid currentColor;text-decoration:none}.insight-detail-error{padding:120px 28px;text-align:center}
+    .insight-detail-shell{max-width:980px;margin:0 auto;padding:120px 28px 80px}
+    .insight-detail-back{display:inline-block;margin-bottom:28px;text-decoration:none}
+    .insight-detail-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+    .insight-detail-shell h1{font-size:clamp(34px,5vw,58px);line-height:1.08;margin:18px 0}
+    .insight-detail-summary{font-size:20px;line-height:1.65}
+    .insight-detail-body{margin-top:48px;font-size:17px;line-height:1.8}
+    .insight-detail-body h2,.insight-detail-body h3{margin-top:1.8em}
+    .insight-detail-body img{max-width:100%;height:auto}
+    .insight-detail-resource{margin-top:36px}
+    .insight-detail-resource a{display:inline-block;padding:12px 18px;border:1px solid currentColor;text-decoration:none}
+    .insight-detail-error{padding:120px 28px;text-align:center}
   </style>
 </head>
+
 <body>
   <main id="insight-detail" class="insight-detail-shell" hidden>
     <a class="insight-detail-back" href="index.html#insights">← Back to Insights</a>
-    <div class="insight-detail-meta"><span id="detail-type"></span><span id="detail-date"></span></div>
+
+    <div class="insight-detail-meta">
+      <span id="detail-type"></span>
+      <span id="detail-date"></span>
+    </div>
+
     <h1 id="detail-title"></h1>
     <p id="detail-summary" class="insight-detail-summary"></p>
     <article id="detail-body" class="insight-detail-body"></article>
     <div id="detail-resource" class="insight-detail-resource"></div>
   </main>
+
   <div id="insight-error" class="insight-detail-error" hidden></div>
+
 <script>
 (function(){
-  const root=document.getElementById('insight-detail');
-  const errorBox=document.getElementById('insight-error');
-  const params=new URLSearchParams(location.search);
-  const id=params.get('id')||'';
-  const slug=params.get('slug')||'';
-  const escapeHtml=value=>String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  const slugify=value=>String(value||'').toLowerCase().trim().replace(/&/g,' and ').replace(/[^a-z0-9가-힣]+/g,'-').replace(/^-+|-+$/g,'');
+  const root = document.getElementById('insight-detail');
+  const errorBox = document.getElementById('insight-error');
+
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || '';
+  const slug = params.get('slug') || '';
+  const requestedLang = (params.get('lang') || '').toLowerCase();
+
+  const escapeHtml = value =>
+    String(value || '').replace(/[&<>"']/g, ch => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#39;'
+    }[ch]));
+
+  const slugify = value =>
+    String(value || '')
+      .toLowerCase()
+      .trim()
+      .replace(/&/g,' and ')
+      .replace(/[^a-z0-9가-힣]+/g,'-')
+      .replace(/^-+|-+$/g,'');
+
   function fallbackMarkdown(markdown){
-    let text=escapeHtml(markdown||'');
-    text=text.replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>');
-    text=text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
-    text=text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    return text.split(/\n{2,}/).map(block=>/^<h[1-3]>/.test(block)?block:'<p>'+block.replace(/\n/g,'<br>')+'</p>').join('');
+    let text = escapeHtml(markdown || '');
+
+    text = text
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1>$1</h1>');
+
+    text = text
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g,'<em>$1</em>');
+
+    text = text.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+
+    return text
+      .split(/\n{2,}/)
+      .map(block =>
+        /^<h[1-3]>/.test(block)
+          ? block
+          : '<p>' + block.replace(/\n/g,'<br>') + '</p>'
+      )
+      .join('');
   }
-  function renderMarkdown(markdown){return window.IXLMarkdown&&typeof window.IXLMarkdown.render==='function'?window.IXLMarkdown.render(markdown||''):fallbackMarkdown(markdown||'');}
-  function stripFrontmatter(text){return String(text||'').replace(/^---\s*[\r\n]+[\s\S]*?[\r\n]+---\s*[\r\n]?/,'');}
-  function selectVersion(item){const versions=item.versions||{};const isKo=document.documentElement.lang==='ko';const first=isKo?versions.ko:versions.other;const second=isKo?versions.other:versions.ko;return (first&&(first.title||first.summary||first.body||first.contentSource))?{key:isKo?'ko':'other',value:first}:{key:isKo?'other':'ko',value:second||{}};}
-  function resolveMediaItems(item,versionKey,assets){const list=Array.isArray(item.media)?item.media:[];return list.filter(m=>m.language===versionKey||m.language==='common').map(media=>{const key=media.assetKey||'';const found=key?assets.find(a=>a.key===key):null;return {...media,resolvedUrl:(found&&(found.url||found.pathname))||media.asset||media.url||''};});}
+
+  function renderMarkdown(markdown){
+    return window.IXLMarkdown && typeof window.IXLMarkdown.render === 'function'
+      ? window.IXLMarkdown.render(markdown || '')
+      : fallbackMarkdown(markdown || '');
+  }
+
+  function stripFrontmatter(text){
+    return String(text || '').replace(
+      /^---\s*[\r\n]+[\s\S]*?[\r\n]+---\s*[\r\n]?/,
+      ''
+    );
+  }
+
+  function hasVersionContent(version){
+    if (!version) return false;
+
+    const source = version.contentSource || {};
+
+    return !!(
+      String(version.title || '').trim() ||
+      String(version.summary || '').trim() ||
+      String(version.body || '').trim() ||
+      String(source.path || '').trim() ||
+      String(source.ref || '').trim()
+    );
+  }
+
+  function selectVersion(item){
+    const versions = item.versions || {};
+    const ko = versions.ko || {};
+    const other = versions.other || {};
+
+    // 1) URL에서 lang=ko / lang=en 이 명시된 경우 우선 적용
+    if (requestedLang === 'ko') {
+      if (hasVersionContent(ko)) return { key:'ko', value:ko };
+      if (hasVersionContent(other)) return { key:'other', value:other };
+    }
+
+    if (requestedLang === 'en' || requestedLang === 'other') {
+      if (hasVersionContent(other)) return { key:'other', value:other };
+      if (hasVersionContent(ko)) return { key:'ko', value:ko };
+    }
+
+    // 2) 페이지 기본 언어 기준
+    const pageIsKo = document.documentElement.lang === 'ko';
+
+    if (pageIsKo) {
+      if (hasVersionContent(ko)) return { key:'ko', value:ko };
+      if (hasVersionContent(other)) return { key:'other', value:other };
+    } else {
+      if (hasVersionContent(other)) return { key:'other', value:other };
+      if (hasVersionContent(ko)) return { key:'ko', value:ko };
+    }
+
+    // 3) 둘 다 실질 콘텐츠가 없는 경우
+    return { key: pageIsKo ? 'ko' : 'other', value: {} };
+  }
+
+  function resolveMediaItems(item, versionKey, assets){
+    const list = Array.isArray(item.media) ? item.media : [];
+
+    return list
+      .filter(media =>
+        media.language === versionKey ||
+        media.language === 'common'
+      )
+      .map(media => {
+        const key = media.assetKey || '';
+        const found = key ? assets.find(asset => asset.key === key) : null;
+
+        return {
+          ...media,
+          resolvedUrl:
+            (found && (found.url || found.pathname)) ||
+            media.asset ||
+            media.url ||
+            ''
+        };
+      });
+  }
+
   async function run(){
     try{
-      const [knowledgeResponse,assetsResponse]=await Promise.all([fetch('/api/insights-library?resource=public-knowledge',{cache:'no-store'}),fetch('insightscontent/asset-registry.json',{cache:'no-store'})]);
-      if(!knowledgeResponse.ok)throw new Error('Public Knowledge could not be loaded.');
-      const kd=await knowledgeResponse.json(); const list=Array.isArray(kd)?kd:(kd.items||[]);
-      const assets=assetsResponse.ok?((await assetsResponse.json()).assets||[]):[];
-      const item=list.find(x=>(id&&x.knowledgeId===id)||(!id&&slug&&((x.slug||slugify(x.title))===slug)));
-      if(!item)throw new Error('This Insight is not available.');
-      const selected=selectVersion(item); const version=selected.value||{}; const title=version.title||item.title||''; const summary=version.summary||item.summary||'';
-      let body=version.body||item.body||''; const contentSource=version.contentSource||{};
-      if(contentSource.type==='cms-markdown'&&contentSource.path){const r=await fetch(contentSource.path,{cache:'no-store'});if(!r.ok)throw new Error('Linked CMS Markdown article could not be loaded.');body=stripFrontmatter(await r.text());}
-      document.title=title+' | IXL Korea'; document.getElementById('detail-type').textContent=item.type||'';document.getElementById('detail-date').textContent=item.dateLabel||item.date||'';document.getElementById('detail-title').textContent=title;document.getElementById('detail-summary').textContent=summary;document.getElementById('detail-body').innerHTML=body?renderMarkdown(body):'';
-      const mediaItems=resolveMediaItems(item,selected.key,assets); const resourceHost=document.getElementById('detail-resource'); mediaItems.forEach((media,index)=>{const url=media.resolvedUrl;if(!url)return;const a=document.createElement('a');a.href=url;const defaultLabel=media.type==='pdf'?'View PDF →':media.type==='video'?'Watch Video →':media.type==='image'?'View Image →':'Open Resource →';a.textContent=media.title||defaultLabel;a.style.marginRight='10px';a.style.marginBottom='10px';if(/^https?:\/\//i.test(url)||media.type!=='external'){a.target='_blank';a.rel='noopener noreferrer';}resourceHost.appendChild(a);});
-      root.hidden=false;
-    }catch(error){errorBox.textContent=error.message||'Insight could not be loaded.';errorBox.hidden=false;}
+      const [knowledgeResponse, assetsResponse] = await Promise.all([
+        fetch('/api/insights-library?resource=public-knowledge', { cache:'no-store' }),
+        fetch('insightscontent/asset-registry.json', { cache:'no-store' })
+      ]);
+
+      if (!knowledgeResponse.ok) {
+        throw new Error('Public Knowledge could not be loaded.');
+      }
+
+      const kd = await knowledgeResponse.json();
+      const list = Array.isArray(kd) ? kd : (kd.items || []);
+
+      const assets = assetsResponse.ok
+        ? ((await assetsResponse.json()).assets || [])
+        : [];
+
+      const item = list.find(x =>
+        (id && x.knowledgeId === id) ||
+        (!id && slug && ((x.slug || slugify(x.title)) === slug))
+      );
+
+      if (!item) {
+        throw new Error('This Insight is not available.');
+      }
+
+      const selected = selectVersion(item);
+      const version = selected.value || {};
+
+      // 실제 선택된 콘텐츠 언어로 문서 lang도 맞춤
+      document.documentElement.lang = selected.key === 'ko' ? 'ko' : 'en';
+
+      const title = version.title || item.title || '';
+      const summary = version.summary || item.summary || '';
+
+      let body = version.body || item.body || '';
+      const contentSource = version.contentSource || {};
+
+      if (contentSource.type === 'cms-markdown' && contentSource.path) {
+        const response = await fetch(contentSource.path, { cache:'no-store' });
+
+        if (!response.ok) {
+          throw new Error('Linked CMS Markdown article could not be loaded.');
+        }
+
+        body = stripFrontmatter(await response.text());
+      }
+
+      document.title = (title || 'Insight') + ' | IXL Korea';
+
+      document.getElementById('detail-type').textContent = item.type || '';
+      document.getElementById('detail-date').textContent = item.dateLabel || item.date || '';
+      document.getElementById('detail-title').textContent = title;
+      document.getElementById('detail-summary').textContent = summary;
+      document.getElementById('detail-body').innerHTML =
+        body ? renderMarkdown(body) : '';
+
+      const mediaItems = resolveMediaItems(item, selected.key, assets);
+      const resourceHost = document.getElementById('detail-resource');
+
+      mediaItems.forEach(media => {
+        const url = media.resolvedUrl;
+        if (!url) return;
+
+        const link = document.createElement('a');
+        link.href = url;
+
+        const defaultLabel =
+          media.type === 'pdf' ? 'View PDF →' :
+          media.type === 'video' ? 'Watch Video →' :
+          media.type === 'image' ? 'View Image →' :
+          'Open Resource →';
+
+        link.textContent = media.title || defaultLabel;
+        link.style.marginRight = '10px';
+        link.style.marginBottom = '10px';
+
+        if (/^https?:\/\//i.test(url) || media.type !== 'external') {
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        }
+
+        resourceHost.appendChild(link);
+      });
+
+      root.hidden = false;
+
+    } catch(error) {
+      errorBox.textContent = error.message || 'Insight could not be loaded.';
+      errorBox.hidden = false;
+    }
   }
+
   run();
 })();
 </script>
