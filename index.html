@@ -2079,6 +2079,42 @@ let assetUsage = [];
         renderBooks();
     }
 
+    function openInsightFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const requestedKnowledgeId = params.get('insight') || '';
+        if (!requestedKnowledgeId) return;
+
+        const item = insightsContent.find(entry => entry.knowledgeId === requestedKnowledgeId);
+        if (!item) return;
+
+        const config = typeConfig[item.type];
+        if (!config) return;
+
+        if (window.IXLInsights && typeof window.IXLInsights.showPanel === 'function') {
+            window.IXLInsights.showPanel(config.panel);
+            if (typeof window.IXLInsights.savePanel === 'function') {
+                window.IXLInsights.savePanel(config.panel);
+            }
+        }
+
+        if (item.type !== 'book') {
+            const panel = document.querySelector('.insights-panel[data-panel="' + config.panel + '"]');
+            const items = sortedItems(item.type);
+            const index = items.findIndex(entry => entry.knowledgeId === requestedKnowledgeId);
+
+            if (panel && index >= 0) {
+                showItem(panel, items, config, index);
+            }
+        }
+
+        requestAnimationFrame(function () {
+            const insightsSection = document.getElementById('insights');
+            if (insightsSection) {
+                insightsSection.scrollIntoView({ block: 'start' });
+            }
+        });
+    }
+
     async function loadInsights() {
         try {
                 const [
@@ -2136,6 +2172,7 @@ let assetUsage = [];
 
             resolveAssetUsageLinks();
             renderAllInsights();
+            openInsightFromUrl();
         } catch (error) {
             console.error('Failed to load Public Knowledge:', error);
             document.querySelectorAll(
