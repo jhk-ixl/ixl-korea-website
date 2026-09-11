@@ -834,7 +834,7 @@
 
     /* =========================================
        LOAD KNOWLEDGE
-       DATA SOURCE: LOCAL JSON
+       DATA SOURCE: MANAGER KNOWLEDGE API
        ========================================= */
 
     async function loadKnowledge() {
@@ -1080,9 +1080,13 @@
       };
     }
 
-    function getDefaultReviewMedia(item, language) {
+    function getDefaultResolvedKnowledgeMedia(item, language) {
       const list = getKnowledgeMediaItems(item, language);
-      return list.length ? resolveMediaItem(list[0]).url : '';
+      return list.length ? resolveMediaItem(list[0]) : {};
+    }
+
+    function getDefaultReviewMedia(item, language) {
+      return getDefaultResolvedKnowledgeMedia(item, language).url || '';
     }
 
     function populateKnowledgeMediaOptions(item, language, selectedIndex = '') {
@@ -1166,7 +1170,7 @@
     }
 
     function thumbnailMarkup(item, language, key) {
-      const media = resolveKnowledgeMedia(item, language);
+      const media = getDefaultResolvedKnowledgeMedia(item, language);
       const url = String(media.url || '').trim();
       if (!url) return '<div class="sns-list-thumbnail"><span class="sns-thumb-label">NO MEDIA</span></div>';
       const safeUrl = escapeHtml(IXLManager.toUrl(url));
