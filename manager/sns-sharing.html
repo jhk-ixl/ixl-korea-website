@@ -1112,28 +1112,23 @@
       return String(asset?.url || asset?.pathname || '').trim();
     }
 
-    function mediaCandidateThumbnail(url, mediaType) {
-      const value = String(url || '').trim();
-      const safeUrl = escapeHtml(value);
-      const lower = value.toLowerCase().split('?')[0].split('#')[0];
-
-      if (!value) {
-        return '<div class="sns-media-thumb"><span class="sns-media-thumb-label">NO MEDIA</span></div>';
+    function mediaCandidateThumbnail(candidate) {
+      if (!window.IXLManager?.media) {
+        return '<div class="sns-media-thumb"><span class="sns-media-thumb-label">MEDIA</span></div>';
       }
 
-      if (mediaType === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
-        return `<div class="sns-media-thumb"><img src="${safeUrl}" alt=""></div>`;
-      }
-
-      if (mediaType === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
-        return `<div class="sns-media-thumb"><video src="${safeUrl}#t=0.1" muted preload="metadata"></video></div>`;
-      }
-
-      if (mediaType === 'Document' || /\.pdf$/i.test(lower)) {
-        return `<div class="sns-media-thumb"><iframe src="${safeUrl}#page=1&view=FitH" title="PDF preview"></iframe></div>`;
-      }
-
-      return '<div class="sns-media-thumb"><span class="sns-media-thumb-label">MEDIA</span></div>';
+      return `<div class="sns-media-thumb">${
+        IXLManager.media.elementHtml({
+          url: candidate?.mediaFile || '',
+          mediaType: candidate?.mediaType || 'None',
+          assetKey: candidate?.assetKey || '',
+          thumbnailTime: candidate?.thumbnailTime
+        }, {
+          mode: 'thumbnail',
+          controls: false,
+          emptyHtml: '<span class="sns-media-thumb-label">NO MEDIA</span>'
+        })
+      }</div>`;
     }
 
     function populateAssetImageOptions(selectedKey = '') {
@@ -1180,7 +1175,8 @@
           label: entry.title || media.assetKey || media.url || `Knowledge Media ${index + 1}`,
           mediaType,
           mediaFile: media.url,
-          assetKey: media.assetKey || ''
+          assetKey: media.assetKey || '',
+          thumbnailTime: media.thumbnailTime
         });
       });
 
@@ -1197,7 +1193,8 @@
             label: String(asset?.name || asset?.fileName || assetKey).trim(),
             mediaType,
             mediaFile,
-            assetKey
+            assetKey,
+            thumbnailTime: asset?.thumbnailTime ?? null
           });
         }
       }
@@ -1219,7 +1216,7 @@
         return `
           <label class="sns-media-candidate">
             <input type="radio" name="share-media-choice" value="${escapeHtml(candidate.id)}"${checked}>
-            ${mediaCandidateThumbnail(candidate.mediaFile, candidate.mediaType)}
+            ${mediaCandidateThumbnail(candidate)}
             <span class="sns-media-info">
               <strong>${escapeHtml(candidate.label)}</strong>
               <small>${escapeHtml(candidate.source)} · ${escapeHtml(candidate.mediaType)}</small>
@@ -1250,31 +1247,22 @@
       }
     }
 
-    function renderSelectedMediaPreview(mediaType, mediaFile) {
+    async function renderSelectedMediaPreview(media) {
       const wrap = document.getElementById('share-selected-media-preview');
       if (!wrap) return;
 
-      const value = String(mediaFile || '').trim();
-      if (!value || String(mediaType || '') === 'None') {
+      const mediaType = String(media?.mediaType || 'None');
+      const value = String(media?.mediaFile || media?.url || '').trim();
+
+      if (!value || mediaType === 'None') {
         wrap.innerHTML = '';
         return;
       }
 
       const safeUrl = escapeHtml(IXLManager.toUrl(value));
-      const lower = value.toLowerCase().split('?')[0].split('#')[0];
-      let thumb = '<span class="sns-media-thumb-label">MEDIA</span>';
-
-      if (String(mediaType) === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
-        thumb = `<img src="${safeUrl}" alt="">`;
-      } else if (String(mediaType) === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
-        thumb = `<video src="${safeUrl}#t=0.1" muted preload="metadata"></video>`;
-      } else if (String(mediaType) === 'Document' || /\.pdf$/i.test(lower)) {
-        thumb = `<iframe src="${safeUrl}#page=1&view=FitH" title="PDF preview"></iframe>`;
-      }
-
       wrap.innerHTML = `
         <div class="sns-selected-media-card">
-          <div class="sns-selected-media-thumb">${thumb}</div>
+          <div class="sns-selected-media-thumb" id="share-selected-media-thumb"></div>
           <div class="sns-selected-media-meta">
             <strong>${escapeHtml(mediaFileName(value))}</strong>
             <small>${escapeHtml(formatSnsMediaType(mediaType, value))}</small>
@@ -1282,6 +1270,16 @@
           </div>
         </div>
       `;
+
+      await IXLManager.media.renderThumbnail(
+        document.getElementById('share-selected-media-thumb'),
+        {
+          url: value,
+          mediaType,
+          assetKey: media?.assetKey || '',
+          thumbnailTime: media?.thumbnailTime
+        }
+      );
     }
 
     function applyMediaCandidateSelection(item, language, selectedId, assetImageKey = '') {
@@ -1293,10 +1291,7 @@
       selectedAssetKey = candidate.assetKey || '';
       mediaTypeField.value = candidate.mediaType || 'None';
       mediaFileField.value = candidate.mediaFile || '';
-      renderSelectedMediaPreview(
-        candidate.mediaType || 'None',
-        candidate.mediaFile || ''
-      );
+      renderSelectedMediaPreview(candidate);
     }
 
     function findMediaCandidateSelection(item, language, assetKey, mediaFile, assetImageKey = '') {
@@ -1324,6 +1319,7 @@
         });
         const data = await response.json();
         assetRegistry = response.ok && Array.isArray(data) ? data : [];
+        window.IXLManager?.media?.setAssets(assetRegistry);
       } catch (error) {
         assetRegistry = [];
       }
@@ -1575,7 +1571,23 @@
       return distributionItems.filter(x=>String(x.knowledgeId||'').trim()===String(ctx.item.knowledgeId||'').trim() && normalizeLanguage(x.language)===ctx.language).sort((a,b)=>String(b.publishedDate||b.createdAt||'').localeCompare(String(a.publishedDate||a.createdAt||'')));
     }
 
-    function renderMedia(source){ const box=document.getElementById('sns-review-media'); const value=String(source||'').trim(); if(!value){box.textContent='No media';return;} const url=IXLManager.toUrl(value); const lower=value.toLowerCase().split('?')[0].split('#')[0]; const youtubeId=getYouTubeId(value); if(youtubeId) box.innerHTML=`<iframe src="https://www.youtube.com/embed/${youtubeId}" title="YouTube preview" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`; else if(/\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) box.innerHTML=`<img src="${url}" alt="Preview">`; else if(/\.(mp4|mov|m4v|webm)$/i.test(lower)) box.innerHTML=`<video controls src="${url}"></video>`; else if(/\.pdf$/i.test(lower)) box.innerHTML=`<iframe src="${url}#page=1&view=FitH" title="PDF preview"></iframe>`; else box.innerHTML=`<a href="${url}" target="_blank" rel="noopener">View media</a>`; }
+    async function renderMedia(source, media = {}) {
+      const box = document.getElementById('sns-review-media');
+      const value = String(source || '').trim();
+
+      if (!value) {
+        box.textContent = 'No media';
+        return;
+      }
+
+      await IXLManager.media.renderPreview(box, {
+        ...media,
+        url: value
+      }, {
+        controls: true,
+        pdfCanvas: false
+      });
+    }
 
     function setReviewSummary(text) {
       const p = document.getElementById('sns-review-summary');
@@ -1618,7 +1630,11 @@
         document.getElementById('share-external-link').value=tx.externalLink||'';
         document.getElementById('share-media-type').value=tx.mediaType||'None';
         document.getElementById('share-media-file').value=tx.mediaFile||'';
-        renderSelectedMediaPreview(tx.mediaType||'None', tx.mediaFile||'');
+        renderSelectedMediaPreview({
+          mediaType: tx.mediaType || 'None',
+          mediaFile: tx.mediaFile || '',
+          assetKey: tx.assetKey || ''
+        });
         selectedAssetKey=tx.assetKey||'';
         const restoredAssetImageKey =
           (tx.mediaType || '') === 'Image' &&
@@ -1655,17 +1671,19 @@
     }
 
     document.getElementById('share-media-file')?.addEventListener('input', () => {
-      renderSelectedMediaPreview(
-        document.getElementById('share-media-type')?.value || 'None',
-        document.getElementById('share-media-file')?.value || ''
-      );
+      renderSelectedMediaPreview({
+        mediaType: document.getElementById('share-media-type')?.value || 'None',
+        mediaFile: document.getElementById('share-media-file')?.value || '',
+        assetKey: selectedAssetKey
+      });
     });
 
     document.getElementById('share-media-type')?.addEventListener('change', () => {
-      renderSelectedMediaPreview(
-        document.getElementById('share-media-type')?.value || 'None',
-        document.getElementById('share-media-file')?.value || ''
-      );
+      renderSelectedMediaPreview({
+        mediaType: document.getElementById('share-media-type')?.value || 'None',
+        mediaFile: document.getElementById('share-media-file')?.value || '',
+        assetKey: selectedAssetKey
+      });
     });
 
     document.getElementById('share-media-candidates')?.addEventListener('change', event => {

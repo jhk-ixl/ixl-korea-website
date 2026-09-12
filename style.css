@@ -1889,22 +1889,36 @@ body {
 
 @media (max-width: 900px) {
 
-  /* EN / KOR — mobile */
+  /* EN / KO — mobile
+     Keep the language control inside the visible viewport at all times. */
   .header .language-switcher {
     position: absolute;
     top: 0;
-    right: var(--page-side-padding);
+    right: max(12px, env(safe-area-inset-right));
     height: var(--mobile-logo-row-height);
+    max-width: 72px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 4px;
     margin-left: 0;
+    padding: 0;
+    white-space: nowrap;
+    background: #ffffff;
     z-index: 3100;
   }
 
   .header .language-switcher button {
-    padding: 4px 2px;
+    flex: 0 0 auto;
+    min-width: 20px;
+    padding: 4px 1px;
     font-size: 12px;
+    line-height: 1;
+  }
+
+  .header .language-switcher .divider {
+    flex: 0 0 auto;
   }
 
 
@@ -4201,7 +4215,7 @@ body {
     height: var(--mobile-logo-row-height);
     display: flex;
     align-items: center;
-    padding: 0;
+    padding: 0 82px 0 0;
     min-width: 0;
   }
 
@@ -4309,9 +4323,24 @@ body {
 }
 
 @media (max-width: 520px) {
+  .header .logo {
+    padding-right: 74px;
+  }
+
   .header .logo img {
     width: var(--small-mobile-logo-width);
     max-height: 42px;
+  }
+
+  .header .language-switcher {
+    right: max(10px, env(safe-area-inset-right));
+    max-width: 66px;
+    gap: 3px;
+  }
+
+  .header .language-switcher button {
+    min-width: 18px;
+    font-size: 11px;
   }
 
   .header nav {

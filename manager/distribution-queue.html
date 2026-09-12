@@ -1022,7 +1022,7 @@
       }
     }
 
-    function renderQueueMediaFile(mediaType, mediaFile) {
+    async function renderQueueMediaFile(mediaType, mediaFile, assetKey = '') {
       const card = document.getElementById('queue-edit-media-file-card');
       const empty = document.getElementById('queue-edit-media-empty');
       const thumb = document.getElementById('queue-edit-media-thumb');
@@ -1043,17 +1043,6 @@
       }
 
       const url = IXLManager.toUrl(value);
-      const lower = value.toLowerCase().split('?')[0].split('#')[0];
-
-      if (String(mediaType) === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
-        thumb.innerHTML = `<img src="${url}" alt="">`;
-      } else if (String(mediaType) === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
-        thumb.innerHTML = `<video src="${url}#t=0.1" muted preload="metadata"></video>`;
-      } else if (String(mediaType) === 'Document' || /\.pdf$/i.test(lower)) {
-        thumb.innerHTML = `<iframe src="${url}#page=1&view=FitH" title="PDF preview"></iframe>`;
-      } else {
-        thumb.textContent = 'MEDIA';
-      }
 
       link.textContent = queueMediaFileName(value);
       link.href = url;
@@ -1062,6 +1051,12 @@
 
       card.hidden = false;
       empty.hidden = true;
+
+      await IXLManager.media.renderThumbnail(thumb, {
+        url: value,
+        mediaType,
+        assetKey
+      });
     }
 
     function openQueueEditor(fileName) {
@@ -1146,7 +1141,8 @@
 
       renderQueueMediaFile(
         item.mediaType || 'None',
-        item.mediaFile || ''
+        item.mediaFile || '',
+        item.assetKey || ''
       );
 
 

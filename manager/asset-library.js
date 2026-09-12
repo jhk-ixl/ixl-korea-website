@@ -3,12 +3,19 @@
 
   const API_LIBRARY = '/api/insights-library';
   const API_UPLOAD = '/api/insights-upload';
+  const API_ONEDRIVE = '/api/onedrive-assets';
   const DEFAULT_VIDEO_THUMBNAIL_TIME = 1;
 
   let allAssets = [];
   let registryAssets = [];
   let usageMappings = [];
   let uploadObjectUrl = '';
+  let selectedOneDriveItem = null;
+  let oneDriveConnections = [];
+  let oneDriveConnectionId = '';
+  let oneDriveConnectionLabel = '';
+  let oneDriveDriveId = '';
+  let oneDriveStack = [];
   let assetSorter = null;
   let usageSorter = null;
 
@@ -85,31 +92,73 @@
     return ['video', 'mp4', 'webm'].includes(String(value || '').toLowerCase());
   }
 
+  function getStorageProvider(asset) {
+    return String(asset?.storageProvider || (asset?.driveId && asset?.itemId ? 'onedrive' : 'vercel')).toLowerCase();
+  }
+
+  function getOneDriveContentUrl(asset) {
+    if (!asset?.storageConnection || !asset?.driveId || !asset?.itemId) return '';
+    const params = new URLSearchParams({
+      action: 'content',
+      connection: asset.storageConnection,
+      driveId: asset.driveId,
+      itemId: asset.itemId
+    });
+    return `${API_ONEDRIVE}?${params}`;
+  }
+
+  function getOneDriveConnectionLabel(connectionId) {
+    const id = String(connectionId || '').trim();
+    return oneDriveConnections.find(item => item.id === id)?.label || id || 'OneDrive';
+  }
+
+  async function loadOneDriveConnections() {
+    const select = $('onedrive-storage-connection');
+    try {
+      const response = await fetch(`${API_ONEDRIVE}?action=connections`, { credentials: 'same-origin', cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to load OneDrive connections.');
+      oneDriveConnections = Array.isArray(data.connections) ? data.connections : [];
+
+      if (select) {
+        const previous = select.value || oneDriveConnectionId;
+        select.innerHTML = oneDriveConnections.length
+          ? oneDriveConnections.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`).join('')
+          : '<option value="">No OneDrive connections configured</option>';
+        if (previous && oneDriveConnections.some(item => item.id === previous)) select.value = previous;
+        oneDriveConnectionId = select.value || '';
+        oneDriveConnectionLabel = getOneDriveConnectionLabel(oneDriveConnectionId);
+      }
+      return oneDriveConnections;
+    } catch (error) {
+      oneDriveConnections = [];
+      oneDriveConnectionId = '';
+      oneDriveConnectionLabel = '';
+      if (select) select.innerHTML = '<option value="">OneDrive unavailable</option>';
+      throw error;
+    }
+  }
+
   function getPreviewKind(asset) {
-    const type = String(asset?.type || '').toLowerCase();
-    const ext = getExtension(asset?.pathname || asset?.fileName || asset?.name || asset?.url || '');
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'image'].includes(type) ||
-        ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image';
-
-    if (isVideoType(type) || ['mp4', 'webm'].includes(ext)) return 'video';
-    if (type === 'pdf' || ext === 'pdf') return 'pdf';
-    if (['markdown', 'md', 'txt', 'text'].includes(type) || ['md', 'txt'].includes(ext)) return 'text';
-    if (['presentation', 'ppt', 'pptx'].includes(type) || ['ppt', 'pptx'].includes(ext)) return 'presentation';
-    if (['document', 'doc', 'docx'].includes(type) || ['doc', 'docx'].includes(ext)) return 'document';
-    if (type === 'external' || type === 'link') return 'link';
-    return 'file';
+    return window.IXLManager?.media
+      ? IXLManager.media.detectKind({
+          ...asset,
+          url: getAssetSourceUrl(asset)
+        })
+      : 'file';
   }
 
   function getAssetSourceUrl(asset) {
+    if (getStorageProvider(asset) === 'onedrive') return getOneDriveContentUrl(asset);
     return String(asset?.url || asset?.path || asset?.pathname || '').trim();
   }
 
   function getThumbnailTime(asset) {
-    const raw = asset?.thumbnailTime;
-    if (raw === null || raw === undefined || raw === '') return DEFAULT_VIDEO_THUMBNAIL_TIME;
-    const value = Number(raw);
-    return Number.isFinite(value) && value >= 0 ? value : DEFAULT_VIDEO_THUMBNAIL_TIME;
+    return window.IXLManager?.media
+      ? IXLManager.media.getThumbnailTime(asset, {
+          thumbnailTime: asset?.thumbnailTime
+        })
+      : DEFAULT_VIDEO_THUMBNAIL_TIME;
   }
 
   function getAssetProxyUrl(url) {
@@ -119,10 +168,21 @@
   function getRegistryIndex(asset) {
     const url = String(asset?.url || '');
     const pathname = String(asset?.pathname || '');
-    return registryAssets.findIndex(item =>
-      (item.url && item.url === url) ||
-      (item.pathname && item.pathname === pathname)
-    );
+    const provider = getStorageProvider(asset);
+
+    return registryAssets.findIndex(item => {
+      if (asset?.key && item.key === asset.key) return true;
+
+      if (provider === 'onedrive') {
+        if (getStorageProvider(item) !== 'onedrive') return false;
+        if (!asset?.storageConnection || item.storageConnection !== asset.storageConnection) return false;
+        if (asset?.driveId && asset?.itemId && item.driveId === asset.driveId && item.itemId === asset.itemId) return true;
+        if (asset?.relativePath && item.relativePath === asset.relativePath) return true;
+        return false;
+      }
+
+      return (item.url && item.url === url) || (item.pathname && item.pathname === pathname);
+    });
   }
 
   function getRegistryItem(asset) {
@@ -145,73 +205,32 @@
     const stage = typeof target === 'string' ? $(target) : target;
     if (!stage) return;
 
+    if (!window.IXLManager?.media) {
+      stage.innerHTML = '<div class="asset-preview-empty">Common media preview is unavailable.</div>';
+      return;
+    }
+
     stage.innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
 
     const sourceUrl = options.sourceUrl || getAssetSourceUrl(asset);
-    const kind = options.kind || getPreviewKind(asset);
-
     if (!sourceUrl) {
       stage.innerHTML = '<div class="asset-preview-empty">No preview source is available.</div>';
       return;
     }
 
     try {
-      if (kind === 'image') {
-        stage.innerHTML = `<img src="${escapeHtml(sourceUrl)}" alt="${escapeHtml(asset?.name || asset?.fileName || 'Asset preview')}">`;
-        return;
-      }
-
-      if (kind === 'video') {
-        const time = options.thumbnailTime ?? getThumbnailTime(asset);
-        stage.innerHTML = `
-          <video controls preload="metadata" src="${escapeHtml(sourceUrl)}#t=${Number(time)}">
-            Your browser does not support video playback.
-          </video>
-        `;
-        return;
-      }
-
-      if (kind === 'pdf') {
-        if (!window.pdfjsLib) {
-          stage.innerHTML = '<div class="asset-preview-empty">PDF.js is not available. Use Open to view this PDF.</div>';
-          return;
-        }
-
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const pdfUrl = sourceUrl.startsWith('blob:')
-          ? sourceUrl
-          : getAssetProxyUrl(sourceUrl);
-
-        const pdf = await window.pdfjsLib.getDocument(pdfUrl).promise;
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 1.35 });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        stage.innerHTML = '';
-        stage.appendChild(canvas);
-        await page.render({ canvasContext: context, viewport }).promise;
-        return;
-      }
-
-      if (kind === 'text') {
-        const response = await fetch(sourceUrl, { credentials: 'same-origin' });
-        if (!response.ok) throw new Error('Text preview could not be loaded.');
-        const body = await response.text();
-        stage.innerHTML = `<pre>${escapeHtml(body.slice(0, 30000))}</pre>`;
-        return;
-      }
-
-      const label = kind === 'presentation'
-        ? 'Presentation preview is not reliably supported by the browser.'
-        : kind === 'document'
-          ? 'Document preview is not reliably supported by the browser.'
-          : 'Open the asset to view its contents.';
-
-      stage.innerHTML = `<div class="asset-preview-empty">${escapeHtml(label)}</div>`;
+      await IXLManager.media.renderPreview(stage, {
+        ...asset,
+        url: sourceUrl,
+        thumbnailTime: options.thumbnailTime ?? asset?.thumbnailTime
+      }, {
+        ...options,
+        kind: options.kind || undefined,
+        controls: true,
+        pdfCanvas: true,
+        loadText: true,
+        emptyHtml: '<div class="asset-preview-empty">No preview source is available.</div>'
+      });
     } catch (error) {
       console.error(error);
       stage.innerHTML = '<div class="asset-preview-empty">Preview could not be loaded. Use Open to view the asset.</div>';
@@ -238,6 +257,97 @@
     });
 
     if (folders.includes(currentValue)) select.value = currentValue;
+  }
+
+
+  const DEFAULT_UPLOAD_FOLDERS = [
+    'companyprofile',
+    'insights',
+    'articles',
+    'documents',
+    'presentations',
+    'images'
+  ];
+
+  function normalizeAssetFolderName(value) {
+    return String(value || '')
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/^\/+|\/+$/g, '')
+      .replace(/\/{2,}/g, '/');
+  }
+
+  function isValidAssetFolderName(value) {
+    const folder = normalizeAssetFolderName(value);
+    if (!folder || folder.length > 120) return false;
+    return folder.split('/').every(part => /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(part));
+  }
+
+  function getUploadFolderOptions() {
+    return [
+      ...new Set([
+        ...DEFAULT_UPLOAD_FOLDERS,
+        ...allAssets.map(asset => getFolder(asset.pathname)),
+        ...registryAssets.map(asset => asset.folder || getFolder(asset.pathname))
+      ].map(normalizeAssetFolderName).filter(Boolean))
+    ].sort((a, b) => a.localeCompare(b));
+  }
+
+  function renderUploadFolderSelect(preferredFolder = '') {
+    const select = $('asset-upload-folder');
+    if (!select) return;
+
+    const current = normalizeAssetFolderName(preferredFolder || select.value);
+    const folders = getUploadFolderOptions();
+
+    select.innerHTML = '';
+    folders.forEach(folder => {
+      const option = document.createElement('option');
+      option.value = folder;
+      option.textContent = folder;
+      select.appendChild(option);
+    });
+
+    if (current && !folders.includes(current)) {
+      const option = document.createElement('option');
+      option.value = current;
+      option.textContent = current;
+      select.appendChild(option);
+    }
+
+    select.value = current && [...select.options].some(option => option.value === current)
+      ? current
+      : (folders.includes('companyprofile') ? 'companyprofile' : (folders[0] || ''));
+  }
+
+  function openNewFolderEditor() {
+    const editor = $('asset-new-folder-editor');
+    const input = $('asset-new-folder-name');
+    if (!editor || !input) return;
+    editor.hidden = false;
+    input.value = '';
+    requestAnimationFrame(() => input.focus());
+  }
+
+  function closeNewFolderEditor() {
+    const editor = $('asset-new-folder-editor');
+    const input = $('asset-new-folder-name');
+    if (editor) editor.hidden = true;
+    if (input) input.value = '';
+  }
+
+  function createUploadFolderOption() {
+    const input = $('asset-new-folder-name');
+    const folder = normalizeAssetFolderName(input?.value);
+
+    if (!isValidAssetFolderName(folder)) {
+      alert('Enter a valid folder name. Use letters, numbers, hyphens, underscores, periods, or nested paths such as campaigns/2026.');
+      input?.focus();
+      return;
+    }
+
+    renderUploadFolderSelect(folder);
+    closeNewFolderEditor();
   }
 
   function updateTopScroller() {
@@ -326,9 +436,13 @@
       const pathname = asset.pathname || '';
       const fileName = getFileName(pathname);
       const folderName = getFolder(pathname);
-      const viewUrl = asset.url || '';
-      const downloadUrl = asset.downloadUrl || asset.url || '';
+      const provider = getStorageProvider(asset);
       const registryItem = getRegistryItem(asset);
+      const storageLabel = provider === 'onedrive'
+        ? getOneDriveConnectionLabel(asset.storageConnection || registryItem?.storageConnection)
+        : 'Vercel';
+      const viewUrl = getAssetSourceUrl(asset);
+      const downloadUrl = viewUrl;
       const assetKey = registryItem?.key || createAssetKey(fileName);
 
       const duplicateBlobAssets = allAssets.filter(otherAsset => {
@@ -347,7 +461,7 @@
           : `<button type="button" class="library-button primary" data-register-path="${escapeHtml(pathname)}">Register</button>`;
 
       row.innerHTML = `
-        <td title="${escapeHtml(fileName)}">${escapeHtml(fileName)}</td>
+        <td title="${escapeHtml(fileName)}">${escapeHtml(fileName)} <span class="asset-storage-badge">${escapeHtml(storageLabel)}</span></td>
         <td><code title="${escapeHtml(assetKey)}">${escapeHtml(assetKey)}</code></td>
         <td>${escapeHtml(folderName)}</td>
         <td>${escapeHtml(getFileType(pathname))}</td>
@@ -356,8 +470,8 @@
         <td>${viewUrl ? `<a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : ''}</td>
         <td>${registryButton}</td>
         <td>${downloadUrl ? `<a href="${escapeHtml(downloadUrl)}">Download</a>` : ''}</td>
-        <td>${viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : ''}</td>
-        <td>${viewUrl ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>` : ''}</td>
+        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : ''}</td>
+        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>` : ''}</td>
       `;
 
       tbody.appendChild(row);
@@ -388,6 +502,7 @@
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to load Asset Registry.');
     registryAssets = Array.isArray(data) ? data : [];
+    window.IXLManager?.media?.setAssets(registryAssets);
   }
 
   async function loadUsageMappings() {
@@ -685,7 +800,11 @@
       const data = await blobResponse.json();
       if (!blobResponse.ok) throw new Error(data.error || 'Failed to load assets.');
 
-      allAssets = Array.isArray(data.blobs) ? data.blobs : [];
+      const blobAssets = Array.isArray(data.blobs) ? data.blobs.map(item => ({ ...item, storageProvider: 'vercel' })) : [];
+      const externalRegistered = registryAssets
+        .filter(item => getStorageProvider(item) === 'onedrive')
+        .map(item => ({ ...item, pathname: item.pathname || item.name || item.fileName || item.key }));
+      allAssets = [...blobAssets, ...externalRegistered];
 
       if ($('asset-count')) $('asset-count').textContent = allAssets.length;
       renderFolderFilter();
@@ -789,6 +908,13 @@
       pathname: asset.pathname || '',
       url: asset.url || '',
       downloadUrl: asset.downloadUrl || asset.url || '',
+      storageProvider: explicit.storageProvider || asset.storageProvider || 'vercel',
+      storageConnection: explicit.storageConnection || asset.storageConnection || '',
+      relativePath: explicit.relativePath || asset.relativePath || '',
+      driveId: explicit.driveId || asset.driveId || '',
+      itemId: explicit.itemId || asset.itemId || '',
+      webUrl: explicit.webUrl || asset.webUrl || '',
+      parentItemId: explicit.parentItemId || asset.parentItemId || '',
       type,
       size: Number(asset.size || 0),
       uploadedAt: asset.uploadedAt || '',
@@ -846,13 +972,25 @@ UPDATE will make all of these usages point to the new file. Continue?`
   }
 
   function resetUploadForm() {
+    const selectedFolder = normalizeAssetFolderName($('asset-upload-folder')?.value);
+    const selectedConnection = $('onedrive-storage-connection')?.value || oneDriveConnectionId;
     clearUploadObjectUrl();
     $('asset-upload-form').reset();
+    renderUploadFolderSelect(selectedFolder);
+    if (selectedConnection && $('onedrive-storage-connection')) {
+      $('onedrive-storage-connection').value = selectedConnection;
+      oneDriveConnectionId = selectedConnection;
+      oneDriveConnectionLabel = getOneDriveConnectionLabel(selectedConnection);
+    }
+    closeNewFolderEditor();
     $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
     $('asset-upload-thumbnail-field').hidden = true;
     $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a file to preview.</div>';
     $('upload-preview-note').textContent = '';
     $('asset-upload-key').value = '';
+    selectedOneDriveItem = null;
+    renderSelectedOneDriveItem();
+    syncAssetSourceUI();
   }
 
   async function handleUploadFileChange() {
@@ -892,13 +1030,210 @@ UPDATE will make all of these usages point to the new file. Continue?`
       `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}`;
   }
 
+  function getAssetSourceChoice() {
+    return document.querySelector('input[name="asset-source"]:checked')?.value || 'pc';
+  }
+
+  function clearOneDriveSelection() {
+    selectedOneDriveItem = null;
+    oneDriveDriveId = '';
+    oneDriveStack = [];
+    renderSelectedOneDriveItem();
+  }
+
+  function syncAssetSourceUI() {
+    const source = getAssetSourceChoice();
+    const pc = $('asset-pc-fields');
+    const od = $('asset-onedrive-fields');
+    if (pc) pc.hidden = source !== 'pc';
+    if (od) od.hidden = source !== 'onedrive';
+    const file = $('asset-upload-file');
+    if (file) file.required = source === 'pc';
+    const button = $('asset-upload-button');
+    if (button) button.textContent = source === 'pc' ? 'Upload & Register' : 'Register';
+    if (source === 'onedrive') {
+      const select = $('onedrive-storage-connection');
+      if (select?.value) {
+        oneDriveConnectionId = select.value;
+        oneDriveConnectionLabel = getOneDriveConnectionLabel(oneDriveConnectionId);
+      }
+      renderSelectedOneDriveItem();
+    }
+  }
+
+  function renderSelectedOneDriveItem() {
+    const host = $('onedrive-selected-file');
+    if (!host) return;
+    if (!selectedOneDriveItem) {
+      host.textContent = 'No OneDrive file selected.';
+      return;
+    }
+    const connectionLabel = getOneDriveConnectionLabel(selectedOneDriveItem.storageConnection);
+    host.innerHTML = `<strong>${escapeHtml(selectedOneDriveItem.name)}</strong><br>` +
+      `${escapeHtml(connectionLabel)} · ${escapeHtml(selectedOneDriveItem.relativePath || selectedOneDriveItem.parentPath || 'OneDrive')} · ${formatFileSize(selectedOneDriveItem.size)}`;
+  }
+
+  async function loadOneDriveFolder(itemId = '') {
+    const list = $('onedrive-browser-list');
+    if (list) list.innerHTML = '<div class="onedrive-browser-empty">Loading...</div>';
+    if (!oneDriveConnectionId) throw new Error('Please select a OneDrive storage connection first.');
+
+    const params = new URLSearchParams({
+      action: 'children',
+      connection: oneDriveConnectionId
+    });
+    if (oneDriveDriveId) params.set('driveId', oneDriveDriveId);
+    if (itemId) params.set('itemId', itemId);
+
+    const response = await fetch(`${API_ONEDRIVE}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to browse OneDrive.');
+
+    oneDriveDriveId = data.driveId || oneDriveDriveId;
+    oneDriveConnectionId = data.storageConnection || oneDriveConnectionId;
+    oneDriveConnectionLabel = data.connectionLabel || getOneDriveConnectionLabel(oneDriveConnectionId);
+    const items = Array.isArray(data.items) ? data.items : [];
+
+    const breadcrumb = oneDriveStack.length
+      ? `${oneDriveConnectionLabel} / ${oneDriveStack.map(x => x.name).join(' / ')}`
+      : oneDriveConnectionLabel;
+    $('onedrive-browser-path').textContent = breadcrumb;
+    $('onedrive-browser-connection').textContent = `${oneDriveConnectionLabel} — read-only browse and register. No upload, move, rename or folder creation.`;
+    $('onedrive-browser-up').disabled = !oneDriveStack.length;
+
+    if (!items.length) {
+      list.innerHTML = '<div class="onedrive-browser-empty">This folder is empty.</div>';
+      return;
+    }
+
+    list.innerHTML = items
+      .sort((a,b) => Number(b.isFolder) - Number(a.isFolder) || String(a.name).localeCompare(String(b.name)))
+      .map(item => `<button type="button" class="onedrive-browser-row" data-od-id="${escapeHtml(item.id)}" data-od-folder="${item.isFolder ? '1' : '0'}">
+        <span class="onedrive-browser-name">${item.isFolder ? '▰ ' : ''}${escapeHtml(item.name)}</span>
+        <span class="onedrive-browser-meta">${item.isFolder ? 'Folder' : escapeHtml(getFileType(item.name))}</span>
+        <span class="onedrive-browser-meta onedrive-size">${item.isFolder ? `${item.childCount || 0} items` : formatFileSize(item.size)}</span>
+      </button>`).join('');
+
+    list.querySelectorAll('[data-od-id]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const item = items.find(x => x.id === button.dataset.odId);
+        if (!item) return;
+        if (item.isFolder) {
+          oneDriveStack.push({ id: item.id, name: item.name });
+          await loadOneDriveFolder(item.id);
+          return;
+        }
+
+        selectedOneDriveItem = {
+          ...item,
+          driveId: oneDriveDriveId,
+          storageConnection: oneDriveConnectionId,
+          parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
+          relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`
+        };
+
+        $('asset-upload-key').value = createAssetKey(item.name);
+        renderSelectedOneDriveItem();
+        const source = getOneDriveContentUrl(selectedOneDriveItem);
+        await renderPreview('upload-preview', {
+          ...selectedOneDriveItem,
+          pathname: selectedOneDriveItem.relativePath,
+          url: source,
+          type: getExtension(selectedOneDriveItem.name)
+        }, { sourceUrl: source });
+        $('upload-preview-note').textContent = `${oneDriveConnectionLabel} · ${item.name} · ${formatFileSize(item.size)}`;
+        $('onedrive-browser-modal').hidden = true;
+      });
+    });
+  }
+
+  async function openOneDriveBrowser() {
+    const select = $('onedrive-storage-connection');
+    if (!oneDriveConnections.length) await loadOneDriveConnections();
+    oneDriveConnectionId = select?.value || oneDriveConnectionId || oneDriveConnections[0]?.id || '';
+    if (!oneDriveConnectionId) return alert('No OneDrive storage connection is configured.');
+    oneDriveConnectionLabel = getOneDriveConnectionLabel(oneDriveConnectionId);
+    oneDriveDriveId = '';
+    oneDriveStack = [];
+    $('onedrive-browser-modal').hidden = false;
+    try {
+      await loadOneDriveFolder();
+    } catch (error) {
+      $('onedrive-browser-modal').hidden = true;
+      alert(error.message || 'OneDrive could not be opened.');
+    }
+  }
+
+  async function registerSelectedOneDriveAsset() {
+    const item = selectedOneDriveItem;
+    if (!item) return alert('Please select a OneDrive file first.');
+    if (!item.storageConnection) return alert('The selected OneDrive file has no storage connection. Please select it again.');
+    if (!item.relativePath) return alert('The selected OneDrive file has no relative path. Please select it again.');
+
+    const key = createAssetKey($('asset-upload-key').value || item.name);
+    if (!key) return alert('A valid Asset Key is required.');
+    const ext = getExtension(item.name);
+    const registryPath = item.relativePath.replace(/^\/+/, '');
+
+    const registered = await registerAsset({
+      pathname: registryPath,
+      url: '',
+      downloadUrl: '',
+      storageProvider: 'onedrive',
+      storageConnection: item.storageConnection,
+      relativePath: item.relativePath,
+      driveId: item.driveId,
+      itemId: item.id,
+      webUrl: item.webUrl || '',
+      parentItemId: item.parentItemId || '',
+      size: item.size,
+      uploadedAt: item.lastModifiedDateTime || ''
+    }, {
+      key,
+      name: item.name,
+      description: $('asset-upload-description').value.trim(),
+      type: ext,
+      storageProvider: 'onedrive',
+      storageConnection: item.storageConnection,
+      relativePath: item.relativePath,
+      driveId: item.driveId,
+      itemId: item.id,
+      webUrl: item.webUrl || '',
+      parentItemId: item.parentItemId || ''
+    });
+
+    if (!registered) return;
+    alert(`OneDrive asset registered.\n\nStorage: ${getOneDriveConnectionLabel(item.storageConnection)}\nKey: ${registered.key || key}`);
+    clearOneDriveSelection();
+    resetUploadForm();
+    location.href = 'asset-library.html';
+  }
+
   async function uploadAndRegister(event) {
     event.preventDefault();
 
+    if (getAssetSourceChoice() === 'onedrive') {
+      try {
+        const button = $('asset-upload-button');
+        button.disabled = true;
+        button.textContent = 'Registering...';
+        await registerSelectedOneDriveAsset();
+      } catch (error) {
+        console.error(error);
+        alert(error.message || 'OneDrive asset registration failed.');
+      } finally {
+        const button = $('asset-upload-button');
+        button.disabled = false;
+        syncAssetSourceUI();
+      }
+      return;
+    }
+
     const file = $('asset-upload-file').files[0];
-    const folder = $('asset-upload-folder').value;
+    const folder = normalizeAssetFolderName($('asset-upload-folder').value);
     const button = $('asset-upload-button');
     if (!file) return alert('Please select a file first.');
+    if (!isValidAssetFolderName(folder)) return alert('Please select or create a valid folder.');
 
     const key = createAssetKey($('asset-upload-key').value || file.name);
     if (!key) return alert('A valid Asset Key is required.');
@@ -1353,8 +1688,43 @@ Key: ${registered.key || key}`);
     });
 
     $('asset-upload-file')?.addEventListener('change', handleUploadFileChange);
+    document.querySelectorAll('input[name="asset-source"]').forEach(input => input.addEventListener('change', async () => {
+      syncAssetSourceUI();
+      if (getAssetSourceChoice() === 'onedrive' && !oneDriveConnections.length) {
+        try { await loadOneDriveConnections(); }
+        catch (error) { console.error(error); alert(error.message || 'OneDrive connections could not be loaded.'); }
+      }
+    }));
+    $('onedrive-storage-connection')?.addEventListener('change', event => {
+      oneDriveConnectionId = event.target.value || '';
+      oneDriveConnectionLabel = getOneDriveConnectionLabel(oneDriveConnectionId);
+      clearOneDriveSelection();
+      $('asset-upload-key').value = '';
+      $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a OneDrive file to preview.</div>';
+      $('upload-preview-note').textContent = '';
+    });
+    $('onedrive-browse-button')?.addEventListener('click', openOneDriveBrowser);
+    $('onedrive-browser-close')?.addEventListener('click', () => { $('onedrive-browser-modal').hidden = true; });
+    $('onedrive-browser-up')?.addEventListener('click', async () => {
+      if (!oneDriveStack.length) return;
+      oneDriveStack.pop();
+      await loadOneDriveFolder(oneDriveStack.at(-1)?.id || '');
+    });
     $('asset-upload-form')?.addEventListener('submit', uploadAndRegister);
     $('[data-reset-upload]')?.addEventListener('click', resetUploadForm);
+    $('asset-new-folder-button')?.addEventListener('click', openNewFolderEditor);
+    $('asset-new-folder-create')?.addEventListener('click', createUploadFolderOption);
+    $('asset-new-folder-cancel')?.addEventListener('click', closeNewFolderEditor);
+    $('asset-new-folder-name')?.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        createUploadFolderOption();
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeNewFolderEditor();
+      }
+    });
 
     $('repository-asset-path')?.addEventListener('input', updateRepositoryKeyFromPath);
     $('repository-asset-form')?.addEventListener('submit', registerRepositoryAsset);

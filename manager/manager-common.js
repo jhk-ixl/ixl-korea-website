@@ -1,4 +1,4 @@
-﻿/* =========================================
+/* =========================================
    IXL KOREA MANAGER
    COMMON UTILITIES
    Asset Management is the canonical UI/UX pattern.
@@ -528,6 +528,368 @@
   }
 
 
+
+  /* =========================================
+     COMMON MEDIA THUMBNAIL + PREVIEW
+     Canonical renderer for Asset / Knowledge / SNS / Queue.
+     Add a new media type with:
+       IXLManager.media.registerRenderer('kind', { thumbnail, preview })
+     ========================================= */
+
+  const managerMediaRenderers = new Map();
+  let managerMediaAssetRegistry = null;
+  let managerMediaAssetRegistryPromise = null;
+
+  const MANAGER_MEDIA_DEFAULTS = Object.freeze({
+    videoThumbnailTime: 1,
+    pdfScale: 1.35,
+    assetEndpoint: '/api/insights-library?resource=assets',
+    assetProxyEndpoint: '/api/insights-library?resource=assetproxy&url='
+  });
+
+  function escapeManagerHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getManagerMediaExtension(value) {
+    const clean = String(value || '').split('?')[0].split('#')[0];
+    const fileName = clean.split('/').pop() || '';
+    const dot = fileName.lastIndexOf('.');
+    return dot >= 0 ? fileName.slice(dot + 1).toLowerCase() : '';
+  }
+
+  function getManagerYouTubeId(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    const match = raw.match(
+      /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i
+    );
+    return match ? match[1] : '';
+  }
+
+  function getManagerMediaSource(media) {
+    if (typeof media === 'string') return String(media || '').trim();
+    return String(
+      media?.sourceUrl ||
+      media?.url ||
+      media?.asset ||
+      media?.path ||
+      media?.pathname ||
+      ''
+    ).trim();
+  }
+
+  function getManagerMediaType(media) {
+    return String(
+      typeof media === 'object'
+        ? (media?.mediaType || media?.type || '')
+        : ''
+    ).trim().toLowerCase();
+  }
+
+  function getManagerMediaKind(media, options = {}) {
+    const forced = String(options.kind || '').trim().toLowerCase();
+    if (forced) return forced;
+
+    const source = getManagerMediaSource(media);
+    if (getManagerYouTubeId(source)) return 'youtube';
+
+    const type = getManagerMediaType(media);
+    const ext = getManagerMediaExtension(source);
+
+    if (
+      ['image', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(type) ||
+      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)
+    ) return 'image';
+
+    if (
+      ['video', 'mp4', 'mov', 'm4v', 'webm'].includes(type) ||
+      ['mp4', 'mov', 'm4v', 'webm'].includes(ext)
+    ) return 'video';
+
+    if (type === 'pdf' || type === 'document/pdf' || ext === 'pdf') return 'pdf';
+
+    if (
+      ['markdown', 'md', 'txt', 'text'].includes(type) ||
+      ['md', 'txt'].includes(ext)
+    ) return 'text';
+
+    if (
+      ['presentation', 'ppt', 'pptx'].includes(type) ||
+      ['ppt', 'pptx'].includes(ext)
+    ) return 'presentation';
+
+    if (
+      ['document', 'doc', 'docx'].includes(type) ||
+      ['doc', 'docx'].includes(ext)
+    ) return 'document';
+
+    if (type === 'external' || type === 'link') return 'link';
+    return source ? 'file' : 'none';
+  }
+
+  function getManagerThumbnailTime(media, options = {}) {
+    const candidates = [
+      options.thumbnailTime,
+      typeof media === 'object' ? media?.thumbnailTime : null,
+      MANAGER_MEDIA_DEFAULTS.videoThumbnailTime
+    ];
+
+    for (const raw of candidates) {
+      if (raw === null || raw === undefined || raw === '') continue;
+      const value = Number(raw);
+      if (Number.isFinite(value) && value >= 0) return value;
+    }
+
+    return MANAGER_MEDIA_DEFAULTS.videoThumbnailTime;
+  }
+
+  async function loadManagerMediaAssets(force = false) {
+    if (!force && Array.isArray(managerMediaAssetRegistry)) {
+      return managerMediaAssetRegistry;
+    }
+
+    if (!force && managerMediaAssetRegistryPromise) {
+      return managerMediaAssetRegistryPromise;
+    }
+
+    managerMediaAssetRegistryPromise = fetch(MANAGER_MEDIA_DEFAULTS.assetEndpoint, {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    })
+      .then(async response => {
+        const data = await response.json();
+        managerMediaAssetRegistry = response.ok && Array.isArray(data) ? data : [];
+        return managerMediaAssetRegistry;
+      })
+      .catch(() => {
+        managerMediaAssetRegistry = [];
+        return managerMediaAssetRegistry;
+      })
+      .finally(() => {
+        managerMediaAssetRegistryPromise = null;
+      });
+
+    return managerMediaAssetRegistryPromise;
+  }
+
+  function setManagerMediaAssets(items) {
+    managerMediaAssetRegistry = Array.isArray(items) ? items : [];
+    managerMediaAssetRegistryPromise = null;
+    return managerMediaAssetRegistry;
+  }
+
+  function findManagerMediaAsset(assetKey) {
+    const key = String(assetKey || '').trim();
+    if (!key || !Array.isArray(managerMediaAssetRegistry)) return null;
+    return managerMediaAssetRegistry.find(item => String(item?.key || '').trim() === key) || null;
+  }
+
+  async function resolveManagerMedia(media, options = {}) {
+    const input = typeof media === 'object' && media ? { ...media } : { url: media };
+    const assetKey = String(input.assetKey || options.assetKey || '').trim();
+
+    let registered = assetKey ? findManagerMediaAsset(assetKey) : null;
+    if (assetKey && !registered && options.resolveAsset !== false) {
+      await loadManagerMediaAssets();
+      registered = findManagerMediaAsset(assetKey);
+    }
+
+    const source = String(
+      options.sourceUrl ||
+      input.sourceUrl ||
+      registered?.url ||
+      registered?.pathname ||
+      input.url ||
+      input.asset ||
+      input.path ||
+      input.pathname ||
+      ''
+    ).trim();
+
+    const merged = {
+      ...registered,
+      ...input,
+      sourceUrl: source,
+      url: source,
+      assetKey: assetKey || String(registered?.key || '').trim()
+    };
+
+    if (
+      (merged.thumbnailTime === null ||
+       merged.thumbnailTime === undefined ||
+       merged.thumbnailTime === '') &&
+      registered?.thumbnailTime !== undefined
+    ) {
+      merged.thumbnailTime = registered.thumbnailTime;
+    }
+
+    merged.kind = getManagerMediaKind(merged, options);
+    merged.thumbnailTime = getManagerThumbnailTime(merged, options);
+    return merged;
+  }
+
+  function managerMediaElementHtml(media, options = {}) {
+    const resolved = typeof media === 'object' && media ? media : { url: media };
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+    const safeSource = escapeManagerHtml(toManagerUrl(source));
+    const label = escapeManagerHtml(
+      options.alt ||
+      resolved?.name ||
+      resolved?.fileName ||
+      resolved?.title ||
+      'Media'
+    );
+
+    if (!source || kind === 'none') {
+      return options.emptyHtml || '<span class="manager-media-empty">No Media</span>';
+    }
+
+    const renderer = managerMediaRenderers.get(kind);
+    const rendererMode = options.mode === 'preview' ? 'preview' : 'thumbnail';
+    if (renderer && typeof renderer[rendererMode] === 'function') {
+      return renderer[rendererMode](resolved, options);
+    }
+
+    if (kind === 'image') {
+      return `<img src="${safeSource}" alt="${label}">`;
+    }
+
+    if (kind === 'video') {
+      const time = getManagerThumbnailTime(resolved, options);
+      const controls = options.controls ? ' controls' : '';
+      return `<video${controls} muted preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+    }
+
+    if (kind === 'youtube') {
+      const youtubeId = getManagerYouTubeId(source);
+      return youtubeId
+        ? `<iframe src="https://www.youtube.com/embed/${escapeManagerHtml(youtubeId)}" title="${label}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+        : `<a href="${safeSource}" target="_blank" rel="noopener">View media</a>`;
+    }
+
+    if (kind === 'pdf') {
+      return `<iframe src="${safeSource}#page=1&view=FitH" title="${label}"></iframe>`;
+    }
+
+    return `<a href="${safeSource}" target="_blank" rel="noopener">View media</a>`;
+  }
+
+  async function renderManagerMediaThumbnail(target, media, options = {}) {
+    const stage = typeof target === 'string'
+      ? document.getElementById(target)
+      : target;
+    if (!stage) return null;
+
+    const resolved = await resolveManagerMedia(media, options);
+    stage.innerHTML = managerMediaElementHtml(resolved, {
+      ...options,
+      mode: 'thumbnail',
+      controls: false
+    });
+    return resolved;
+  }
+
+  async function renderManagerMediaPreview(target, media, options = {}) {
+    const stage = typeof target === 'string'
+      ? document.getElementById(target)
+      : target;
+    if (!stage) return null;
+
+    const resolved = await resolveManagerMedia(media, options);
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+
+    if (!source || kind === 'none') {
+      stage.innerHTML = options.emptyHtml || '<div class="manager-media-empty">No media</div>';
+      return resolved;
+    }
+
+    const renderer = managerMediaRenderers.get(kind);
+    if (renderer && typeof renderer.preview === 'function') {
+      const custom = await renderer.preview(resolved, options, stage);
+      if (typeof custom === 'string') stage.innerHTML = custom;
+      return resolved;
+    }
+
+    if (kind === 'pdf' && options.pdfCanvas !== false && window.pdfjsLib) {
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          options.pdfWorkerSrc ||
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const proxyUrl = source.startsWith('blob:')
+          ? source
+          : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
+
+        const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
+        const page = await pdf.getPage(Number(options.pdfPage || 1));
+        const viewport = page.getViewport({
+          scale: Number(options.pdfScale || MANAGER_MEDIA_DEFAULTS.pdfScale)
+        });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        stage.innerHTML = '';
+        stage.appendChild(canvas);
+        await page.render({ canvasContext: context, viewport }).promise;
+        return resolved;
+      } catch (error) {
+        console.error(error);
+        // Fall through to the common iframe preview.
+      }
+    }
+
+    if (kind === 'text' && options.loadText !== false) {
+      try {
+        const response = await fetch(source, { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Text preview could not be loaded.');
+        const body = await response.text();
+        stage.innerHTML = `<pre>${escapeManagerHtml(body.slice(0, Number(options.maxTextLength || 30000)))}</pre>`;
+        return resolved;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    stage.innerHTML = managerMediaElementHtml(resolved, {
+      ...options,
+      mode: 'preview',
+      controls: kind === 'video' ? options.controls !== false : false
+    });
+    return resolved;
+  }
+
+  function registerManagerMediaRenderer(kind, renderer) {
+    const key = String(kind || '').trim().toLowerCase();
+    if (!key || !renderer) return;
+    managerMediaRenderers.set(key, renderer);
+  }
+
+  const managerMedia = {
+    defaults: MANAGER_MEDIA_DEFAULTS,
+    detectKind: getManagerMediaKind,
+    getSourceUrl: getManagerMediaSource,
+    getThumbnailTime: getManagerThumbnailTime,
+    getYouTubeId: getManagerYouTubeId,
+    elementHtml: managerMediaElementHtml,
+    resolve: resolveManagerMedia,
+    loadAssets: loadManagerMediaAssets,
+    setAssets: setManagerMediaAssets,
+    findAssetByKey: findManagerMediaAsset,
+    renderThumbnail: renderManagerMediaThumbnail,
+    renderPreview: renderManagerMediaPreview,
+    registerRenderer: registerManagerMediaRenderer
+  };
+
+
   /* =========================================
      COMMON SECOND-SCREEN SHELL
      One runtime structure contract for Builder Review,
@@ -582,6 +944,7 @@
     compareValues,
     createSortableTable,
     initCanonicalScrollTable,
+    media: managerMedia,
     initDetailShell,
     initDetailShells,
     initManagerUi
