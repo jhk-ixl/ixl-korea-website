@@ -1888,42 +1888,7 @@ body {
    ========================================= */
 
 @media (max-width: 900px) {
-
-  /* EN / KO — mobile
-     Keep the language control inside the visible viewport at all times. */
-  .header .language-switcher {
-    position: absolute;
-    top: 0;
-    right: max(12px, env(safe-area-inset-right));
-    height: var(--mobile-logo-row-height);
-    max-width: 72px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    flex: 0 0 auto;
-    gap: 4px;
-    margin-left: 0;
-    padding: 0;
-    white-space: nowrap;
-    background: #ffffff;
-    z-index: 3100;
-  }
-
-  .header .language-switcher button {
-    flex: 0 0 auto;
-    min-width: 20px;
-    padding: 4px 1px;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .header .language-switcher .divider {
-    flex: 0 0 auto;
-  }
-
-
-
-  .hero {
+.hero {
     min-height: auto;
     grid-template-columns: 1fr;
     padding: 70px var(--page-side-padding);
@@ -4211,57 +4176,25 @@ body {
     padding-top: var(--mobile-header-height);
   }
 
-  /* Language control belongs to the logo row, independent of the scrollable nav row. */
+  /* Language switcher: fixed in the logo row, moved slightly left only. */
   .header .language-switcher {
     position: absolute;
     top: 0;
-    right: max(12px, env(safe-area-inset-right));
+    right: 18px;
     height: var(--mobile-logo-row-height);
     display: flex;
-    visibility: visible;
-    opacity: 1;
     align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
+    gap: 6px;
     margin: 0;
-    padding: 0;
     white-space: nowrap;
-    background: #ffffff;
-    color: #17202a;
     z-index: 3100;
-  }
-
-  .header .language-switcher button {
-    display: inline-flex;
-    visibility: visible;
-    opacity: .48;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    min-width: 20px;
-    padding: 4px 1px;
-    color: #17202a;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .header .language-switcher button.active {
-    opacity: 1;
-  }
-
-  .header .language-switcher .divider {
-    display: inline-block;
-    visibility: visible;
-    flex: 0 0 auto;
-    color: #17202a;
-    opacity: .35;
   }
 
   .header .logo {
     height: var(--mobile-logo-row-height);
     display: flex;
     align-items: center;
-    padding: 0 82px 0 0;
+    padding: 0;
     min-width: 0;
   }
 
@@ -4369,24 +4302,9 @@ body {
 }
 
 @media (max-width: 520px) {
-  .header .logo {
-    padding-right: 74px;
-  }
-
   .header .logo img {
     width: var(--small-mobile-logo-width);
     max-height: 42px;
-  }
-
-  .header .language-switcher {
-    right: max(10px, env(safe-area-inset-right));
-    max-width: 66px;
-    gap: 3px;
-  }
-
-  .header .language-switcher button {
-    min-width: 18px;
-    font-size: 11px;
   }
 
   .header nav {
