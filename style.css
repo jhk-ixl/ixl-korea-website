@@ -4186,12 +4186,8 @@ body {
 }
 
 /* =========================================
-   MOBILE VIEWPORT / HEADER / NAV — CANONICAL
-   Visible phone viewport is the only horizontal frame.
-   - html/body/header/main never exceed the viewport
-   - top row: Logo | flexible space | Language
-   - nav viewport is exactly the phone viewport
-   - only nav contents scroll horizontally
+   MOBILE COMMON BASE — CANONICAL
+   Shared mobile viewport contract for the whole public site.
    ========================================= */
 @media (max-width: 900px) {
   :root {
@@ -4225,6 +4221,42 @@ body {
     box-sizing: border-box;
   }
 
+
+  #home {
+    scroll-margin-top: var(--page-anchor-offset);
+  }
+
+  .insights-menu {
+    gap: 22px;
+  }
+
+  .insights-tab {
+    font-size: 12px;
+  }
+
+  .universities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .university-flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .university-flow > div {
+    width: 100%;
+  }
+
+  .university-arrow {
+    transform: rotate(90deg);
+  }
+}
+
+/* =========================================
+   MOBILE HEADER — CANONICAL
+   Consumes the shared viewport; owns only top-row layout.
+   ========================================= */
+@media (max-width: 900px) {
   .header {
     position: fixed;
     top: 0;
@@ -4293,7 +4325,13 @@ body {
     padding: 0 var(--mobile-header-side-padding) 0 0;
     white-space: nowrap;
   }
+}
 
+/* =========================================
+   MOBILE NAV SCROLLER — CANONICAL
+   Owns only horizontal menu scrolling and mobile dropdown behavior.
+   ========================================= */
+@media (max-width: 900px) {
   .header nav {
     grid-area: nav;
 
@@ -4361,35 +4399,6 @@ body {
 
   .header .nav-dropdown-menu a {
     padding: var(--mobile-about-popup-item-padding-y) var(--mobile-about-popup-item-padding-x);
-  }
-
-  #home {
-    scroll-margin-top: var(--page-anchor-offset);
-  }
-
-  .insights-menu {
-    gap: 22px;
-  }
-
-  .insights-tab {
-    font-size: 12px;
-  }
-
-  .universities-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .university-flow {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .university-flow > div {
-    width: 100%;
-  }
-
-  .university-arrow {
-    transform: rotate(90deg);
   }
 }
 
