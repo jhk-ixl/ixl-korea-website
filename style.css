@@ -30,11 +30,14 @@ body {
   --page-top-padding: 60px;
   --page-anchor-offset: 80px;
 
-  /* Desktop header */
+  /* Header — single source of truth */
   --header-height: 80px;
   --header-side-padding: 6.5%;
   --header-nav-gap: 28px;
   --header-main-link-padding-y: 30px;
+  --header-logo-width: 285px;
+  --header-language-gap: 6px;
+  --header-language-offset: 14px;
 
   /* About popup — desktop */
   --about-popup-width: 230px;
@@ -73,13 +76,14 @@ body {
 }
 
 
-/* ---------- HEADER ---------- */
-
+/* ---------- HEADER — CANONICAL ---------- */
 .header {
   height: var(--header-height);
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "logo nav language";
   align-items: center;
+  column-gap: var(--header-language-offset);
   padding: 0 var(--header-side-padding);
   background: #ffffff;
   border-bottom: 1px solid #eeeeee;
@@ -88,20 +92,34 @@ body {
   z-index: 1000;
 }
 
-.logo {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: 1px;
+.header .logo {
+  grid-area: logo;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
   color: #071b33;
 }
 
+.header .logo img {
+  display: block;
+  width: var(--header-logo-width);
+  max-width: 100%;
+  max-height: 64px;
+  height: auto;
+  object-fit: contain;
+}
+
 .header nav {
+  grid-area: nav;
+  justify-self: end;
   display: flex;
   align-items: center;
   gap: var(--header-nav-gap);
+  min-width: 0;
 }
 
-/* Main-menu links only. Popup links are intentionally excluded. */
 .header nav > a,
 .header .nav-dropdown > .nav-dropdown-trigger {
   position: relative;
@@ -115,6 +133,83 @@ body {
 .header nav > a:hover,
 .header .nav-dropdown > .nav-dropdown-trigger:hover {
   color: #087ee6;
+}
+
+.header .language-switcher {
+  grid-area: language;
+  display: flex;
+  align-items: center;
+  gap: var(--header-language-gap);
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.header .language-switcher button {
+  border: 0;
+  background: transparent;
+  padding: 4px 2px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: inherit;
+  opacity: .48;
+  cursor: pointer;
+}
+
+.header .language-switcher button.active { opacity: 1; }
+.header .language-switcher .divider { opacity: .35; }
+
+.header .nav-dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header .nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 0;
+  min-width: var(--about-popup-width);
+  padding: var(--about-popup-shell-padding-y) 0;
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid #e2e8ef;
+  border-radius: 0 0 7px 7px;
+  box-shadow: 0 14px 30px rgba(7, 27, 51, 0.12);
+  z-index: 1200;
+}
+
+.header .nav-dropdown-menu a {
+  display: block;
+  width: 100%;
+  padding: var(--about-popup-item-padding-y) var(--about-popup-item-padding-x);
+  color: #17202a;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: var(--about-popup-item-line-height);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.header .nav-dropdown-menu a:hover {
+  background: #f5f8fc;
+  color: #087ee6;
+}
+
+.insights-action-links {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.insights-action-links .insights-action {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }
 
 /* ---------- HERO ---------- */
@@ -2090,10 +2185,6 @@ body {
 
 @media (max-width: 520px) {
 
-  .logo {
-    font-size: 20px;
-  }
-
   .hero {
     padding: 55px var(--page-side-padding);
   }
@@ -2650,55 +2741,6 @@ body {
    Keeps the current HTML structure aligned with the site's
    established 100%-zoom desktop scale and responsive behavior.
    ========================================= */
-
-/* Keep the image logo inside the fixed header height. */
-.logo img {
-  display: block;
-  width: auto;
-  max-width: 285px;
-  max-height: 64px;
-  object-fit: contain;
-}
-
-/* ---------- HEADER DROPDOWN ---------- */
-.nav-dropdown {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.header .nav-dropdown-menu {
-  position: absolute;
-  top: calc(100% - 1px);
-  left: 0;
-  min-width: var(--about-popup-width);
-  padding: var(--about-popup-shell-padding-y) 0;
-  display: none;
-  flex-direction: column;
-  gap: 0;
-  background: #ffffff;
-  border: 1px solid #e2e8ef;
-  border-radius: 0 0 7px 7px;
-  box-shadow: 0 14px 30px rgba(7, 27, 51, 0.12);
-  z-index: 1200;
-}
-
-.header .nav-dropdown-menu a {
-  display: block;
-  width: 100%;
-  padding: var(--about-popup-item-padding-y) var(--about-popup-item-padding-x);
-  color: #17202a;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: var(--about-popup-item-line-height);
-  white-space: nowrap;
-  text-decoration: none;
-}
-
-.header .nav-dropdown-menu a:hover {
-  background: #f5f8fc;
-  color: #087ee6;
-}
 
 /* ---------- SHARED CURRENT PAGE LAYOUT ---------- */
 .page-start {
@@ -4143,16 +4185,16 @@ body {
 }
 
 /* =========================================
-   MOBILE HEADER / NAV
-   Single structural layout:
-   Row 1 = Logo | Language
-   Row 2 = Horizontal navigation
-   No absolute positioning or pixel nudges.
+   MOBILE HEADER / NAV — CANONICAL
+   Same grid model as desktop.
+   Language follows the logo in normal flow.
    ========================================= */
 @media (max-width: 900px) {
   :root {
     --page-top-padding: var(--mobile-page-top-padding);
     --page-anchor-offset: var(--mobile-header-height);
+    --header-logo-width: var(--mobile-logo-width);
+    --header-language-offset: 12px;
     --innovation5-section-padding-y: var(--mobile-innovation5-section-padding-y);
     --article-hero-top-padding: var(--mobile-article-hero-top-padding);
     --article-hero-bottom-padding: var(--mobile-article-hero-bottom-padding);
@@ -4162,83 +4204,34 @@ body {
 
   .header {
     position: fixed;
-    top: 0;
-    left: 0;
     width: 100%;
     height: var(--mobile-header-height);
     min-height: var(--mobile-header-height);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: max-content max-content minmax(0, 1fr);
     grid-template-rows: var(--mobile-logo-row-height) var(--mobile-nav-row-height);
     grid-template-areas:
-      "logo language"
-      "nav nav";
-    align-items: center;
+      "logo language ."
+      "nav nav nav";
+    column-gap: var(--header-language-offset);
     padding: 0;
     overflow: visible;
-    background: #ffffff;
     z-index: 3000;
   }
 
-  main {
-    padding-top: var(--mobile-header-height);
-  }
+  main { padding-top: var(--mobile-header-height); }
 
-  .header .logo {
-    grid-area: logo;
-    min-width: 0;
-    height: var(--mobile-logo-row-height);
-    display: flex;
-    align-items: center;
-    padding: 0;
-    margin: 0;
-  }
-
-  .header .logo img {
-    margin-left: 0;
-    width: var(--mobile-logo-width);
-    max-width: 100%;
-    max-height: 44px;
-    height: auto;
-  }
+  .header .logo { height: var(--mobile-logo-row-height); }
+  .header .logo img { max-height: 44px; }
 
   .header .language-switcher {
-    grid-area: language;
-    position: static;
-    width: auto;
-    max-width: none;
     height: var(--mobile-logo-row-height);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    margin: 0;
-    padding: 0 var(--page-side-padding) 0 12px;
-    white-space: nowrap;
-    background: transparent;
-    z-index: auto;
-  }
-
-  .header .language-switcher button {
-    flex: 0 0 auto;
-    min-width: 0;
-    padding: 4px 2px;
-    font-size: 12px;
-    line-height: 1;
-  }
-
-  .header .language-switcher .divider {
-    flex: 0 0 auto;
+    align-self: center;
   }
 
   .header nav {
-    grid-area: nav;
-    display: flex;
-    visibility: visible;
-    opacity: 1;
     width: 100%;
-    max-width: none;
     height: var(--mobile-nav-row-height);
+    justify-self: stretch;
     align-items: center;
     gap: var(--mobile-nav-gap);
     padding: 0 var(--page-side-padding);
@@ -4249,9 +4242,7 @@ body {
     scrollbar-width: none;
   }
 
-  .header nav::-webkit-scrollbar {
-    display: none;
-  }
+  .header nav::-webkit-scrollbar { display: none; }
 
   .header nav > a,
   .header .nav-dropdown,
@@ -4287,53 +4278,35 @@ body {
     box-shadow: 0 12px 30px rgba(7, 27, 51, 0.18);
   }
 
-  .header .nav-dropdown.mobile-about-open .nav-dropdown-menu {
-    display: flex;
-  }
+  .header .nav-dropdown.mobile-about-open .nav-dropdown-menu { display: flex; }
 
   .header .nav-dropdown-menu a {
     padding: var(--mobile-about-popup-item-padding-y) var(--mobile-about-popup-item-padding-x);
   }
 
-  #home {
-    scroll-margin-top: var(--page-anchor-offset);
-  }
+  #home { scroll-margin-top: var(--page-anchor-offset); }
 
-  .insights-menu {
-    gap: 22px;
-  }
+  .insights-menu { gap: 22px; }
+  .insights-tab { font-size: 12px; }
 
-  .insights-tab {
-    font-size: 12px;
-  }
-
-  .universities-grid {
-    grid-template-columns: 1fr;
-  }
+  .universities-grid { grid-template-columns: 1fr; }
 
   .university-flow {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .university-flow > div {
-    width: 100%;
-  }
-
-  .university-arrow {
-    transform: rotate(90deg);
-  }
+  .university-flow > div { width: 100%; }
+  .university-arrow { transform: rotate(90deg); }
 }
 
 @media (max-width: 520px) {
-  .header .logo img {
-    width: var(--small-mobile-logo-width);
-    max-height: 42px;
+  :root {
+    --header-logo-width: var(--small-mobile-logo-width);
+    --mobile-nav-gap: var(--small-mobile-nav-gap);
   }
 
-  .header nav {
-    gap: var(--small-mobile-nav-gap);
-  }
+  .header .logo img { max-height: 42px; }
 }
 
 
