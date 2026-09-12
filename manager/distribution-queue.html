@@ -30,6 +30,16 @@
 .queue-editor-head h2{margin:0 0 6px;font-size:26px}
 .queue-editor-head p{margin:0;color:#64748b}
 .queue-editor-card{max-width:none}
+
+.queue-media-file-card{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;align-items:center;margin-top:6px;padding:10px;border:1px solid #dbe3ec;border-radius:8px;background:#f8fafc}
+.queue-media-file-thumb{width:120px;height:78px;border:1px solid #dbe3ec;border-radius:6px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.queue-media-file-thumb img,.queue-media-file-thumb video{width:100%;height:100%;object-fit:cover}
+.queue-media-file-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}
+.queue-media-file-info{min-width:0}
+.queue-media-file-info a{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-media-file-info small{display:block;margin-top:4px;color:#64748b}
+.queue-media-file-empty{padding:10px 0;color:#64748b}
+
 </style>
 
 </head>
@@ -395,12 +405,20 @@
         <label>
           Media File
 
-          <a
-            id="queue-edit-media-file"
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-          ></a>
+          <div id="queue-edit-media-file-card" class="queue-media-file-card" hidden>
+            <div id="queue-edit-media-thumb" class="queue-media-file-thumb"></div>
+            <div class="queue-media-file-info">
+              <a
+                id="queue-edit-media-file"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+              ></a>
+              <small id="queue-edit-media-meta"></small>
+            </div>
+          </div>
+
+          <div id="queue-edit-media-empty" class="queue-media-file-empty">No Media</div>
         </label> 
 
         <label>
@@ -983,6 +1001,69 @@
     }
 
 
+
+    function formatQueueMediaType(mediaType, mediaFile = '') {
+      const type = String(mediaType || 'None').trim();
+      const lower = String(mediaFile || '').toLowerCase().split('?')[0].split('#')[0];
+      if (type === 'Document' && /\.pdf$/i.test(lower)) {
+        return 'Document / PDF';
+      }
+      return type;
+    }
+
+    function queueMediaFileName(value) {
+      const url = String(value || '').trim();
+      if (!url) return 'No Media';
+      try {
+        const pathname = new URL(url, window.location.origin).pathname;
+        return decodeURIComponent(pathname.split('/').pop() || url);
+      } catch {
+        return decodeURIComponent(url.split('/').pop()?.split('?')[0] || url);
+      }
+    }
+
+    function renderQueueMediaFile(mediaType, mediaFile) {
+      const card = document.getElementById('queue-edit-media-file-card');
+      const empty = document.getElementById('queue-edit-media-empty');
+      const thumb = document.getElementById('queue-edit-media-thumb');
+      const link = document.getElementById('queue-edit-media-file');
+      const meta = document.getElementById('queue-edit-media-meta');
+
+      const value = String(mediaFile || '').trim();
+
+      if (!value || String(mediaType || '') === 'None') {
+        card.hidden = true;
+        empty.hidden = false;
+        thumb.innerHTML = '';
+        link.textContent = '';
+        link.removeAttribute('href');
+        link.dataset.mediaFile = '';
+        meta.textContent = '';
+        return;
+      }
+
+      const url = IXLManager.toUrl(value);
+      const lower = value.toLowerCase().split('?')[0].split('#')[0];
+
+      if (String(mediaType) === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
+        thumb.innerHTML = `<img src="${url}" alt="">`;
+      } else if (String(mediaType) === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
+        thumb.innerHTML = `<video src="${url}#t=0.1" muted preload="metadata"></video>`;
+      } else if (String(mediaType) === 'Document' || /\.pdf$/i.test(lower)) {
+        thumb.innerHTML = `<iframe src="${url}#page=1&view=FitH" title="PDF preview"></iframe>`;
+      } else {
+        thumb.textContent = 'MEDIA';
+      }
+
+      link.textContent = queueMediaFileName(value);
+      link.href = url;
+      link.dataset.mediaFile = value;
+      meta.textContent = formatQueueMediaType(mediaType, value);
+
+      card.hidden = false;
+      empty.hidden = true;
+    }
+
     function openQueueEditor(fileName) {
 
       const item =
@@ -1057,33 +1138,16 @@
       document.getElementById(
         'queue-edit-media-type'
       ).value =
-        item.mediaType || 'None';
-
-
-      const editMediaFile =
-        document.getElementById(
-          'queue-edit-media-file'
+        formatQueueMediaType(
+          item.mediaType || 'None',
+          item.mediaFile || ''
         );
 
 
-      if (item.mediaFile) {
-
-        editMediaFile.textContent =
-          item.mediaFile;
-
-        editMediaFile.href =
-          IXLManager.toUrl(item.mediaFile);
-
-      } else {
-
-        editMediaFile.textContent =
-          'No Media';
-
-        editMediaFile.removeAttribute(
-          'href'
-        );
-
-      }
+      renderQueueMediaFile(
+        item.mediaType || 'None',
+        item.mediaFile || ''
+      );
 
 
       document.getElementById(
@@ -1173,15 +1237,23 @@ async function publishToLinkedIn() {
       'queue-edit-post-text'
     ).value.trim();
 
-  const mediaType =
+  const mediaTypeDisplay =
     document.getElementById(
       'queue-edit-media-type'
     ).value;
 
-  const mediaFile =
+  const mediaType =
+    mediaTypeDisplay.startsWith('Document')
+      ? 'Document'
+      : mediaTypeDisplay;
+
+  const mediaFileElement =
     document.getElementById(
       'queue-edit-media-file'
-    ).textContent.trim();
+    );
+
+  const mediaFile =
+    mediaFileElement.dataset.mediaFile || '';
 
   const assetKey =
     document.getElementById(

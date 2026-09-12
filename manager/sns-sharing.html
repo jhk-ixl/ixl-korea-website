@@ -65,6 +65,17 @@
 .sns-media-info small{display:block;margin-top:3px;color:#64748b}
 .sns-asset-image-picker{margin-top:12px}
 
+
+.sns-selected-media-preview{margin-top:10px}
+.sns-selected-media-card{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border:1px solid #dbe3ec;border-radius:8px;background:#f8fafc}
+.sns-selected-media-thumb{width:110px;height:72px;border:1px solid #dbe3ec;border-radius:6px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sns-selected-media-thumb img,.sns-selected-media-thumb video{width:100%;height:100%;object-fit:cover}
+.sns-selected-media-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}
+.sns-selected-media-meta{min-width:0}
+.sns-selected-media-meta strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sns-selected-media-meta small{display:block;margin-top:4px;color:#64748b}
+.sns-selected-media-meta a{display:inline-block;margin-top:5px}
+
 </style>
 </head>
 
@@ -478,6 +489,8 @@
             id="share-media-file"
             placeholder="Image, PDF or video file path"
           >
+
+          <div id="share-selected-media-preview" class="sns-selected-media-preview"></div>
 
         </div>
 
@@ -1218,6 +1231,59 @@
       applyMediaCandidateSelection(item, language, chosenId, assetImageKey);
     }
 
+
+    function formatSnsMediaType(mediaType, mediaFile = '') {
+      const type = String(mediaType || 'None').trim();
+      const lower = String(mediaFile || '').toLowerCase().split('?')[0].split('#')[0];
+      if (type === 'Document' && /\.pdf$/i.test(lower)) return 'Document / PDF';
+      return type;
+    }
+
+    function mediaFileName(value) {
+      const url = String(value || '').trim();
+      if (!url) return 'No Media';
+      try {
+        const pathname = new URL(url, window.location.origin).pathname;
+        return decodeURIComponent(pathname.split('/').pop() || url);
+      } catch {
+        return decodeURIComponent(url.split('/').pop()?.split('?')[0] || url);
+      }
+    }
+
+    function renderSelectedMediaPreview(mediaType, mediaFile) {
+      const wrap = document.getElementById('share-selected-media-preview');
+      if (!wrap) return;
+
+      const value = String(mediaFile || '').trim();
+      if (!value || String(mediaType || '') === 'None') {
+        wrap.innerHTML = '';
+        return;
+      }
+
+      const safeUrl = escapeHtml(IXLManager.toUrl(value));
+      const lower = value.toLowerCase().split('?')[0].split('#')[0];
+      let thumb = '<span class="sns-media-thumb-label">MEDIA</span>';
+
+      if (String(mediaType) === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
+        thumb = `<img src="${safeUrl}" alt="">`;
+      } else if (String(mediaType) === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
+        thumb = `<video src="${safeUrl}#t=0.1" muted preload="metadata"></video>`;
+      } else if (String(mediaType) === 'Document' || /\.pdf$/i.test(lower)) {
+        thumb = `<iframe src="${safeUrl}#page=1&view=FitH" title="PDF preview"></iframe>`;
+      }
+
+      wrap.innerHTML = `
+        <div class="sns-selected-media-card">
+          <div class="sns-selected-media-thumb">${thumb}</div>
+          <div class="sns-selected-media-meta">
+            <strong>${escapeHtml(mediaFileName(value))}</strong>
+            <small>${escapeHtml(formatSnsMediaType(mediaType, value))}</small>
+            <a href="${safeUrl}" target="_blank" rel="noopener">View File ↗</a>
+          </div>
+        </div>
+      `;
+    }
+
     function applyMediaCandidateSelection(item, language, selectedId, assetImageKey = '') {
       const mediaTypeField = document.getElementById('share-media-type');
       const mediaFileField = document.getElementById('share-media-file');
@@ -1227,6 +1293,10 @@
       selectedAssetKey = candidate.assetKey || '';
       mediaTypeField.value = candidate.mediaType || 'None';
       mediaFileField.value = candidate.mediaFile || '';
+      renderSelectedMediaPreview(
+        candidate.mediaType || 'None',
+        candidate.mediaFile || ''
+      );
     }
 
     function findMediaCandidateSelection(item, language, assetKey, mediaFile, assetImageKey = '') {
@@ -1548,6 +1618,7 @@
         document.getElementById('share-external-link').value=tx.externalLink||'';
         document.getElementById('share-media-type').value=tx.mediaType||'None';
         document.getElementById('share-media-file').value=tx.mediaFile||'';
+        renderSelectedMediaPreview(tx.mediaType||'None', tx.mediaFile||'');
         selectedAssetKey=tx.assetKey||'';
         const restoredAssetImageKey =
           (tx.mediaType || '') === 'Image' &&
@@ -1582,6 +1653,20 @@
         : `${ctx.item.knowledgeId||''} · ${ctx.language} — edit the official Knowledge version for this distribution only.`;
       showSnsScreen('editor');
     }
+
+    document.getElementById('share-media-file')?.addEventListener('input', () => {
+      renderSelectedMediaPreview(
+        document.getElementById('share-media-type')?.value || 'None',
+        document.getElementById('share-media-file')?.value || ''
+      );
+    });
+
+    document.getElementById('share-media-type')?.addEventListener('change', () => {
+      renderSelectedMediaPreview(
+        document.getElementById('share-media-type')?.value || 'None',
+        document.getElementById('share-media-file')?.value || ''
+      );
+    });
 
     document.getElementById('share-media-candidates')?.addEventListener('change', event => {
       const radio = event.target.closest('input[name="share-media-choice"]');
