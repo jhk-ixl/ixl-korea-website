@@ -401,6 +401,61 @@
     }
   }
 
+
+  function getListMediaAsset(asset) {
+    const registryItem = getRegistryItem(asset);
+    return {
+      ...asset,
+      ...(registryItem || {}),
+      url: getAssetSourceUrl(asset),
+      assetKey: registryItem?.key || asset?.key || '',
+      key: registryItem?.key || asset?.key || '',
+      thumbnailTime: registryItem?.thumbnailTime ?? asset?.thumbnailTime
+    };
+  }
+
+  async function renderListThumbnail(stage, asset) {
+    if (!stage) return;
+    const commonMedia = window.IXLManager?.media;
+    if (!commonMedia) {
+      stage.innerHTML = '<span class="asset-list-thumbnail-fallback">View</span>';
+      return;
+    }
+
+    try {
+      await commonMedia.renderThumbnail(stage, getListMediaAsset(asset), {
+        label: getFileName(asset?.pathname || ''),
+        emptyHtml: '<span class="asset-list-thumbnail-fallback">File</span>'
+      });
+    } catch (error) {
+      console.error(error);
+      stage.innerHTML = '<span class="asset-list-thumbnail-fallback">File</span>';
+    }
+  }
+
+  async function openListPreview(asset) {
+    const modal = $('asset-list-preview-modal');
+    const stage = $('asset-list-preview-stage');
+    const title = $('asset-list-preview-title');
+    if (!modal || !stage) return;
+
+    if (title) title.textContent = getFileName(asset?.pathname || '') || 'Preview';
+    modal.hidden = false;
+    stage.innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
+
+    await renderPreview(stage, getListMediaAsset(asset), {
+      controls: true,
+      autoplay: false
+    });
+  }
+
+  function closeListPreview() {
+    const modal = $('asset-list-preview-modal');
+    const stage = $('asset-list-preview-stage');
+    if (stage) stage.innerHTML = '<div class="asset-preview-empty">Choose an asset to preview.</div>';
+    if (modal) modal.hidden = true;
+  }
+
   function renderAssets() {
     const tbody = $('asset-table-body');
     const empty = $('library-empty');
@@ -462,14 +517,26 @@
           ? `<button type="button" class="library-button" data-duplicate-key="${escapeHtml(assetKey)}">Duplicate Key</button>`
           : `<button type="button" class="library-button primary" data-register-path="${escapeHtml(pathname)}">Register</button>`;
 
+      const previewId = `asset-thumb-${Math.random().toString(36).slice(2)}`;
+
       row.innerHTML = `
+        <td>
+          <button type="button"
+                  class="asset-list-thumbnail-button"
+                  data-preview-path="${escapeHtml(pathname)}"
+                  aria-label="Preview ${escapeHtml(fileName)}"
+                  title="Preview / Play">
+            <span id="${previewId}" class="asset-list-thumbnail-stage">
+              <span class="asset-list-thumbnail-fallback">Loading</span>
+            </span>
+          </button>
+        </td>
         <td title="${escapeHtml(fileName)}">${escapeHtml(fileName)} <span class="asset-storage-badge">${escapeHtml(storageLabel)}</span></td>
         <td><code title="${escapeHtml(assetKey)}">${escapeHtml(assetKey)}</code></td>
         <td>${escapeHtml(folderName)}</td>
         <td>${escapeHtml(getFileType(pathname))}</td>
         <td>${escapeHtml(formatFileSize(asset.size))}</td>
         <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
-        <td>${viewUrl ? `<a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : ''}</td>
         <td>${registryButton}</td>
         <td>${downloadUrl ? `<a href="${escapeHtml(downloadUrl)}">Download</a>` : ''}</td>
         <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : ''}</td>
@@ -477,6 +544,7 @@
       `;
 
       tbody.appendChild(row);
+      renderListThumbnail(document.getElementById(previewId), asset);
     });
 
     empty.style.display = sorted.length ? 'none' : 'block';
@@ -1762,6 +1830,13 @@ Key: ${registered.key || key}`);
     });
 
     $('asset-table-body')?.addEventListener('click', async event => {
+      const previewButton = event.target.closest('[data-preview-path]');
+      if (previewButton) {
+        const asset = allAssets.find(item => String(item.pathname || '') === String(previewButton.dataset.previewPath || ''));
+        if (asset) await openListPreview(asset);
+        return;
+      }
+
       const copyButton = event.target.closest('[data-copy-url]');
       if (copyButton) return copyAssetUrl(copyButton.dataset.copyUrl);
 
@@ -1791,6 +1866,11 @@ Key: ${registered.key || key}`);
 
       const deleteButton = event.target.closest('[data-delete-url]');
       if (deleteButton) await deleteBlobAsset(deleteButton);
+    });
+
+    $('asset-list-preview-close')?.addEventListener('click', closeListPreview);
+    $('asset-list-preview-modal')?.addEventListener('click', event => {
+      if (event.target.id === 'asset-list-preview-modal') closeListPreview();
     });
 
     $('duplicate-modal-close')?.addEventListener('click', closeDuplicateModal);

@@ -214,16 +214,17 @@
         <div class="asset-header-viewport" id="asset-header-viewport" aria-hidden="false">
           <table class="library-table asset-table asset-header-table" id="asset-header-table">
             <colgroup>
-              <col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-view"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
+              <col class="asset-col-thumbnail"><col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
             </colgroup>
             <thead><tr>
+              <th>Thumbnail</th>
               <th data-sort-column="file"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="file">File <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
               <th data-sort-column="key"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="key">Key <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
               <th data-sort-column="folder"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="folder">Folder <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
               <th data-sort-column="type"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="type">Type <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
               <th data-sort-column="size"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="size">Size <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
               <th data-sort-column="uploaded"><button type="button" class="asset-sort-button manager-sort-button" data-sort-key="uploaded">Uploaded <span class="asset-sort-indicator manager-sort-indicator" aria-hidden="true"></span></button></th>
-              <th>View</th><th>Registry</th><th>Download</th><th>URL</th><th>Delete</th>
+              <th>Registry</th><th>Download</th><th>URL</th><th>Delete</th>
             </tr></thead>
           </table>
         </div>
@@ -233,7 +234,7 @@
         <div class="library-table-wrap asset-table-wrap" id="asset-table-wrap">
           <table class="library-table asset-table asset-body-table" id="asset-table">
             <colgroup>
-              <col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-view"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
+              <col class="asset-col-thumbnail"><col class="asset-col-file"><col class="asset-col-key"><col class="asset-col-folder"><col class="asset-col-type"><col class="asset-col-size"><col class="asset-col-uploaded"><col class="asset-col-registry"><col class="asset-col-download"><col class="asset-col-url"><col class="asset-col-delete">
             </colgroup>
             <tbody id="asset-table-body"></tbody>
           </table>
@@ -451,6 +452,21 @@
           <button type="button" id="duplicate-modal-close" class="library-button">Cancel</button>
         </div>
         <div id="duplicate-modal-list" class="asset-duplicate-list"></div>
+      </div>
+    </div>
+
+    <div id="asset-list-preview-modal" class="asset-modal" hidden>
+      <div class="asset-modal-card asset-list-preview-card" role="dialog" aria-modal="true" aria-labelledby="asset-list-preview-title">
+        <div class="asset-panel-head">
+          <div>
+            <span class="section-eyebrow">ASSET PREVIEW</span>
+            <h3 id="asset-list-preview-title">Preview</h3>
+          </div>
+          <button type="button" id="asset-list-preview-close" class="library-button">Close</button>
+        </div>
+        <div id="asset-list-preview-stage" class="asset-preview-stage asset-list-preview-stage">
+          <div class="asset-preview-empty">Choose an asset to preview.</div>
+        </div>
       </div>
     </div>
   </main>

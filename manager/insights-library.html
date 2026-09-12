@@ -659,6 +659,22 @@
 
   
     .knowledge-media-list{grid-column:1/-1;display:grid;gap:12px}.knowledge-media-toolbar{display:flex;justify-content:flex-end}.knowledge-media-row{border:1px solid #d7e0e8;border-radius:12px;padding:14px;background:#fff;display:grid;grid-template-columns:150px 150px minmax(160px,1fr) auto;gap:10px;align-items:end}.knowledge-media-row .full{grid-column:1/-1}.knowledge-media-row label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#38536d}.knowledge-media-row input,.knowledge-media-row select{width:100%;box-sizing:border-box}.knowledge-media-asset{font-size:12px;color:#526b82;overflow-wrap:anywhere}.knowledge-media-actions{display:flex;gap:8px;align-items:center}.knowledge-media-empty{padding:18px;border:1px dashed #bccbd8;border-radius:10px;color:#667c90;text-align:center}@media(max-width:800px){.knowledge-media-row{grid-template-columns:1fr}.knowledge-media-row .full{grid-column:auto}}
+    .knowledge-media-view{grid-column:1/-1}
+    .knowledge-media-view>label{margin-bottom:7px}
+    .knowledge-media-view-stage{width:180px;height:112px;overflow:hidden;border:1px solid #cfd8e3;border-radius:8px;background:#f5f7f9}
+    .knowledge-media-view-stage.is-playing{width:min(760px,100%);height:auto;min-height:220px}
+    .knowledge-media-view-stage .knowledge-media-editor-thumb{position:relative;width:100%;height:100%;display:block;padding:0;border:0;background:#f5f7f9;cursor:pointer;overflow:hidden}
+    .knowledge-media-view-stage .knowledge-media-editor-thumb img,
+    .knowledge-media-view-stage .knowledge-media-editor-thumb video,
+    .knowledge-media-view-stage .knowledge-media-editor-thumb iframe,
+    .knowledge-media-view-stage .knowledge-media-editor-thumb canvas{width:100%;height:100%;display:block;object-fit:cover;border:0}
+    .knowledge-media-view-stage.is-playing img,
+    .knowledge-media-view-stage.is-playing video,
+    .knowledge-media-view-stage.is-playing canvas{max-width:100%;height:auto;max-height:62vh;object-fit:contain}
+    .knowledge-media-view-stage.is-playing iframe{width:100%;height:62vh}
+    .knowledge-media-editor-action{position:absolute;left:8px;bottom:8px;padding:4px 7px;border-radius:999px;background:rgba(7,27,51,.82);color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em}
+    .knowledge-media-view-empty{width:100%;height:100%;display:grid;place-items:center;padding:10px;box-sizing:border-box;color:#6b7785;font-size:11px;text-align:center}
+
 </style>
 </head>
 
@@ -2056,6 +2072,33 @@
         : [];
     }
 
+    async function mountMediaEditorView(stage, media, asset) {
+      if (!stage) return;
+
+      const commonMedia = window.IXLManager?.media;
+      if (!commonMedia?.mount) {
+        stage.innerHTML = '<div class="knowledge-media-view-empty">Media preview unavailable.</div>';
+        return;
+      }
+
+      const candidate = {
+        type: media.type || '',
+        assetKey: media.assetKey || '',
+        asset: media.asset || '',
+        url: media.url || '',
+        ...(asset || {})
+      };
+
+      await commonMedia.mount(stage, candidate, {
+        buttonClass: 'knowledge-media-editor-thumb',
+        actionClass: 'knowledge-media-editor-action',
+        playingClass: 'is-playing',
+        controls: true,
+        autoplay: true,
+        emptyHtml: '<div class="knowledge-media-view-empty">Select an Asset or enter an External URL.</div>'
+      });
+    }
+
     function renderMediaEditor() {
       const host = document.getElementById('knowledge-media-rows');
       if (!mediaDrafts.length) {
@@ -2063,14 +2106,25 @@
         return;
       }
 
+      const mounts = [];
+
       host.innerHTML = mediaDrafts.map((media, index) => {
         const isExternal = media.type === 'external';
         const asset = media.assetKey ? getAssetByKey(media.assetKey) : null;
         const sourceLabel = media.assetKey
           ? `${media.assetKey}${asset ? ' · ' + getAssetDisplayName(asset) : ''}`
           : (media.asset || 'No Asset selected');
+        const stageId = `knowledge-media-view-${index}`;
+
+        mounts.push({ stageId, media, asset });
 
         return `<div class="knowledge-media-row" data-media-index="${index}">
+          <div class="knowledge-media-view">
+            <label>Thumbnail <span class="insights-field-hint">Click to View / Play</span></label>
+            <div id="${stageId}" class="knowledge-media-view-stage">
+              <div class="knowledge-media-view-empty">Loading media...</div>
+            </div>
+          </div>
           <div><label>Type</label><select data-media-field="type">
             ${['image','video','pdf','markdown','presentation','document','external'].map(type => `<option value="${type}" ${media.type===type?'selected':''}>${type === 'external' ? 'External Link' : type.charAt(0).toUpperCase()+type.slice(1)}</option>`).join('')}
           </select></div>
@@ -2090,6 +2144,10 @@
           </div>
         </div>`;
       }).join('');
+
+      mounts.forEach(({ stageId, media, asset }) => {
+        mountMediaEditorView(document.getElementById(stageId), media, asset);
+      });
     }
 
     function addMediaResource() {
@@ -3305,6 +3363,10 @@
       const index = Number(row.dataset.mediaIndex);
       if (!mediaDrafts[index]) return;
       mediaDrafts[index][field] = event.target.value;
+      if (field === 'url' && mediaDrafts[index].type === 'external') {
+        const stage = row.querySelector('.knowledge-media-view-stage');
+        mountMediaEditorView(stage, mediaDrafts[index], null);
+      }
     });
     document.getElementById('knowledge-media-rows').addEventListener('change', event => {
       const row = event.target.closest('[data-media-index]');

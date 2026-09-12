@@ -188,6 +188,41 @@
   line-height: 1.4;
 }
 
+.asset-folder-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.asset-folder-picker .asset-new-folder-button {
+  white-space: nowrap;
+}
+
+.asset-new-folder-editor {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--asset-edit-border);
+}
+
+.asset-new-folder-editor[hidden] {
+  display: none !important;
+}
+
+.asset-new-folder-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .asset-folder-picker {
+    grid-template-columns: 1fr;
+  }
+}
+
 .asset-field-grow {
   min-width: 0;
 }
@@ -364,18 +399,18 @@
 }
 
 .asset-table {
-  width: 1530px;
-  min-width: 1530px;
+  width: 1560px;
+  min-width: 1560px;
   table-layout: fixed;
 }
 
+.asset-table col.asset-col-thumbnail { width: 110px; }
 .asset-table col.asset-col-file { width: 300px; }
 .asset-table col.asset-col-key { width: 295px; }
 .asset-table col.asset-col-folder { width: 125px; }
 .asset-table col.asset-col-type { width: 70px; }
 .asset-table col.asset-col-size { width: 90px; }
 .asset-table col.asset-col-uploaded { width: 175px; }
-.asset-table col.asset-col-view { width: 80px; }
 .asset-table col.asset-col-registry { width: 110px; }
 .asset-table col.asset-col-download { width: 100px; }
 .asset-table col.asset-col-url { width: 95px; }
@@ -398,12 +433,12 @@
   white-space: nowrap;
 }
 
-.asset-table td:first-child {
+.asset-table td:nth-child(2) {
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.asset-table td:nth-child(2) code {
+.asset-table td:nth-child(3) code {
   display: inline-block;
   max-width: 260px;
   overflow: hidden;
@@ -616,4 +651,97 @@
   .asset-grid-sticky {
     top: 0;
   }
+}
+
+
+/* OneDrive source / browser */
+.asset-source-switch{display:flex;gap:18px;flex-wrap:wrap;padding:10px 12px;border:1px solid #d7dee7;border-radius:8px;background:#f8fafc}
+.asset-source-switch label{display:flex;align-items:center;gap:7px;font-weight:700;color:#29435d;cursor:pointer}
+.onedrive-selected-file{margin-top:10px;padding:12px;border:1px solid #dce3ea;border-radius:8px;background:#f8fafc;color:#4d5d6d;line-height:1.5;word-break:break-word}
+.onedrive-browser-card{width:min(980px,calc(100vw - 32px));max-height:86vh;display:flex;flex-direction:column}
+.onedrive-browser-toolbar{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #e2e7ed}
+.onedrive-browser-path{font-size:13px;font-weight:700;color:#44576a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.onedrive-browser-list{overflow:auto;min-height:280px;max-height:58vh;padding-top:8px}
+.onedrive-browser-row{width:100%;display:grid;grid-template-columns:minmax(260px,1.4fr) 120px 130px;gap:12px;align-items:center;border:0;border-bottom:1px solid #edf1f5;background:#fff;padding:11px 8px;text-align:left;font:inherit;cursor:pointer}
+.onedrive-browser-row:hover,.onedrive-browser-row:focus{background:#f4f7fa;outline:none}
+.onedrive-browser-name{font-weight:700;color:#20364c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.onedrive-browser-meta{font-size:12px;color:#687786}
+.onedrive-browser-empty{padding:30px 10px;text-align:center;color:#73808d}
+.asset-storage-badge{display:inline-flex;align-items:center;padding:2px 7px;border:1px solid #d6dee7;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;background:#f8fafc;color:#486079}
+@media(max-width:700px){.onedrive-browser-row{grid-template-columns:1fr 80px}.onedrive-browser-row .onedrive-size{display:none}}
+
+
+/* Asset List media contract:
+   Thumbnail is the first column and is also the Preview / Play trigger.
+   Media rendering itself stays in IXLManager.media. */
+.asset-list-thumbnail-button {
+  width: 82px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--asset-border-strong);
+  border-radius: 7px;
+  background: var(--asset-bg-soft);
+  cursor: pointer;
+}
+
+.asset-list-thumbnail-button:hover,
+.asset-list-thumbnail-button:focus-visible {
+  border-color: var(--asset-navy);
+  box-shadow: 0 0 0 2px rgba(7, 27, 51, 0.08);
+}
+
+.asset-list-thumbnail-stage,
+.asset-list-thumbnail-stage img,
+.asset-list-thumbnail-stage video,
+.asset-list-thumbnail-stage iframe,
+.asset-list-thumbnail-stage canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.asset-list-thumbnail-stage img,
+.asset-list-thumbnail-stage video,
+.asset-list-thumbnail-stage canvas {
+  object-fit: cover;
+}
+
+.asset-list-thumbnail-stage iframe {
+  border: 0;
+  pointer-events: none;
+}
+
+.asset-list-thumbnail-fallback {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--asset-muted);
+  text-transform: uppercase;
+}
+
+.asset-list-preview-card {
+  width: min(980px, calc(100vw - 48px));
+}
+
+.asset-list-preview-stage {
+  margin-top: 18px;
+  min-height: min(560px, 68vh);
+  max-height: 72vh;
+  overflow: auto;
+}
+
+.asset-list-preview-stage img,
+.asset-list-preview-stage video,
+.asset-list-preview-stage canvas {
+  max-width: 100%;
+  max-height: 66vh;
+  object-fit: contain;
+}
+
+.asset-list-preview-stage iframe {
+  width: 100%;
+  min-height: 64vh;
+  border: 0;
 }
