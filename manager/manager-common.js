@@ -1511,8 +1511,7 @@
          * page navigation, thumbnails, zoom, print and download in one step.
          */
         const pdfUrl = toManagerUrl(source);
-        const opened = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-        if (!opened) window.location.href = pdfUrl;
+        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
         return;
       }
 
