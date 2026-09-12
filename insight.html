@@ -6,6 +6,7 @@
   <title>Insight | IXL Korea</title>
   <link rel="stylesheet" href="style.css">
   <script src="markdown-renderer.js"></script>
+  <script src="header-nav.js?v=20260912-v30-public-nav-common"></script>
   <style>
     .insight-detail-shell{max-width:980px;margin:0 auto;padding:120px 28px 80px}
     .insight-detail-back{display:inline-block;margin-bottom:28px;text-decoration:none}
@@ -43,7 +44,7 @@
   const root = document.getElementById('insight-detail');
   const errorBox = document.getElementById('insight-error');
 
-  const params = new URLSearchParams(location.search);
+  const params = window.IXLPublicNavigation?.getParams() || new URLSearchParams(location.search);
   const id = params.get('id') || '';
   const slug = params.get('slug') || '';
   const requestedLang = (params.get('lang') || '').toLowerCase();

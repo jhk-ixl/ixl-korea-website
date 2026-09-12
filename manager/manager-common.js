@@ -1085,6 +1085,152 @@
   };
 
 
+
+  /* =========================================
+     COMMON MANAGER NAVIGATION
+     Global menu + navigation primitives.
+     Consumers provide destination/state; they do not rebuild navigation behavior.
+     ========================================= */
+
+  const MANAGER_NAV_ITEMS = Object.freeze([
+    { id: 'dashboard', label: 'Dashboard', href: 'index.html' },
+    { id: 'knowledge', label: 'Knowledge', href: 'knowledge.html' },
+    { id: 'distribution', label: 'Distribution', href: 'distribution.html' },
+    { id: 'community', label: 'Community', href: 'index.html#community' },
+    { id: 'education', label: 'Education', href: 'index.html#education' },
+    { id: 'business', label: 'Business', href: 'index.html#business' },
+    { id: 'analytics', label: 'Analytics', href: 'index.html#analytics' },
+    { id: 'system', label: 'System', href: 'index.html#system' },
+    { id: 'website', label: 'View Website ↗', href: '../index.html', className: 'website-link' }
+  ]);
+
+  function renderManagerNav(root = document) {
+    root.querySelectorAll('.manager-nav[data-manager-nav]').forEach(nav => {
+      const activeId = String(nav.dataset.managerNav || '').trim().toLowerCase();
+
+      nav.replaceChildren(...MANAGER_NAV_ITEMS.map(item => {
+        const link = document.createElement('a');
+        link.href = item.href;
+        link.textContent = item.label;
+
+        if (item.className) link.classList.add(item.className);
+
+        if (item.id === activeId) {
+          link.classList.add('active');
+          link.setAttribute('aria-current', 'page');
+        }
+
+        return link;
+      }));
+    });
+  }
+
+  function getManagerNavigationParams(search = window.location.search) {
+    return new URLSearchParams(search || '');
+  }
+
+  function buildManagerNavigationUrl(path, params = null, hash = '') {
+    const rawPath = String(path || '').trim() || window.location.pathname;
+    const url = new URL(rawPath, window.location.href);
+
+    if (params instanceof URLSearchParams) {
+      url.search = params.toString();
+    } else if (params && typeof params === 'object') {
+      const next = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === '') return;
+        next.set(key, String(value));
+      });
+      url.search = next.toString();
+    }
+
+    if (hash !== null && hash !== undefined) {
+      const cleanHash = String(hash || '').trim();
+      url.hash = cleanHash ? (cleanHash.startsWith('#') ? cleanHash : `#${cleanHash}`) : '';
+    }
+
+    const sameOrigin = url.origin === window.location.origin;
+    return sameOrigin
+      ? `${url.pathname.split('/').pop() || ''}${url.search}${url.hash}`
+      : url.href;
+  }
+
+  function goManagerNavigation(target, options = {}) {
+    const url = String(target || '').trim();
+    if (!url) return;
+
+    if (options.replace === true) {
+      window.location.replace(url);
+    } else {
+      window.location.href = url;
+    }
+  }
+
+  function pushManagerView(view, state = {}, hash = '') {
+    const managerView = String(view || '').trim();
+    if (!managerView) return;
+
+    const nextState = {
+      ...(history.state || {}),
+      ...state,
+      managerView
+    };
+
+    const cleanHash = String(hash || '').trim();
+    const nextUrl =
+      `${window.location.pathname}${window.location.search}` +
+      (cleanHash ? (cleanHash.startsWith('#') ? cleanHash : `#${cleanHash}`) : '');
+
+    history.pushState(nextState, '', nextUrl);
+  }
+
+  function replaceManagerView(view, state = {}, hash = '') {
+    const managerView = String(view || '').trim();
+    const nextState = {
+      ...(history.state || {}),
+      ...state,
+      ...(managerView ? { managerView } : {})
+    };
+
+    const cleanHash = String(hash || '').trim();
+    const nextUrl =
+      `${window.location.pathname}${window.location.search}` +
+      (cleanHash ? (cleanHash.startsWith('#') ? cleanHash : `#${cleanHash}`) : '');
+
+    history.replaceState(nextState, '', nextUrl);
+  }
+
+  function isManagerView(view) {
+    return String(history.state?.managerView || history.state?.builderView || '') === String(view || '');
+  }
+
+  function backManagerNavigation(fallback = '') {
+    if (history.state?.managerView || history.state?.builderView) {
+      history.back();
+      return true;
+    }
+
+    if (fallback) {
+      goManagerNavigation(fallback);
+      return true;
+    }
+
+    return false;
+  }
+
+  const managerNavigation = Object.freeze({
+    items: MANAGER_NAV_ITEMS,
+    render: renderManagerNav,
+    getParams: getManagerNavigationParams,
+    buildUrl: buildManagerNavigationUrl,
+    go: goManagerNavigation,
+    replace: target => goManagerNavigation(target, { replace: true }),
+    pushView: pushManagerView,
+    replaceView: replaceManagerView,
+    isView: isManagerView,
+    back: backManagerNavigation
+  });
+
   /* =========================================
      COMMON SECOND-SCREEN SHELL
      One runtime structure contract for Builder Review,
@@ -1126,6 +1272,7 @@
   }
 
   function initManagerUi(root = document) {
+    renderManagerNav(root);
     root.querySelectorAll('table[data-manager-sortable]').forEach(initDomSortableTable);
     root.querySelectorAll('.manager-canonical-table-wrap, .library-table-wrap').forEach(initCanonicalScrollTable);
     initDetailShells(root);
@@ -1140,6 +1287,7 @@
     createSortableTable,
     initCanonicalScrollTable,
     media: managerMedia,
+    navigation: managerNavigation,
     initDetailShell,
     initDetailShells,
     initManagerUi

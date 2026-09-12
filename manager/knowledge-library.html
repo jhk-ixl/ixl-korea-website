@@ -21,18 +21,7 @@
       <p>Innovation Knowledge Ecosystem Control Center</p>
     </div>
 
-    <nav class="manager-nav">
-      <a href="index.html">Dashboard</a>
-      <a href="knowledge.html" class="active">Knowledge</a>
-      <a href="index.html#distribution">Distribution</a>
-      <a href="index.html#community">Community</a>
-      <a href="index.html#education">Education</a>
-      <a href="index.html#business">Business</a>
-      <a href="index.html#analytics">Analytics</a>
-      <a href="index.html#system">System</a>
-
-      <a href="../index.html" class="website-link">View Website ↗</a>
-    </nav>
+    <nav class="manager-nav" data-manager-nav="knowledge"></nav>
 
   </header>
 
@@ -223,6 +212,7 @@
 
 
   <script>
+    const commonNavigation = window.IXLManager?.navigation;
 
     let allKnowledgeItems = [];
     let assetRegistry = [];
@@ -1192,6 +1182,11 @@
       document.getElementById(
         'library-detail-edit'
       ).href =
+        commonNavigation?.buildUrl('insights-library.html', {
+          edit: stableId,
+          from: 'library',
+          return: stableId
+        }) ||
         `insights-library.html?edit=${encodeURIComponent(stableId)}&from=library&return=${encodeURIComponent(stableId)}`;
 
       renderLibraryMedia(item);
@@ -1733,8 +1728,8 @@
         );
 
         const requestedDetail =
-          new URLSearchParams(
-            window.location.search
+          (commonNavigation?.getParams() ||
+            new URLSearchParams(window.location.search)
           ).get('detail');
 
         if (requestedDetail) {

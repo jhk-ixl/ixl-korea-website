@@ -672,20 +672,7 @@
       <p>Innovation Knowledge Ecosystem Control Center</p>
     </div>
 
-    <nav class="manager-nav">
-      <a href="index.html">Dashboard</a>
-      <a href="knowledge.html" class="active">Knowledge</a>
-      <a href="index.html#distribution">Distribution</a>
-      <a href="index.html#community">Community</a>
-      <a href="index.html#education">Education</a>
-      <a href="index.html#business">Business</a>
-      <a href="index.html#analytics">Analytics</a>
-      <a href="index.html#system">System</a>
-
-      <a href="../index.html" class="website-link">
-        View Website ↗
-      </a>
-    </nav>
+    <nav class="manager-nav" data-manager-nav="knowledge"></nav>
 
   </header>
 
@@ -1828,6 +1815,7 @@
 
     function getAssetPreviewKind(asset) {
       const commonMedia = window.IXLManager?.media;
+    const commonNavigation = window.IXLManager?.navigation;
       if (commonMedia) return commonMedia.detectKind(asset);
 
       const path = String(asset?.url || asset?.path || asset?.pathname || '').trim();
@@ -2580,11 +2568,7 @@
       pendingEditIndex = index;
 
       if (pushHistory) {
-        history.pushState(
-          { builderView: 'detail', index },
-          '',
-          `${window.location.pathname}${window.location.search}#review`
-        );
+        commonNavigation?.pushView('detail', { builderView: 'detail', index }, '#review');
       }
       closeAllMarkdownPreviews();
       document.getElementById('insights-editor').classList.remove('open');
@@ -2673,11 +2657,7 @@
       resetEditor();
 
       if (pushHistory) {
-        history.pushState(
-          { builderView: 'add' },
-          '',
-          `${window.location.pathname}${window.location.search}#add`
-        );
+        commonNavigation?.pushView('add', { builderView: 'add' }, '#add');
       }
 
 
@@ -2702,11 +2682,7 @@
       setBuilderFocus(true);
 
       if (pushHistory) {
-        history.pushState(
-          { builderView: 'edit', index },
-          '',
-          `${window.location.pathname}${window.location.search}#edit`
-        );
+        commonNavigation?.pushView('edit', { builderView: 'edit', index }, '#edit');
       }
 
       const item = insightsItems.find(entry => entry._sourceIndex === index);
@@ -3047,9 +3023,8 @@
 
     function openRequestedKnowledgeEdit() {
       const params =
-        new URLSearchParams(
-          window.location.search
-        );
+        commonNavigation?.getParams() ||
+        new URLSearchParams(window.location.search);
 
       const requested =
         params.get('edit');
@@ -3118,8 +3093,8 @@
     });
 
     document.getElementById('knowledge-detail-back').addEventListener('click', () => {
-      if (history.state?.builderView === 'detail') {
-        history.back();
+      if (commonNavigation?.isView('detail')) {
+        commonNavigation.back();
       } else {
         closeKnowledgeDetail();
       }
@@ -3127,21 +3102,22 @@
 
     document.getElementById('editor-back-button').addEventListener('click', () => {
       if (builderReturnToLibrary && builderReturnId) {
-        window.location.href =
-          `knowledge-library.html?detail=${encodeURIComponent(builderReturnId)}`;
+        commonNavigation?.go(
+          commonNavigation.buildUrl('knowledge-library.html', { detail: builderReturnId })
+        );
         return;
       }
 
       if (editingIndex !== null && pendingEditIndex !== null) {
-        if (history.state?.builderView === 'edit') {
-          history.back();
+        if (commonNavigation?.isView('edit')) {
+          commonNavigation.back();
         } else {
           document.getElementById('insights-editor').classList.remove('open');
           openKnowledgeDetail(pendingEditIndex, false);
         }
       } else {
-        if (history.state?.builderView === 'add') {
-          history.back();
+        if (commonNavigation?.isView('add')) {
+          commonNavigation.back();
         } else {
           closeEditor();
         }

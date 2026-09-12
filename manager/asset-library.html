@@ -24,17 +24,7 @@
       <p>Innovation Knowledge Ecosystem Control Center</p>
     </div>
 
-    <nav class="manager-nav">
-      <a href="index.html">Dashboard</a>
-      <a href="knowledge.html" class="active">Knowledge</a>
-      <a href="index.html#distribution">Distribution</a>
-      <a href="index.html#community">Community</a>
-      <a href="index.html#education">Education</a>
-      <a href="index.html#business">Business</a>
-      <a href="index.html#analytics">Analytics</a>
-      <a href="index.html#system">System</a>
-      <a href="../index.html" class="website-link">View Website ↗</a>
-    </nav>
+    <nav class="manager-nav" data-manager-nav="knowledge"></nav>
   </header>
 
   <main class="manager-main asset-manager">
@@ -74,7 +64,7 @@
           <p>Search, sort and manage all available assets from one table.</p>
         </div>
         <div class="library-actions">
-          <a id="asset-upload-toggle" href="asset-library.html?mode=upload" class="library-button primary">Upload Asset</a>
+          <a id="asset-upload-toggle" href="asset-library.html?mode=upload" class="library-button primary">Register Asset</a>
           <button type="button" id="repository-toggle" class="library-button">Register Repository Asset</button>
         </div>
       </section>
@@ -82,9 +72,9 @@
       <section id="asset-upload-panel" class="asset-work-panel" hidden>
         <div class="asset-panel-head">
           <div>
-            <span class="section-eyebrow">NEW ASSET</span>
-            <h3>Upload & Register</h3>
-            <p>The selected file is uploaded to Vercel Blob and registered in Asset Registry in one flow.</p>
+            <span class="section-eyebrow">ASSET REGISTER</span>
+            <h3>Register Asset</h3>
+            <p>Choose the source. PC files are uploaded to Vercel Blob before registration; existing OneDrive files are registered without file transfer.</p>
           </div>
           <a href="asset-library.html" class="library-button">Close</a>
         </div>
@@ -100,20 +90,34 @@
 
           <form id="asset-upload-form" class="asset-form-card manager-form-card">
             <div class="asset-editable-field manager-editable-field">
+              <label>Source *</label>
+              <div class="asset-source-switch" role="radiogroup" aria-label="Asset source">
+                <label><input type="radio" name="asset-source" value="pc" checked> PC / Vercel</label>
+                <label><input type="radio" name="asset-source" value="onedrive"> OneDrive</label>
+              </div>
+              <small>PC uploads the file to Vercel. OneDrive registers an existing file only.</small>
+            </div>
+
+            <div id="asset-pc-fields">
+            <div class="asset-editable-field manager-editable-field">
               <label for="asset-upload-file">File *</label>
               <input type="file" id="asset-upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt" required>
             </div>
             <div class="asset-form-row">
               <div class="asset-editable-field manager-editable-field">
                 <label for="asset-upload-folder">Folder *</label>
-                <select id="asset-upload-folder">
-                  <option value="companyprofile">companyprofile</option>
-                  <option value="insights">insights</option>
-                  <option value="articles">articles</option>
-                  <option value="documents">documents</option>
-                  <option value="presentations">presentations</option>
-                  <option value="images">images</option>
-                </select>
+                <div class="asset-folder-picker">
+                  <select id="asset-upload-folder" aria-label="Asset upload folder"></select>
+                  <button type="button" id="asset-new-folder-button" class="library-button asset-new-folder-button">+ New Folder</button>
+                </div>
+                <div id="asset-new-folder-editor" class="asset-new-folder-editor" hidden>
+                  <input type="text" id="asset-new-folder-name" placeholder="e.g. sns-assets" autocomplete="off">
+                  <div class="asset-new-folder-actions">
+                    <button type="button" id="asset-new-folder-create" class="library-button primary">Create</button>
+                    <button type="button" id="asset-new-folder-cancel" class="library-button">Cancel</button>
+                  </div>
+                  <small>Creates the folder path when the first asset is uploaded. Use letters, numbers, hyphens, underscores, or nested paths such as campaigns/2026.</small>
+                </div>
               </div>
               <div class="asset-editable-field manager-editable-field">
                 <label for="asset-upload-key">Asset Key *</label>
@@ -130,6 +134,23 @@
               <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
               <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
+            </div>
+
+            <div id="asset-onedrive-fields" hidden>
+              <div class="asset-editable-field manager-editable-field">
+                <label for="onedrive-storage-connection">Storage Connection *</label>
+                <select id="onedrive-storage-connection" aria-label="OneDrive storage connection">
+                  <option value="">Loading OneDrive connections...</option>
+                </select>
+                <small>Each registered connection is a separate OneDrive storage. Changing the connection clears the selected file.</small>
+              </div>
+              <div class="asset-editable-field manager-editable-field">
+                <label>OneDrive File *</label>
+                <button type="button" id="onedrive-browse-button" class="library-button">Browse OneDrive</button>
+                <div id="onedrive-selected-file" class="onedrive-selected-file">No OneDrive file selected.</div>
+              </div>
+            </div>
+
             <div class="asset-form-actions manager-detail-actions">
               <button type="submit" id="asset-upload-button" class="library-button primary">Upload & Register</button>
               <button type="button" class="library-button" data-reset-upload>Reset</button>
@@ -400,6 +421,24 @@
         </form>
       </div>
     </section>
+
+    <div id="onedrive-browser-modal" class="asset-modal" hidden>
+      <div class="asset-modal-card onedrive-browser-card">
+        <div class="asset-panel-head">
+          <div>
+            <span class="section-eyebrow">ONEDRIVE</span>
+            <h3>Select Existing File</h3>
+            <p id="onedrive-browser-connection">Browse folders and select a file. No upload, move, rename or folder creation is performed.</p>
+          </div>
+          <button type="button" id="onedrive-browser-close" class="library-button">Close</button>
+        </div>
+        <div class="onedrive-browser-toolbar">
+          <button type="button" id="onedrive-browser-up" class="library-button">Up</button>
+          <div id="onedrive-browser-path" class="onedrive-browser-path">OneDrive</div>
+        </div>
+        <div id="onedrive-browser-list" class="onedrive-browser-list"></div>
+      </div>
+    </div>
 
     <div id="duplicate-modal" class="asset-modal" hidden>
       <div class="asset-modal-card asset-duplicate-card">

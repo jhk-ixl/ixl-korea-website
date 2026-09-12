@@ -1,6 +1,8 @@
 (() => {
   'use strict';
 
+  const commonNavigation = window.IXLManager?.navigation;
+
   const API_LIBRARY = '/api/insights-library';
   const API_UPLOAD = '/api/insights-upload';
   const API_ONEDRIVE = '/api/onedrive-assets';
@@ -1206,7 +1208,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     alert(`OneDrive asset registered.\n\nStorage: ${getOneDriveConnectionLabel(item.storageConnection)}\nKey: ${registered.key || key}`);
     clearOneDriveSelection();
     resetUploadForm();
-    location.href = 'asset-library.html';
+    commonNavigation?.go('asset-library.html');
   }
 
   async function uploadAndRegister(event) {
@@ -1292,7 +1294,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
 
 Key: ${registered.key || key}`);
       resetUploadForm();
-      location.href = 'asset-library.html';
+      commonNavigation?.go('asset-library.html');
     } catch (error) {
       console.error(error);
       if (uploadedAsset && !registered) await deleteUploadedBlobQuietly(uploadedAsset);
@@ -1424,7 +1426,7 @@ Key: ${registered.key || key}`);
 
   async function initMode() {
     setAssetDetailActive(false);
-    const params = new URLSearchParams(location.search);
+    const params = commonNavigation?.getParams() || new URLSearchParams(location.search);
     const editKey = params.get('edit');
     const mode = params.get('mode') || 'library';
 
@@ -1440,7 +1442,7 @@ Key: ${registered.key || key}`);
       const index = registryAssets.findIndex(item => item.key === editKey);
       if (index < 0) {
         alert(`Asset Key "${editKey}" was not found.`);
-        location.href = 'asset-library.html';
+        commonNavigation?.go('asset-library.html');
         return;
       }
       renderEditMode(registryAssets[index], index);
@@ -1562,7 +1564,7 @@ Key: ${registered.key || key}`);
         (affectedCount ? `\n\n${affectedCount} Usage mapping(s) updated automatically.` : '')
       );
 
-      location.href = `asset-library.html?edit=${encodeURIComponent(data.item?.key || key)}`;
+      commonNavigation?.go(commonNavigation.buildUrl('asset-library.html', { edit: data.item?.key || key }));
     } catch (error) {
       console.error(error);
       alert(error.message || 'Failed to update Asset Registry.');
@@ -1819,10 +1821,10 @@ Key: ${registered.key || key}`);
 
     $('asset-edit-form')?.addEventListener('submit', saveEditedAsset);
     $('asset-edit-back')?.addEventListener('click', () => {
-      location.href = 'asset-library.html';
+      commonNavigation?.go('asset-library.html');
     });
     $('asset-edit-cancel')?.addEventListener('click', () => {
-      location.href = 'asset-library.html';
+      commonNavigation?.go('asset-library.html');
     });
   }
 

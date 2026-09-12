@@ -12,31 +12,14 @@
 <body>
 <header class="header">
 <div class="logo"><img alt="IXL Korea" data-asset-usage="site-header-logo"/></div>
-<nav>
-<a href="#home" data-i18n="nav.home">Home</a>
-<div class="nav-dropdown">
-<a class="nav-dropdown-trigger" href="#company-overview" data-i18n="nav.about">About</a>
-<div class="nav-dropdown-menu">
-<a href="#company-overview" data-i18n="nav.companyOverview">Company Overview</a>
-<a href="#ixl-team" data-i18n="nav.ixlCenterTeam">IXL Center Team</a>
-<a href="#advisory-board" data-i18n="nav.advisoryBoard">Advisory Board</a>
-<a href="#about-partners" data-i18n="nav.partners">Partners</a>
-<a href="#our-office" data-i18n="nav.office">Our Office</a>
-</div>
-</div>
-<a href="#company-profile" data-i18n="nav.companyProfile">Company Profile</a>
-<a href="#offerings" data-i18n="nav.offerings">Offerings</a>
-<a href="#universities" data-i18n="nav.universities">Universities</a>
-<a href="#cases" data-i18n="nav.cases">Cases</a>
-<a href="#insights" data-i18n="nav.insights">Insights</a>
-<a href="#contact" data-i18n="nav.contact">Contact</a>
-</nav>
+<nav data-site-nav data-site-nav-context="home"></nav>
 <div class="language-switcher" aria-label="Language selection">
   <button type="button" data-language="en" class="active">EN</button>
   <span class="divider" aria-hidden="true">|</span>
   <button type="button" data-language="ko">KO</button>
 </div>
 </header>
+<script src="header-nav.js?v=20260912-v30-public-nav-common"></script>
 <main>
 <section class="hero" id="home">
 <div class="hero-content">
@@ -1557,7 +1540,7 @@
             savePanel(panelName);
 
             if (window.location.hash !== '#insights') {
-                history.replaceState(null, '', '#insights');
+                window.IXLPublicNavigation?.replaceHash('insights');
             }
         });
     });
@@ -1577,7 +1560,7 @@
 
         if (legacyMatch) {
             savePanel(legacyMatch[1]);
-            history.replaceState(null, '', '#insights');
+            window.IXLPublicNavigation?.replaceHash('insights');
             showInsightsPanel(legacyMatch[1]);
         } else {
             showInsightsPanel('news');
@@ -2040,7 +2023,7 @@ let assetUsage = [];
     }
 
     function openInsightFromUrl() {
-        const params = new URLSearchParams(window.location.search);
+        const params = window.IXLPublicNavigation?.getParams() || new URLSearchParams(window.location.search);
         const requestedKnowledgeId = params.get('insight') || '';
         if (!requestedKnowledgeId) return;
 
@@ -2068,10 +2051,11 @@ let assetUsage = [];
         }
 
         requestAnimationFrame(function () {
-            const insightsSection = document.getElementById('insights');
-            if (insightsSection) {
-                insightsSection.scrollIntoView({ block: 'start' });
-            }
+            window.IXLPublicNavigation?.goToSection('insights', {
+                replaceHash: true,
+                block: 'start',
+                behavior: 'auto'
+            });
         });
     }
 
@@ -2178,7 +2162,6 @@ let assetUsage = [];
 </script>
 
 <script src="language.js?v=20260903-v4"></script>
-<script src="header-nav.js?v=20260822-v20"></script>
 
 </body>
 
