@@ -11,6 +11,7 @@
       label: 'About',
       i18n: 'nav.about',
       section: 'company-overview',
+      standaloneSection: 'about',
       children: Object.freeze([
         { id: 'company-overview', label: 'Company Overview', i18n: 'nav.companyOverview', section: 'company-overview' },
         { id: 'ixl-team', label: 'IXL Center Team', i18n: 'nav.ixlCenterTeam', section: 'ixl-team' },
@@ -20,7 +21,7 @@
       ])
     },
     { id: 'company-profile', label: 'Company Profile', i18n: 'nav.companyProfile', section: 'company-profile' },
-    { id: 'offerings', label: 'Offerings', i18n: 'nav.offerings', section: 'offerings' },
+    { id: 'offerings', label: 'Offerings', i18n: 'nav.offerings', section: 'offerings', standaloneSection: 'offerings-head' },
     { id: 'universities', label: 'Universities', i18n: 'nav.universities', section: 'universities' },
     { id: 'cases', label: 'Cases', i18n: 'nav.cases', section: 'cases' },
     { id: 'insights', label: 'Insights', i18n: 'nav.insights', section: 'insights' },
@@ -38,7 +39,10 @@
 
   function makeNavLink(item, context, className = '') {
     const link = document.createElement('a');
-    link.href = sectionHref(item.section, context);
+    const section = context === 'standalone' && item.standaloneSection
+      ? item.standaloneSection
+      : item.section;
+    link.href = sectionHref(section, context);
     link.textContent = item.label;
     if (item.i18n) link.dataset.i18n = item.i18n;
     if (className) link.className = className;

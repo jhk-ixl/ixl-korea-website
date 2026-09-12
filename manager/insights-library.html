@@ -1813,9 +1813,10 @@
     }
 
 
+    const commonNavigation = window.IXLManager?.navigation;
+
     function getAssetPreviewKind(asset) {
       const commonMedia = window.IXLManager?.media;
-    const commonNavigation = window.IXLManager?.navigation;
       if (commonMedia) return commonMedia.detectKind(asset);
 
       const path = String(asset?.url || asset?.path || asset?.pathname || '').trim();
