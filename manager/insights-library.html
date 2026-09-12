@@ -1211,6 +1211,12 @@
         <button type="button" class="insights-small-btn" id="close-asset-picker">Close</button>
       </div>
       <div class="asset-picker-toolbar">
+        <label style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#526273;">Storage
+          <select id="asset-picker-storage" style="padding:7px 9px;border:1px solid #cfd8e3;border-radius:6px;background:#fff;">
+            <option value="all">All</option>
+            <option value="vercel">Vercel</option>
+          </select>
+        </label>
         <div id="asset-picker-breadcrumb" class="asset-picker-breadcrumb" aria-label="Asset folder path"></div>
         <div class="asset-picker-view-toggle" aria-label="Asset view">
           <button type="button" class="asset-picker-view-btn active" data-asset-view="details">Details</button>
@@ -1238,6 +1244,8 @@
     let insightsItems = [];
 
     let assetRegistry = [];
+
+    let oneDriveConnections = [];
 
     let externalSourceRegistry = [];
 
@@ -1680,7 +1688,21 @@
           ? data
           : [];
 
+      try {
+        const connectionResponse = await fetch('/api/onedrive-assets?action=connections', {
+          credentials: 'same-origin',
+          cache: 'no-store'
+        });
+        const connectionData = await connectionResponse.json().catch(() => ({}));
+        oneDriveConnections = connectionResponse.ok && Array.isArray(connectionData.connections)
+          ? connectionData.connections
+          : [];
+      } catch (error) {
+        console.warn('OneDrive connection list unavailable:', error);
+        oneDriveConnections = [];
+      }
 
+      renderAssetStorageOptions();
     }
 
 
@@ -1701,8 +1723,46 @@
       );
     }
 
+    function getAssetStorageProvider(asset) {
+      return String(asset?.storageProvider || (asset?.driveId && asset?.itemId ? 'onedrive' : 'vercel')).toLowerCase();
+    }
+
+    function getAssetStorageFilterValue(asset) {
+      const provider = getAssetStorageProvider(asset);
+      if (provider !== 'onedrive') return 'vercel';
+      const connection = String(asset?.storageConnection || '').trim();
+      return connection ? `onedrive:${connection}` : 'onedrive';
+    }
+
+    function getOneDriveConnectionLabel(connectionId) {
+      const id = String(connectionId || '').trim();
+      return oneDriveConnections.find(item => item.id === id)?.label || id || 'OneDrive';
+    }
+
+    function renderAssetStorageOptions() {
+      const select = document.getElementById('asset-picker-storage');
+      if (!select) return;
+      const current = select.value || 'all';
+      const ids = new Set(
+        assetRegistry
+          .filter(asset => getAssetStorageProvider(asset) === 'onedrive')
+          .map(asset => String(asset.storageConnection || '').trim())
+          .filter(Boolean)
+      );
+      oneDriveConnections.forEach(item => ids.add(item.id));
+
+      const options = [
+        '<option value="all">All</option>',
+        '<option value="vercel">Vercel</option>',
+        ...[...ids].sort((a,b) => getOneDriveConnectionLabel(a).localeCompare(getOneDriveConnectionLabel(b)))
+          .map(id => `<option value="onedrive:${escapeHtml(id)}">${escapeHtml(getOneDriveConnectionLabel(id))}</option>`)
+      ];
+      select.innerHTML = options.join('');
+      select.value = [...select.options].some(option => option.value === current) ? current : 'all';
+    }
+
     function getAssetPath(asset) {
-      return String(asset?.path || asset?.pathname || asset?.url || '');
+      return String(asset?.path || asset?.pathname || asset?.url || asset?.name || '');
     }
 
     function getAssetLogicalPath(asset) {
@@ -1781,12 +1841,16 @@
     }
 
     function getAssetSourceUrl(asset) {
-      return String(
-        asset?.url ||
-        asset?.path ||
-        asset?.pathname ||
-        ''
-      ).trim();
+      if (getAssetStorageProvider(asset) === 'onedrive' && asset?.storageConnection && asset?.driveId && asset?.itemId) {
+        const params = new URLSearchParams({
+          action: 'content',
+          connection: asset.storageConnection,
+          driveId: asset.driveId,
+          itemId: asset.itemId
+        });
+        return `/api/onedrive-assets?${params}`;
+      }
+      return String(asset?.url || asset?.path || asset?.pathname || '').trim();
     }
 
     function getAssetPreviewMarkup(asset, mode = 'card') {
@@ -1917,7 +1981,8 @@
     function renderAssetPicker() {
       const list = document.getElementById('asset-picker-list');
       const query = normalize(document.getElementById('asset-picker-search').value);
-      const assets = [...assetRegistry];
+      const storage = document.getElementById('asset-picker-storage')?.value || 'all';
+      const assets = assetRegistry.filter(asset => storage === 'all' || getAssetStorageFilterValue(asset) === storage);
       const folders = getChildFolders(assets, assetPickerFolder).filter(folder =>
         !query || normalize(folder.split('/').pop()).includes(query)
       );
@@ -1981,6 +2046,7 @@
       assetPickerFolder = '';
       assetPickerView = 'details';
       document.getElementById('asset-picker-search').value = '';
+      document.getElementById('asset-picker-storage').value = 'all';
       renderAssetPicker();
       const backdrop = document.getElementById('asset-picker-backdrop');
       backdrop.classList.add('open');
@@ -2521,44 +2587,65 @@
       });
     }
 
-    function renderDetailMedia(item) {
+    async function renderDetailMedia(item) {
       const host = document.getElementById('knowledge-detail-preview');
       const media = getDetailMedia(item);
       const source = getDetailMediaSource(media);
-      const kind = getDetailMediaKind(media);
+      const commonMedia = window.IXLManager?.media;
+
+      let resolved = {
+        ...media,
+        sourceUrl: source,
+        url: source
+      };
+
+      if (commonMedia?.resolve) {
+        try {
+          resolved = await commonMedia.resolve(resolved, {
+            assetKey: media.assetKey || '',
+            sourceUrl: source
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      const kind = commonMedia?.detectKind
+        ? commonMedia.detectKind(resolved)
+        : getDetailMediaKind(media);
+
+      const thumbnailTime = commonMedia?.getThumbnailTime
+        ? commonMedia.getThumbnailTime(resolved)
+        : Number(media.thumbnailTime ?? 0.1);
+
+      const resolvedSource = commonMedia?.getSourceUrl
+        ? commonMedia.getSourceUrl(resolved)
+        : source;
 
       host.classList.remove('is-playing');
       host.dataset.mediaKind = kind || 'none';
-      host.dataset.mediaSource = source || '';
-      host.dataset.thumbnailTime = String(media.thumbnailTime ?? 0.1);
+      host.dataset.mediaSource = resolvedSource || '';
+      host.dataset.thumbnailTime = String(thumbnailTime);
 
-      if ((!source && !media.asset) || kind === 'none') {
+      if (!resolvedSource || kind === 'none') {
         renderBuilderBodyFirstPage(host, item);
         return;
       }
 
-      let previewMarkup = '';
-
-      if (media.asset) {
-        previewMarkup = getAssetPreviewMarkup(media.asset, 'card');
-      } else if (kind === 'image' && source) {
-        previewMarkup = `<img src="${escapeHtml(source)}" alt="">`;
-      } else if (kind === 'video' && source) {
-        previewMarkup =
-          `<video src="${escapeHtml(source)}#t=${Number(media.thumbnailTime || 0.1)}" muted preload="metadata"></video>`;
-      } else if (kind === 'pdf') {
-        previewMarkup =
-          `<div class="asset-picker-article-thumb"><strong>PDF</strong><span>Click to view document</span></div>`;
-      } else if (kind === 'markdown' || kind === 'document' || kind === 'presentation') {
-        const label =
-          kind === 'markdown' ? 'TEXT' :
-          kind === 'presentation' ? 'PPT' : 'DOC';
-        previewMarkup = `<div class="knowledge-media-text">${label}</div>`;
-      } else {
-        previewMarkup = `<div class="knowledge-media-text">VIEW</div>`;
-      }
-
       const actionLabel = kind === 'video' ? 'PLAY' : 'VIEW';
+      const previewMarkup = commonMedia?.elementHtml
+        ? commonMedia.elementHtml(resolved, {
+            mode: 'thumbnail',
+            controls: false,
+            thumbnailTime
+          })
+        : (
+            kind === 'video'
+              ? `<video src="${escapeHtml(resolvedSource)}#t=${thumbnailTime}" muted preload="metadata"></video>`
+              : kind === 'image'
+                ? `<img src="${escapeHtml(resolvedSource)}" alt="">`
+                : `<div class="knowledge-media-text">VIEW</div>`
+          );
 
       host.innerHTML = `
         <button type="button" class="knowledge-media-thumb" id="knowledge-media-thumb">
@@ -2566,22 +2653,50 @@
           <span class="knowledge-media-action">${actionLabel}</span>
         </button>
       `;
-
-      if (typeof hydrateAssetThumbnails === 'function') {
-        hydrateAssetThumbnails(host);
-      }
     }
 
-    function activateDetailMedia() {
+    async function activateDetailMedia() {
       const host = document.getElementById('knowledge-detail-preview');
       const kind = host.dataset.mediaKind || 'none';
       const source = host.dataset.mediaSource || '';
-      const thumbnailTime = Number(host.dataset.thumbnailTime || 0.1);
+      const thumbnailTime = Number(host.dataset.thumbnailTime || 0);
+      const commonMedia = window.IXLManager?.media;
 
       if (kind === 'none' || !source) return;
 
       if (kind === 'video') {
         host.classList.add('is-playing');
+
+        if (commonMedia?.renderPreview) {
+          await commonMedia.renderPreview(host, {
+            sourceUrl: source,
+            url: source,
+            type: 'video',
+            thumbnailTime
+          }, {
+            kind: 'video',
+            thumbnailTime,
+            controls: true
+          });
+
+          const player = host.querySelector('video');
+          if (player) {
+            player.autoplay = true;
+            const startPlayback = () => {
+              try {
+                if (thumbnailTime > 0 && Math.abs(player.currentTime - thumbnailTime) > 0.25) {
+                  player.currentTime = thumbnailTime;
+                }
+              } catch (error) {}
+              player.play().catch(() => {});
+            };
+
+            if (player.readyState >= 1) startPlayback();
+            else player.addEventListener('loadedmetadata', startPlayback, { once: true });
+          }
+          return;
+        }
+
         host.innerHTML = `
           <video
             id="knowledge-detail-player"
@@ -2593,18 +2708,6 @@
             Your browser does not support video playback.
           </video>
         `;
-
-        const player = document.getElementById('knowledge-detail-player');
-        if (player) {
-          player.addEventListener('loadedmetadata', () => {
-            try {
-              if (thumbnailTime > 0 && player.currentTime < thumbnailTime) {
-                player.currentTime = thumbnailTime;
-              }
-            } catch (error) {}
-            player.play().catch(() => {});
-          }, { once: true });
-        }
         return;
       }
 
@@ -3412,6 +3515,7 @@
 
     document.getElementById('close-asset-picker').addEventListener('click', closeAssetPicker);
     document.getElementById('asset-picker-search').addEventListener('input', renderAssetPicker);
+    document.getElementById('asset-picker-storage').addEventListener('change', () => { assetPickerFolder = ''; renderAssetPicker(); });
     document.getElementById('asset-picker-list').addEventListener('click', event => {
       const folderButton = event.target.closest('[data-folder]');
       if (folderButton) {
@@ -3430,6 +3534,7 @@
       if (!button) return;
       assetPickerFolder = button.dataset.folder || '';
       document.getElementById('asset-picker-search').value = '';
+      document.getElementById('asset-picker-storage').value = 'all';
       renderAssetPicker();
     });
 
