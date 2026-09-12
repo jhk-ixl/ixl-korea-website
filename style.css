@@ -4186,16 +4186,18 @@ body {
 }
 
 /* =========================================
-   MOBILE HEADER / NAV — CANONICAL
-   Same grid model as desktop.
-   Language follows the logo in normal flow.
+   MOBILE VIEWPORT / HEADER / NAV — CANONICAL
+   Single rule:
+   - Header frame = visible mobile viewport
+   - Top row = Logo | Language inside that viewport
+   - Nav box = same viewport width
+   - Only nav contents may scroll horizontally
    ========================================= */
 @media (max-width: 900px) {
   :root {
     --page-top-padding: var(--mobile-page-top-padding);
     --page-anchor-offset: var(--mobile-header-height);
     --header-logo-width: var(--mobile-logo-width);
-    --header-language-offset: 12px;
     --innovation5-section-padding-y: var(--mobile-innovation5-section-padding-y);
     --article-hero-top-padding: var(--mobile-article-hero-top-padding);
     --article-hero-bottom-padding: var(--mobile-article-hero-bottom-padding);
@@ -4205,46 +4207,73 @@ body {
 
   .header {
     position: fixed;
-    width: 100%;
+    inset: 0 0 auto 0;
+    width: auto;
+    max-width: 100%;
     height: var(--mobile-header-height);
     min-height: var(--mobile-header-height);
-    grid-template-columns: max-content minmax(0, 1fr) max-content;
+
+    grid-template-columns: minmax(0, 1fr) max-content;
     grid-template-rows: var(--mobile-logo-row-height) var(--mobile-nav-row-height);
     grid-template-areas:
-      "logo . language"
-      "nav nav nav";
-    column-gap: var(--header-language-offset);
-    padding: 0 var(--mobile-header-side-padding);
+      "logo language"
+      "nav nav";
+
+    column-gap: 0;
+    padding: 0;
+    background: #ffffff;
     overflow: visible;
     z-index: 3000;
   }
 
-  main { padding-top: var(--mobile-header-height); }
+  main {
+    padding-top: var(--mobile-header-height);
+  }
 
-  .header .logo { height: var(--mobile-logo-row-height); }
-  .header .logo img { max-height: 44px; }
+  .header .logo {
+    grid-area: logo;
+    min-width: 0;
+    height: var(--mobile-logo-row-height);
+    padding-left: var(--mobile-header-side-padding);
+  }
+
+  .header .logo img {
+    width: var(--header-logo-width);
+    max-width: 100%;
+    max-height: 44px;
+  }
 
   .header .language-switcher {
+    grid-area: language;
     height: var(--mobile-logo-row-height);
     align-self: center;
+    justify-self: end;
+    padding-right: var(--mobile-header-side-padding);
   }
 
   .header nav {
-    width: calc(100% + (var(--mobile-header-side-padding) * 2));
+    grid-area: nav;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
     height: var(--mobile-nav-row-height);
     justify-self: stretch;
     align-items: center;
     gap: var(--mobile-nav-gap);
-    margin-left: calc(var(--mobile-header-side-padding) * -1);
+    margin: 0;
     padding: 0 var(--page-side-padding);
+
     overflow-x: auto;
     overflow-y: hidden;
+    overscroll-behavior-x: contain;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
 
-  .header nav::-webkit-scrollbar { display: none; }
+  .header nav::-webkit-scrollbar {
+    display: none;
+  }
 
   .header nav > a,
   .header .nav-dropdown,
@@ -4280,26 +4309,42 @@ body {
     box-shadow: 0 12px 30px rgba(7, 27, 51, 0.18);
   }
 
-  .header .nav-dropdown.mobile-about-open .nav-dropdown-menu { display: flex; }
+  .header .nav-dropdown.mobile-about-open .nav-dropdown-menu {
+    display: flex;
+  }
 
   .header .nav-dropdown-menu a {
     padding: var(--mobile-about-popup-item-padding-y) var(--mobile-about-popup-item-padding-x);
   }
 
-  #home { scroll-margin-top: var(--page-anchor-offset); }
+  #home {
+    scroll-margin-top: var(--page-anchor-offset);
+  }
 
-  .insights-menu { gap: 22px; }
-  .insights-tab { font-size: 12px; }
+  .insights-menu {
+    gap: 22px;
+  }
 
-  .universities-grid { grid-template-columns: 1fr; }
+  .insights-tab {
+    font-size: 12px;
+  }
+
+  .universities-grid {
+    grid-template-columns: 1fr;
+  }
 
   .university-flow {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .university-flow > div { width: 100%; }
-  .university-arrow { transform: rotate(90deg); }
+  .university-flow > div {
+    width: 100%;
+  }
+
+  .university-arrow {
+    transform: rotate(90deg);
+  }
 }
 
 @media (max-width: 520px) {
@@ -4308,7 +4353,9 @@ body {
     --mobile-nav-gap: var(--small-mobile-nav-gap);
   }
 
-  .header .logo img { max-height: 42px; }
+  .header .logo img {
+    max-height: 42px;
+  }
 }
 
 
