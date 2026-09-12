@@ -38,6 +38,7 @@ body {
   --header-logo-width: 285px;
   --header-language-gap: 6px;
   --header-language-offset: 14px;
+  --mobile-header-side-padding: 14px;
 
   /* About popup — desktop */
   --about-popup-width: 230px;
@@ -4207,13 +4208,13 @@ body {
     width: 100%;
     height: var(--mobile-header-height);
     min-height: var(--mobile-header-height);
-    grid-template-columns: max-content max-content minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
     grid-template-rows: var(--mobile-logo-row-height) var(--mobile-nav-row-height);
     grid-template-areas:
-      "logo language ."
+      "logo . language"
       "nav nav nav";
     column-gap: var(--header-language-offset);
-    padding: 0;
+    padding: 0 var(--mobile-header-side-padding);
     overflow: visible;
     z-index: 3000;
   }
@@ -4229,11 +4230,12 @@ body {
   }
 
   .header nav {
-    width: 100%;
+    width: calc(100% + (var(--mobile-header-side-padding) * 2));
     height: var(--mobile-nav-row-height);
     justify-self: stretch;
     align-items: center;
     gap: var(--mobile-nav-gap);
+    margin-left: calc(var(--mobile-header-side-padding) * -1);
     padding: 0 var(--page-side-padding);
     overflow-x: auto;
     overflow-y: hidden;
