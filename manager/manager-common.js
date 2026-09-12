@@ -574,12 +574,36 @@
 
   function getManagerMediaSource(media) {
     if (typeof media === 'string') return String(media || '').trim();
+
+    const storageProvider = String(
+      media?.storageProvider ||
+      media?.provider ||
+      media?.storage?.provider ||
+      ''
+    ).trim().toLowerCase();
+
+    if (
+      storageProvider === 'onedrive' &&
+      media?.storageConnection &&
+      media?.driveId &&
+      media?.itemId
+    ) {
+      const params = new URLSearchParams({
+        action: 'content',
+        connection: media.storageConnection,
+        driveId: media.driveId,
+        itemId: media.itemId
+      });
+      return `/api/onedrive-assets?${params}`;
+    }
+
     return String(
       media?.sourceUrl ||
       media?.url ||
       media?.asset ||
       media?.path ||
       media?.pathname ||
+      media?.mediaFile ||
       ''
     ).trim();
   }
@@ -690,47 +714,125 @@
     return managerMediaAssetRegistry.find(item => String(item?.key || '').trim() === key) || null;
   }
 
+  function getManagerMediaSourceIdentities(media) {
+    const values = [
+      typeof media === 'string' ? media : '',
+      media?.sourceUrl,
+      media?.url,
+      media?.pathname,
+      media?.path,
+      media?.asset,
+      media?.mediaFile
+    ];
+
+    const identities = new Set();
+
+    values.forEach(value => {
+      const raw = String(value || '').trim();
+      if (!raw) return;
+
+      const stripped = raw.split('#')[0].split('?')[0].replace(/\\/g, '/');
+      identities.add(stripped.toLowerCase());
+      identities.add(stripped.replace(/^\.\//, '').replace(/^\//, '').toLowerCase());
+
+      try {
+        const parsed = new URL(raw, window.location.origin);
+        const pathname = decodeURIComponent(parsed.pathname || '')
+          .replace(/\\/g, '/')
+          .replace(/^\//, '')
+          .toLowerCase();
+        if (pathname) identities.add(pathname);
+      } catch (error) {}
+    });
+
+    return identities;
+  }
+
+  function findManagerMediaAssetBySource(media) {
+    if (!Array.isArray(managerMediaAssetRegistry)) return null;
+
+    const target = getManagerMediaSourceIdentities(media);
+    if (!target.size) return null;
+
+    return managerMediaAssetRegistry.find(item => {
+      const candidate = getManagerMediaSourceIdentities(item);
+      for (const identity of candidate) {
+        if (target.has(identity)) return true;
+      }
+      return false;
+    }) || null;
+  }
+
   async function resolveManagerMedia(media, options = {}) {
     const input = typeof media === 'object' && media ? { ...media } : { url: media };
-    const assetKey = String(input.assetKey || options.assetKey || '').trim();
+    const requestedAssetKey = String(input.assetKey || options.assetKey || '').trim();
+    const inputSource = getManagerMediaSource(input);
 
-    let registered = assetKey ? findManagerMediaAsset(assetKey) : null;
-    if (assetKey && !registered && options.resolveAsset !== false) {
+    let registered = requestedAssetKey ? findManagerMediaAsset(requestedAssetKey) : null;
+
+    if (!registered && options.resolveAsset !== false) {
       await loadManagerMediaAssets();
-      registered = findManagerMediaAsset(assetKey);
+      registered =
+        (requestedAssetKey ? findManagerMediaAsset(requestedAssetKey) : null) ||
+        findManagerMediaAssetBySource(input);
     }
 
-    const source = String(
-      options.sourceUrl ||
-      input.sourceUrl ||
-      registered?.url ||
-      registered?.pathname ||
-      input.url ||
-      input.asset ||
-      input.path ||
-      input.pathname ||
+    const authoritativeAssetKey = String(
+      registered?.key ||
+      requestedAssetKey ||
       ''
     ).trim();
 
+    const source = String(
+      options.sourceUrl ||
+      registered?.url ||
+      registered?.pathname ||
+      registered?.path ||
+      registered?.asset ||
+      inputSource ||
+      ''
+    ).trim();
+
+    const registeredThumbnailTime =
+      registered?.thumbnailTime === null ||
+      registered?.thumbnailTime === undefined ||
+      registered?.thumbnailTime === ''
+        ? null
+        : Number(registered.thumbnailTime);
+
+    const inputThumbnailTime =
+      input?.thumbnailTime === null ||
+      input?.thumbnailTime === undefined ||
+      input?.thumbnailTime === ''
+        ? null
+        : Number(input.thumbnailTime);
+
+    const authoritativeThumbnailTime =
+      options.thumbnailTime !== null &&
+      options.thumbnailTime !== undefined &&
+      options.thumbnailTime !== ''
+        ? Number(options.thumbnailTime)
+        : Number.isFinite(registeredThumbnailTime)
+          ? registeredThumbnailTime
+          : Number.isFinite(inputThumbnailTime)
+            ? inputThumbnailTime
+            : MANAGER_MEDIA_DEFAULTS.videoThumbnailTime;
+
     const merged = {
-      ...registered,
       ...input,
+      ...(registered || {}),
       sourceUrl: source,
       url: source,
-      assetKey: assetKey || String(registered?.key || '').trim()
+      assetKey: authoritativeAssetKey,
+      thumbnailTime: authoritativeThumbnailTime
     };
 
-    if (
-      (merged.thumbnailTime === null ||
-       merged.thumbnailTime === undefined ||
-       merged.thumbnailTime === '') &&
-      registered?.thumbnailTime !== undefined
-    ) {
-      merged.thumbnailTime = registered.thumbnailTime;
-    }
-
     merged.kind = getManagerMediaKind(merged, options);
-    merged.thumbnailTime = getManagerThumbnailTime(merged, options);
+    merged.thumbnailTime = getManagerThumbnailTime(merged, {
+      ...options,
+      thumbnailTime: authoritativeThumbnailTime
+    });
+
     return merged;
   }
 
@@ -787,12 +889,16 @@
       : target;
     if (!stage) return null;
 
-    const resolved = await resolveManagerMedia(media, options);
+    const resolved = options.resolved === true
+      ? media
+      : await resolveManagerMedia(media, options);
+
     stage.innerHTML = managerMediaElementHtml(resolved, {
       ...options,
       mode: 'thumbnail',
       controls: false
     });
+
     return resolved;
   }
 
@@ -802,7 +908,10 @@
       : target;
     if (!stage) return null;
 
-    const resolved = await resolveManagerMedia(media, options);
+    const resolved = options.resolved === true
+      ? media
+      : await resolveManagerMedia(media, options);
+
     const source = getManagerMediaSource(resolved);
     const kind = getManagerMediaKind(resolved, options);
 
@@ -843,7 +952,6 @@
         return resolved;
       } catch (error) {
         console.error(error);
-        // Fall through to the common iframe preview.
       }
     }
 
@@ -864,6 +972,91 @@
       mode: 'preview',
       controls: kind === 'video' ? options.controls !== false : false
     });
+
+    if (kind === 'video') {
+      const player = stage.querySelector('video');
+      const thumbnailTime = getManagerThumbnailTime(resolved, options);
+
+      if (player) {
+        const startPlayback = () => {
+          try {
+            if (thumbnailTime > 0) player.currentTime = thumbnailTime;
+          } catch (error) {}
+
+          if (options.autoplay === true) {
+            player.play().catch(() => {});
+          }
+        };
+
+        if (player.readyState >= 1) startPlayback();
+        else player.addEventListener('loadedmetadata', startPlayback, { once: true });
+      }
+    }
+
+    return resolved;
+  }
+
+  async function mountManagerMedia(target, media, options = {}) {
+    const stage = typeof target === 'string'
+      ? document.getElementById(target)
+      : target;
+    if (!stage) return null;
+
+    const resolved = await resolveManagerMedia(media, options);
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+
+    if (!source || kind === 'none') {
+      if (typeof options.onEmpty === 'function') {
+        await options.onEmpty(stage, resolved);
+      } else {
+        stage.innerHTML = options.emptyHtml || '<div class="manager-media-empty">No media</div>';
+      }
+      return resolved;
+    }
+
+    const actionLabel = String(
+      options.actionLabel ||
+      (kind === 'video' ? 'PLAY' : 'VIEW')
+    );
+
+    const buttonClass = String(
+      options.buttonClass ||
+      'manager-media-interactive'
+    );
+
+    const actionClass = String(
+      options.actionClass ||
+      'manager-media-action'
+    );
+
+    const thumbnailHtml = managerMediaElementHtml(resolved, {
+      ...options,
+      mode: 'thumbnail',
+      controls: false
+    });
+
+    stage.innerHTML = `
+      <button type="button" class="${escapeManagerHtml(buttonClass)}" data-manager-media-action="preview">
+        ${thumbnailHtml}
+        <span class="${escapeManagerHtml(actionClass)}">${escapeManagerHtml(actionLabel)}</span>
+      </button>
+    `;
+
+    const trigger = stage.querySelector('[data-manager-media-action="preview"]');
+    if (trigger) {
+      trigger.addEventListener('click', async () => {
+        stage.classList.add(options.playingClass || 'is-playing');
+
+        await renderManagerMediaPreview(stage, resolved, {
+          ...options,
+          resolved: true,
+          controls: options.controls !== false,
+          autoplay: kind === 'video' ? options.autoplay !== false : false
+        });
+      });
+    }
+
     return resolved;
   }
 
@@ -884,8 +1077,10 @@
     loadAssets: loadManagerMediaAssets,
     setAssets: setManagerMediaAssets,
     findAssetByKey: findManagerMediaAsset,
+    findAssetBySource: findManagerMediaAssetBySource,
     renderThumbnail: renderManagerMediaThumbnail,
     renderPreview: renderManagerMediaPreview,
+    mount: mountManagerMedia,
     registerRenderer: registerManagerMediaRenderer
   };
 

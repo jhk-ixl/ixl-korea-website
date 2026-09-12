@@ -4144,7 +4144,10 @@ body {
 
 /* =========================================
    MOBILE HEADER / NAV
-   Mobile tuning values are declared once in the A/S control panel.
+   Single structural layout:
+   Row 1 = Logo | Language
+   Row 2 = Horizontal navigation
+   No absolute positioning or pixel nudges.
    ========================================= */
 @media (max-width: 900px) {
   :root {
@@ -4160,12 +4163,17 @@ body {
   .header {
     position: fixed;
     top: 0;
-    right: 0;
     left: 0;
     width: 100%;
     height: var(--mobile-header-height);
     min-height: var(--mobile-header-height);
-    display: block;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: var(--mobile-logo-row-height) var(--mobile-nav-row-height);
+    grid-template-areas:
+      "logo language"
+      "nav nav";
+    align-items: center;
     padding: 0;
     overflow: visible;
     background: #ffffff;
@@ -4176,26 +4184,14 @@ body {
     padding-top: var(--mobile-header-height);
   }
 
-  /* Language switcher: fixed in the logo row, moved slightly left only. */
-  .header .language-switcher {
-    position: absolute;
-    top: 0;
-    right: 18px;
-    height: var(--mobile-logo-row-height);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    white-space: nowrap;
-    z-index: 3100;
-  }
-
   .header .logo {
+    grid-area: logo;
+    min-width: 0;
     height: var(--mobile-logo-row-height);
     display: flex;
     align-items: center;
     padding: 0;
-    min-width: 0;
+    margin: 0;
   }
 
   .header .logo img {
@@ -4206,7 +4202,37 @@ body {
     height: auto;
   }
 
+  .header .language-switcher {
+    grid-area: language;
+    position: static;
+    width: auto;
+    max-width: none;
+    height: var(--mobile-logo-row-height);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: 0;
+    padding: 0 var(--page-side-padding) 0 12px;
+    white-space: nowrap;
+    background: transparent;
+    z-index: auto;
+  }
+
+  .header .language-switcher button {
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 4px 2px;
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .header .language-switcher .divider {
+    flex: 0 0 auto;
+  }
+
   .header nav {
+    grid-area: nav;
     display: flex;
     visibility: visible;
     opacity: 1;
@@ -4273,7 +4299,6 @@ body {
     scroll-margin-top: var(--page-anchor-offset);
   }
 
-  /* Insights uses the same one-line horizontal-scroll pattern on mobile. */
   .insights-menu {
     gap: 22px;
   }
@@ -4282,7 +4307,6 @@ body {
     font-size: 12px;
   }
 
-  /* Prevent Universities content from widening the mobile viewport. */
   .universities-grid {
     grid-template-columns: 1fr;
   }

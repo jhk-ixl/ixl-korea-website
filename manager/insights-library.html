@@ -1827,50 +1827,38 @@
 
 
     function getAssetPreviewKind(asset) {
-      const path = getAssetPath(asset);
-      const type = getAssetTypeLabel(asset).toLowerCase();
+      const commonMedia = window.IXLManager?.media;
+      if (commonMedia) return commonMedia.detectKind(asset);
+
+      const path = String(asset?.url || asset?.path || asset?.pathname || '').trim();
+      const type = String(asset?.type || asset?.mediaType || '').trim().toLowerCase();
       const h = `${type} ${path}`.toLowerCase();
 
       if (/image|\.jpe?g(?:$|[?#])|\.png(?:$|[?#])|\.gif(?:$|[?#])|\.webp(?:$|[?#])|\.svg(?:$|[?#])/.test(h)) return 'image';
       if (/video|\.mp4(?:$|[?#])|\.webm(?:$|[?#])|\.mov(?:$|[?#])/.test(h)) return 'video';
       if (/pdf|\.pdf(?:$|[?#])/.test(h)) return 'pdf';
-      if (/markdown|\.md(?:$|[?#])/.test(h)) return 'markdown';
-      if (/presentation|powerpoint|\.pptx?(?:$|[?#])/.test(h)) return 'presentation';
-      if (/document|word|\.docx?(?:$|[?#])|\.txt(?:$|[?#])/.test(h)) return 'document';
       return 'file';
     }
 
     function getAssetSourceUrl(asset) {
-      if (getAssetStorageProvider(asset) === 'onedrive' && asset?.storageConnection && asset?.driveId && asset?.itemId) {
-        const params = new URLSearchParams({
-          action: 'content',
-          connection: asset.storageConnection,
-          driveId: asset.driveId,
-          itemId: asset.itemId
-        });
-        return `/api/onedrive-assets?${params}`;
-      }
+      const commonMedia = window.IXLManager?.media;
+      if (commonMedia) return commonMedia.getSourceUrl(asset);
       return String(asset?.url || asset?.path || asset?.pathname || '').trim();
     }
 
     function getAssetPreviewMarkup(asset, mode = 'card') {
+      const commonMedia = window.IXLManager?.media;
       const path = getAssetSourceUrl(asset);
       const kind = getAssetPreviewKind(asset);
+
+      if (commonMedia && ['image', 'video'].includes(kind) && path) {
+        return commonMedia.elementHtml(
+          { ...asset, sourceUrl: path, url: path },
+          { mode: 'thumbnail', controls: false, alt: '' }
+        );
+      }
+
       const safePath = escapeHtml(path);
-
-      if (kind === 'image' && path) {
-        return `<img src="${safePath}" alt="">`;
-      }
-
-      if (kind === 'video' && path) {
-        const thumbnailTime =
-          Number.isFinite(Number(asset?.thumbnailTime)) &&
-          Number(asset.thumbnailTime) >= 0
-            ? Number(asset.thumbnailTime)
-            : 0.1;
-
-        return `<video src="${safePath}#t=${thumbnailTime}" muted preload="metadata"></video>`;
-      }
 
       if (kind === 'pdf' && path) {
         return `<canvas class="pdf-thumbnail" data-pdf-url="${safePath}" aria-label="PDF first page thumbnail"></canvas>`;
@@ -2560,120 +2548,29 @@
 
       return {
         type: media.type || inferMediaType(media),
-        url: media.url || '',
-        assetPath: media.asset || '',
+        url: media.url || media.asset || '',
         assetKey: media.assetKey || ''
       };
     }
 
-    function getDetailMediaSource(media) {
-      if (media?.asset) {
-        const source = getAssetSourceUrl(media.asset);
-        if (source) return source;
-      }
-      return media?.assetPath || media?.url || '';
-    }
-
-    function getDetailMediaKind(media) {
-      if (media?.asset) return getAssetPreviewKind(media.asset);
-      if (media?.type && media.type !== 'none') return media.type;
-      return inferMediaType({
-        asset: media?.assetPath || '',
-        url: media?.url || ''
-      });
-    }
-
     async function renderDetailMedia(item) {
       const host = document.getElementById('knowledge-detail-preview');
-      const media = getDetailMedia(item);
       const commonMedia = window.IXLManager?.media;
 
-      if (!commonMedia) {
-        console.error('IXLManager.media is not available.');
+      if (!commonMedia?.mount) {
+        console.error('IXLManager.media.mount is not available.');
         renderBuilderBodyFirstPage(host, item);
         return;
       }
 
-      const resolved = await commonMedia.resolve({
-        type: media.type,
-        url: media.url || media.assetPath || '',
-        assetKey: media.assetKey
+      await commonMedia.mount(host, getDetailMedia(item), {
+        buttonClass: 'knowledge-media-thumb',
+        actionClass: 'knowledge-media-action',
+        playingClass: 'is-playing',
+        controls: true,
+        autoplay: true,
+        onEmpty: stage => renderBuilderBodyFirstPage(stage, item)
       });
-
-      const kind = resolved.kind || commonMedia.detectKind(resolved);
-      const source = commonMedia.getSourceUrl(resolved);
-      const thumbnailTime = commonMedia.getThumbnailTime(resolved);
-
-      host.classList.remove('is-playing');
-      host.dataset.mediaKind = kind || 'none';
-      host.dataset.mediaSource = source || '';
-      host.dataset.thumbnailTime = String(thumbnailTime);
-
-      if (!source || kind === 'none') {
-        renderBuilderBodyFirstPage(host, item);
-        return;
-      }
-
-      const actionLabel = kind === 'video' ? 'PLAY' : 'VIEW';
-      const previewMarkup = commonMedia.elementHtml(resolved, {
-        mode: 'thumbnail',
-        controls: false
-      });
-
-      host.innerHTML = `
-        <button type="button" class="knowledge-media-thumb" id="knowledge-media-thumb">
-          ${previewMarkup}
-          <span class="knowledge-media-action">${actionLabel}</span>
-        </button>
-      `;
-    }
-
-    async function activateDetailMedia() {
-      const host = document.getElementById('knowledge-detail-preview');
-      const kind = host.dataset.mediaKind || 'none';
-      const source = host.dataset.mediaSource || '';
-      const thumbnailTime = Number(host.dataset.thumbnailTime || 0);
-      const commonMedia = window.IXLManager?.media;
-
-      if (kind === 'none' || !source) return;
-
-      if (kind === 'video' && commonMedia) {
-        host.classList.add('is-playing');
-
-        await commonMedia.renderPreview(host, {
-          type: 'video',
-          url: source,
-          sourceUrl: source,
-          thumbnailTime
-        }, {
-          kind: 'video',
-          thumbnailTime,
-          controls: true
-        });
-
-        const player = host.querySelector('video');
-        if (player) {
-          player.autoplay = true;
-
-          const playFromThumbnailTime = () => {
-            try {
-              if (thumbnailTime > 0) player.currentTime = thumbnailTime;
-            } catch (error) {}
-            player.play().catch(() => {});
-          };
-
-          if (player.readyState >= 1) playFromThumbnailTime();
-          else player.addEventListener('loadedmetadata', playFromThumbnailTime, { once: true });
-        }
-        return;
-      }
-
-      const finalUrl =
-        /^https?:\/\//i.test(source)
-          ? source
-          : '../' + source.replace(/^\/+/, '');
-
-      window.open(finalUrl, '_blank', 'noopener,noreferrer');
     }
 
     function openKnowledgeDetail(index, pushHistory = true) {
@@ -3225,12 +3122,6 @@
         history.back();
       } else {
         closeKnowledgeDetail();
-      }
-    });
-
-    document.getElementById('knowledge-detail-preview').addEventListener('click', event => {
-      if (event.target.closest('#knowledge-media-thumb')) {
-        activateDetailMedia();
       }
     });
 
