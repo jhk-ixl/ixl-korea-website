@@ -883,6 +883,59 @@
     return `<a href="${safeSource}" target="_blank" rel="noopener">View media</a>`;
   }
 
+
+  async function renderManagerPdfThumbnailCanvas(stage, resolved, options = {}) {
+    const source = getManagerMediaSource(resolved);
+    if (!stage || !source || !window.pdfjsLib) return false;
+
+    try {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        options.pdfWorkerSrc ||
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      const proxyUrl = source.startsWith('blob:')
+        ? source
+        : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
+
+      const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
+      const page = await pdf.getPage(1);
+      const baseViewport = page.getViewport({ scale: 1 });
+
+      const maxWidth = Math.max(60, Number(options.thumbnailWidth || stage.clientWidth || 180));
+      const maxHeight = Math.max(48, Number(options.thumbnailHeight || stage.clientHeight || 112));
+      const scale = Math.min(
+        maxWidth / baseViewport.width,
+        maxHeight / baseViewport.height
+      );
+
+      const viewport = page.getViewport({ scale: Math.max(scale, 0.1) });
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.floor(viewport.width * ratio));
+      canvas.height = Math.max(1, Math.floor(viewport.height * ratio));
+      canvas.style.width = `${viewport.width}px`;
+      canvas.style.height = `${viewport.height}px`;
+      canvas.style.display = 'block';
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '100%';
+      canvas.style.margin = 'auto';
+
+      stage.replaceChildren(canvas);
+
+      await page.render({
+        canvasContext: canvas.getContext('2d'),
+        viewport,
+        transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0]
+      }).promise;
+
+      return true;
+    } catch (error) {
+      console.error('PDF thumbnail could not be rendered:', error);
+      return false;
+    }
+  }
+
   async function renderManagerMediaThumbnail(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -892,6 +945,13 @@
     const resolved = options.resolved === true
       ? media
       : await resolveManagerMedia(media, options);
+
+    const kind = getManagerMediaKind(resolved, options);
+
+    if (kind === 'pdf' && window.pdfjsLib) {
+      const rendered = await renderManagerPdfThumbnailCanvas(stage, resolved, options);
+      if (rendered) return resolved;
+    }
 
     stage.innerHTML = managerMediaElementHtml(resolved, {
       ...options,
@@ -1063,7 +1123,6 @@
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-
         .manager-media-viewer-open-link,
         .manager-media-viewer-close {
           min-height: 36px;
@@ -1409,43 +1468,59 @@
       return resolved;
     }
 
-    const actionLabel = String(
-      options.actionLabel ||
-      (kind === 'video' ? 'PLAY' : 'VIEW')
-    );
-
     const buttonClass = String(
       options.buttonClass ||
       'manager-media-interactive'
     );
 
-    const actionClass = String(
-      options.actionClass ||
-      'manager-media-action'
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = buttonClass;
+    trigger.dataset.managerMediaAction = 'preview';
+    trigger.setAttribute(
+      'aria-label',
+      kind === 'video' ? 'Play media' :
+      kind === 'pdf' ? 'Open PDF' :
+      'View media'
     );
 
-    const thumbnailHtml = managerMediaElementHtml(resolved, {
-      ...options,
-      mode: 'thumbnail',
-      controls: false
-    });
+    stage.replaceChildren(trigger);
 
-    stage.innerHTML = `
-      <button type="button" class="${escapeManagerHtml(buttonClass)}" data-manager-media-action="preview">
-        ${thumbnailHtml}
-        <span class="${escapeManagerHtml(actionClass)}">${escapeManagerHtml(actionLabel)}</span>
-      </button>
-    `;
-
-    const trigger = stage.querySelector('[data-manager-media-action="preview"]');
-    if (trigger) {
-      trigger.addEventListener('click', async () => {
-        await openManagerMediaViewer(resolved, {
+    if (kind === 'pdf' && window.pdfjsLib) {
+      const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
+      if (!rendered) {
+        trigger.innerHTML = managerMediaElementHtml(resolved, {
           ...options,
-          resolved: true
+          mode: 'thumbnail',
+          controls: false
         });
+      }
+    } else {
+      trigger.innerHTML = managerMediaElementHtml(resolved, {
+        ...options,
+        mode: 'thumbnail',
+        controls: false
       });
     }
+
+    trigger.addEventListener('click', async () => {
+      if (kind === 'pdf') {
+        /*
+         * PDF skips the IXL modal entirely.
+         * Open the actual PDF directly so the browser/Acrobat viewer handles
+         * page navigation, thumbnails, zoom, print and download in one step.
+         */
+        const pdfUrl = toManagerUrl(source);
+        const opened = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+        if (!opened) window.location.href = pdfUrl;
+        return;
+      }
+
+      await openManagerMediaViewer(resolved, {
+        ...options,
+        resolved: true
+      });
+    });
 
     return resolved;
   }
