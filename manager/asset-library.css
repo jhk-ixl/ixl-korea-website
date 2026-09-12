@@ -721,27 +721,4 @@
   text-transform: uppercase;
 }
 
-.asset-list-preview-card {
-  width: min(980px, calc(100vw - 48px));
-}
 
-.asset-list-preview-stage {
-  margin-top: 18px;
-  min-height: min(560px, 68vh);
-  max-height: 72vh;
-  overflow: auto;
-}
-
-.asset-list-preview-stage img,
-.asset-list-preview-stage video,
-.asset-list-preview-stage canvas {
-  max-width: 100%;
-  max-height: 66vh;
-  object-fit: contain;
-}
-
-.asset-list-preview-stage iframe {
-  width: 100%;
-  min-height: 64vh;
-  border: 0;
-}

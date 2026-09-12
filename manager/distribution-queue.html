@@ -35,8 +35,10 @@
 .queue-media-file-thumb{width:120px;height:78px;border:1px solid #dbe3ec;border-radius:6px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .queue-media-file-thumb img,.queue-media-file-thumb video{width:100%;height:100%;object-fit:cover}
 .queue-media-file-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}
+.queue-media-file-thumb .queue-common-media-button{width:100%;height:100%;border:0;background:transparent;padding:0;cursor:pointer;display:block;overflow:hidden}
+.queue-media-file-thumb .queue-common-media-button img,.queue-media-file-thumb .queue-common-media-button video,.queue-media-file-thumb .queue-common-media-button canvas{width:100%;height:100%;object-fit:cover}
 .queue-media-file-info{min-width:0}
-.queue-media-file-info a{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-media-file-info .queue-media-file-name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
 .queue-media-file-info small{display:block;margin-top:4px;color:#64748b}
 .queue-media-file-empty{padding:10px 0;color:#64748b}
 
@@ -67,7 +69,51 @@
     </div>
 
 
-    <nav class="manager-nav" data-manager-nav="distribution"></nav>
+    <nav class="manager-nav">
+
+      <a href="index.html">
+        Dashboard
+      </a>
+
+      <a href="knowledge.html">
+        Knowledge
+      </a>
+
+      <a
+        href="distribution.html"
+        class="active"
+      >
+        Distribution
+      </a>
+
+      <a href="index.html#community">
+        Community
+      </a>
+
+      <a href="index.html#education">
+        Education
+      </a>
+
+      <a href="index.html#business">
+        Business
+      </a>
+
+      <a href="index.html#analytics">
+        Analytics
+      </a>
+
+      <a href="index.html#system">
+        System
+      </a>
+
+      <a
+        href="../index.html"
+        class="website-link"
+      >
+        View Website ↗
+      </a>
+
+    </nav>
 
   </header>
 
@@ -364,12 +410,10 @@
           <div id="queue-edit-media-file-card" class="queue-media-file-card" hidden>
             <div id="queue-edit-media-thumb" class="queue-media-file-thumb"></div>
             <div class="queue-media-file-info">
-              <a
+              <span
                 id="queue-edit-media-file"
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-              ></a>
+                class="queue-media-file-name"
+              ></span>
               <small id="queue-edit-media-meta"></small>
             </div>
           </div>
@@ -445,7 +489,6 @@
 
 
   <script>
-      const commonNavigation = window.IXLManager?.navigation;
 
     /* =========================================
        DATA SOURCE
@@ -993,26 +1036,25 @@
         empty.hidden = false;
         thumb.innerHTML = '';
         link.textContent = '';
-        link.removeAttribute('href');
         link.dataset.mediaFile = '';
         meta.textContent = '';
         return;
       }
 
-      const url = IXLManager.toUrl(value);
-
       link.textContent = queueMediaFileName(value);
-      link.href = url;
       link.dataset.mediaFile = value;
       meta.textContent = formatQueueMediaType(mediaType, value);
 
       card.hidden = false;
       empty.hidden = true;
 
-      await IXLManager.media.renderThumbnail(thumb, {
+      await IXLManager.media.mount(thumb, {
         url: value,
         mediaType,
         assetKey
+      }, {
+        label: queueMediaFileName(value),
+        buttonClass: 'queue-common-media-button'
       });
     }
 
@@ -1657,7 +1699,8 @@ async function publishToLinkedIn() {
           response.status === 401
         ) {
 
-          commonNavigation?.go('login.html');
+          window.location.href =
+            'login.html';
 
           return;
 

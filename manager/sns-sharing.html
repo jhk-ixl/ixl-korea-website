@@ -16,6 +16,8 @@
 .sns-review-media{margin-top:10px;min-height:260px;border:1px solid #dbe3ec;border-radius:8px;background:#f7f9fb;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .sns-review-media img,.sns-review-media video{display:block;max-width:100%;max-height:420px;object-fit:contain}
 .sns-review-media iframe{width:100%;height:420px;border:0;background:#fff}
+.sns-review-media .sns-common-media-button{width:100%;height:260px;border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.sns-review-media .sns-common-media-button img,.sns-review-media .sns-common-media-button video,.sns-review-media .sns-common-media-button canvas{max-width:100%;max-height:100%;object-fit:contain}
 .sns-transaction-history{margin-top:18px;padding-top:16px;border-top:1px solid #dbe3ec}
 .sns-transaction-item{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #edf1f5;font-size:13px;cursor:pointer}
 .sns-transaction-item:hover{background:#f7f9fb}
@@ -71,6 +73,8 @@
 .sns-selected-media-thumb{width:110px;height:72px;border:1px solid #dbe3ec;border-radius:6px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .sns-selected-media-thumb img,.sns-selected-media-thumb video{width:100%;height:100%;object-fit:cover}
 .sns-selected-media-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}
+.sns-selected-media-thumb .sns-selected-media-button{width:100%;height:100%;border:0;background:transparent;padding:0;cursor:pointer;display:block;overflow:hidden}
+.sns-selected-media-thumb .sns-selected-media-button img,.sns-selected-media-thumb .sns-selected-media-button video,.sns-selected-media-thumb .sns-selected-media-button canvas{width:100%;height:100%;object-fit:cover}
 .sns-selected-media-meta{min-width:0}
 .sns-selected-media-meta strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sns-selected-media-meta small{display:block;margin-top:4px;color:#64748b}
@@ -90,7 +94,49 @@
     </div>
 
 
-    <nav class="manager-nav" data-manager-nav="distribution"></nav>
+    <nav class="manager-nav">
+
+      <a href="index.html">
+        Dashboard
+      </a>
+
+      <a href="knowledge.html">
+        Knowledge
+      </a>
+
+      <a href="distribution.html" class="active">
+        Distribution
+      </a>
+
+      <a href="index.html#community">
+        Community
+      </a>
+
+      <a href="index.html#education">
+        Education
+      </a>
+
+      <a href="index.html#business">
+        Business
+      </a>
+
+      <a href="index.html#analytics">
+        Analytics
+      </a>
+
+      <a href="index.html#system">
+        System
+      </a>
+
+
+      <a
+        href="../index.html"
+        class="website-link"
+      >
+        View Website ↗
+      </a>
+
+    </nav>
 
   </header>
 
@@ -474,7 +520,6 @@
 
 
   <script>
-      const commonNavigation = window.IXLManager?.navigation;
 
     /* =========================================
        DATA
@@ -757,7 +802,8 @@
           response.status === 401
         ) {
 
-          commonNavigation?.go('login.html');
+          window.location.href =
+            'login.html';
 
           return;
 
@@ -784,7 +830,8 @@
         setTimeout(
           () => {
 
-            commonNavigation?.go('distribution-queue.html');
+            window.location.href =
+              'distribution-queue.html';
 
           },
           500
@@ -1216,25 +1263,27 @@
         return;
       }
 
-      const safeUrl = escapeHtml(IXLManager.toUrl(value));
       wrap.innerHTML = `
         <div class="sns-selected-media-card">
           <div class="sns-selected-media-thumb" id="share-selected-media-thumb"></div>
           <div class="sns-selected-media-meta">
             <strong>${escapeHtml(mediaFileName(value))}</strong>
             <small>${escapeHtml(formatSnsMediaType(mediaType, value))}</small>
-            <a href="${safeUrl}" target="_blank" rel="noopener">View File ↗</a>
           </div>
         </div>
       `;
 
-      await IXLManager.media.renderThumbnail(
+      await IXLManager.media.mount(
         document.getElementById('share-selected-media-thumb'),
         {
           url: value,
           mediaType,
           assetKey: media?.assetKey || '',
           thumbnailTime: media?.thumbnailTime
+        },
+        {
+          label: mediaFileName(value),
+          buttonClass: 'sns-selected-media-button'
         }
       );
     }
@@ -1537,12 +1586,13 @@
         return;
       }
 
-      await IXLManager.media.renderPreview(box, {
+      await IXLManager.media.mount(box, {
         ...media,
         url: value
       }, {
-        controls: true,
-        pdfCanvas: false
+        label: mediaFileName(value),
+        buttonClass: 'sns-common-media-button',
+        emptyHtml: 'No media'
       });
     }
 
@@ -1703,14 +1753,7 @@
       if(!available){
         event.target.value=ctx.language;
         if (confirm('This Knowledge language version does not exist. Open Knowledge Builder to add it?')) {
-          commonNavigation?.go(
-            commonNavigation.buildUrl('insights-library.html', {
-              edit: ctx.item.knowledgeId || '',
-              language: wanted,
-              from: 'sns',
-              return: window.location.href
-            })
-          );
+          window.location.href = 'insights-library.html?edit=' + encodeURIComponent(ctx.item.knowledgeId || '') + '&language=' + encodeURIComponent(wanted) + '&from=sns&return=' + encodeURIComponent(window.location.href);
         }
         return;
       }

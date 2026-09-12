@@ -884,12 +884,43 @@
   }
 
 
+  let managerPdfJsPromise = null;
+
+  async function ensureManagerPdfJs(options = {}) {
+    if (window.pdfjsLib) return window.pdfjsLib;
+    if (managerPdfJsPromise) return managerPdfJsPromise;
+
+    managerPdfJsPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-ixl-manager-pdfjs]');
+      if (existing) {
+        existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
+        existing.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = options.pdfJsSrc || 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.async = true;
+      script.dataset.ixlManagerPdfjs = 'true';
+      script.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
+      script.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
+      document.head.appendChild(script);
+    }).catch(error => {
+      managerPdfJsPromise = null;
+      throw error;
+    });
+
+    return managerPdfJsPromise;
+  }
+
   async function renderManagerPdfThumbnailCanvas(stage, resolved, options = {}) {
     const source = getManagerMediaSource(resolved);
-    if (!stage || !source || !window.pdfjsLib) return false;
+    if (!stage || !source) return false;
 
     try {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      const pdfjsLib = await ensureManagerPdfJs(options);
+      if (!pdfjsLib) return false;
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
         options.pdfWorkerSrc ||
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -897,7 +928,7 @@
         ? source
         : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
 
-      const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
+      const pdf = await pdfjsLib.getDocument(proxyUrl).promise;
       const page = await pdf.getPage(1);
       const baseViewport = page.getViewport({ scale: 1 });
 
@@ -948,7 +979,7 @@
 
     const kind = getManagerMediaKind(resolved, options);
 
-    if (kind === 'pdf' && window.pdfjsLib) {
+    if (kind === 'pdf') {
       const rendered = await renderManagerPdfThumbnailCanvas(stage, resolved, options);
       if (rendered) return resolved;
     }
@@ -1449,6 +1480,30 @@
     return resolved;
   }
 
+  async function openManagerMedia(media, options = {}) {
+    const resolved = options.resolved === true
+      ? media
+      : await resolveManagerMedia(media, options);
+
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+    if (!source || kind === 'none') return resolved;
+
+    if (kind === 'pdf') {
+      /*
+       * PDF is always delegated to the browser/Acrobat viewer.
+       * Keep the calling Manager screen intact and open exactly one new tab.
+       */
+      window.open(toManagerUrl(source), '_blank', 'noopener,noreferrer');
+      return resolved;
+    }
+
+    return openManagerMediaViewer(resolved, {
+      ...options,
+      resolved: true
+    });
+  }
+
   async function mountManagerMedia(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1486,7 +1541,7 @@
 
     stage.replaceChildren(trigger);
 
-    if (kind === 'pdf' && window.pdfjsLib) {
+    if (kind === 'pdf') {
       const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
       if (!rendered) {
         trigger.innerHTML = managerMediaElementHtml(resolved, {
@@ -1504,18 +1559,7 @@
     }
 
     trigger.addEventListener('click', async () => {
-      if (kind === 'pdf') {
-        /*
-         * PDF skips the IXL modal entirely.
-         * Open the actual PDF directly so the browser/Acrobat viewer handles
-         * page navigation, thumbnails, zoom, print and download in one step.
-         */
-        const pdfUrl = toManagerUrl(source);
-        window.open(pdfUrl, '_blank', 'noopener,noreferrer');
-        return;
-      }
-
-      await openManagerMediaViewer(resolved, {
+      await openManagerMedia(resolved, {
         ...options,
         resolved: true
       });
@@ -1544,6 +1588,7 @@
     findAssetBySource: findManagerMediaAssetBySource,
     renderThumbnail: renderManagerMediaThumbnail,
     renderPreview: renderManagerMediaPreview,
+    open: openManagerMedia,
     openViewer: openManagerMediaViewer,
     closeViewer: closeManagerMediaViewer,
     mount: mountManagerMedia,
