@@ -996,6 +996,400 @@
     return resolved;
   }
 
+  function ensureManagerMediaViewer() {
+    let viewer = document.getElementById('manager-media-viewer');
+
+    if (!document.getElementById('manager-media-viewer-style')) {
+      const style = document.createElement('style');
+      style.id = 'manager-media-viewer-style';
+      style.textContent = `
+        [data-manager-media-action="preview"] img,
+        [data-manager-media-action="preview"] video,
+        [data-manager-media-action="preview"] iframe,
+        [data-manager-media-action="preview"] canvas {
+          pointer-events: none;
+        }
+
+        body.manager-media-viewer-open {
+          overflow: hidden;
+        }
+
+        .manager-media-viewer {
+          position: fixed;
+          inset: 0;
+          z-index: 10000;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          box-sizing: border-box;
+          background: rgba(8, 22, 38, 0.72);
+        }
+
+        .manager-media-viewer.open {
+          display: flex;
+        }
+
+        .manager-media-viewer-dialog {
+          width: min(1180px, 96vw);
+          height: min(860px, 92vh);
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          overflow: hidden;
+          border-radius: 12px;
+          background: #fff;
+          box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+        }
+
+        .manager-media-viewer-head {
+          min-height: 58px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 10px 14px 10px 18px;
+          box-sizing: border-box;
+          border-bottom: 1px solid #dfe5ec;
+          background: #fff;
+        }
+
+        .manager-media-viewer-title {
+          min-width: 0;
+          flex: 1;
+          margin: 0;
+          overflow: hidden;
+          color: #17324d;
+          font-size: 15px;
+          font-weight: 800;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .manager-media-viewer-open-link,
+        .manager-media-viewer-close {
+          min-height: 36px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          box-sizing: border-box;
+          border: 1px solid #cfd8e3;
+          border-radius: 7px;
+          background: #fff;
+          color: #17324d;
+          font: inherit;
+          font-size: 13px;
+          font-weight: 700;
+          text-decoration: none;
+          cursor: pointer;
+        }
+
+        .manager-media-viewer-open-link {
+          padding: 0 12px;
+        }
+
+        .manager-media-viewer-close {
+          width: 38px;
+          padding: 0;
+          font-size: 22px;
+          line-height: 1;
+        }
+
+        .manager-media-viewer-open-link:hover,
+        .manager-media-viewer-close:hover {
+          background: #f2f6fa;
+        }
+
+        .manager-media-viewer-body {
+          min-height: 0;
+          overflow: auto;
+          display: flex;
+          align-items: stretch;
+          justify-content: center;
+          background: #eef2f6;
+        }
+
+        .manager-media-viewer-body > img {
+          max-width: 100%;
+          max-height: 100%;
+          margin: auto;
+          object-fit: contain;
+        }
+
+        .manager-media-viewer-body > video {
+          width: 100%;
+          height: 100%;
+          background: #000;
+          object-fit: contain;
+        }
+
+        .manager-media-viewer-body > iframe {
+          width: 100%;
+          height: 100%;
+          min-height: 100%;
+          border: 0;
+          background: #fff;
+        }
+
+        .manager-media-viewer-body > pre {
+          width: 100%;
+          min-height: 100%;
+          margin: 0;
+          padding: 28px;
+          box-sizing: border-box;
+          overflow: auto;
+          background: #fff;
+          color: #24384d;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+        }
+
+        .manager-media-viewer-message {
+          width: min(720px, calc(100% - 48px));
+          margin: auto;
+          padding: 28px;
+          box-sizing: border-box;
+          border-radius: 10px;
+          background: #fff;
+          color: #44515f;
+          text-align: center;
+          line-height: 1.6;
+        }
+
+        @media (max-width: 760px) {
+          .manager-media-viewer {
+            padding: 10px;
+          }
+
+          .manager-media-viewer-dialog {
+            width: 100%;
+            height: 94vh;
+          }
+
+          .manager-media-viewer-open-link {
+            display: none;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    if (viewer) return viewer;
+
+    viewer = document.createElement('div');
+    viewer.id = 'manager-media-viewer';
+    viewer.className = 'manager-media-viewer';
+    viewer.setAttribute('aria-hidden', 'true');
+
+    viewer.innerHTML = `
+      <div class="manager-media-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="manager-media-viewer-title">
+        <div class="manager-media-viewer-head">
+          <h3 class="manager-media-viewer-title" id="manager-media-viewer-title">Media Viewer</h3>
+          <a class="manager-media-viewer-open-link" data-manager-media-viewer-open target="_blank" rel="noopener noreferrer">Open in new tab ↗</a>
+          <button type="button" class="manager-media-viewer-close" data-manager-media-viewer-close aria-label="Close media viewer">×</button>
+        </div>
+        <div class="manager-media-viewer-body" data-manager-media-viewer-body></div>
+      </div>
+    `;
+
+    const close = () => closeManagerMediaViewer();
+
+    viewer.addEventListener('click', event => {
+      if (event.target === viewer || event.target.closest('[data-manager-media-viewer-close]')) {
+        close();
+      }
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && viewer.classList.contains('open')) {
+        close();
+      }
+    });
+
+    document.body.appendChild(viewer);
+    return viewer;
+  }
+
+  function closeManagerMediaViewer() {
+    const viewer = document.getElementById('manager-media-viewer');
+    if (!viewer) return;
+
+    const body = viewer.querySelector('[data-manager-media-viewer-body]');
+    const player = body?.querySelector('video');
+
+    if (player) {
+      try {
+        player.pause();
+        player.removeAttribute('src');
+        player.load();
+      } catch (error) {}
+    }
+
+    if (body) body.replaceChildren();
+
+    viewer.classList.remove('open');
+    viewer.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('manager-media-viewer-open');
+  }
+
+  function getManagerViewerLabel(media, kind) {
+    return String(
+      media?.title ||
+      media?.label ||
+      media?.name ||
+      media?.fileName ||
+      media?.key ||
+      (kind === 'video' ? 'Video' :
+       kind === 'pdf' ? 'PDF' :
+       kind === 'document' ? 'Document' :
+       kind === 'presentation' ? 'Presentation' :
+       'Media')
+    ).trim();
+  }
+
+  function getManagerOfficeViewerUrl(source) {
+    const raw = String(source || '').trim();
+    if (!raw) return '';
+
+    try {
+      const absolute = new URL(toManagerUrl(raw), window.location.href);
+      if (!/^https?:$/i.test(absolute.protocol)) return '';
+      return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(absolute.href)}`;
+    } catch (error) {
+      return '';
+    }
+  }
+
+  async function renderManagerMediaViewerContent(stage, resolved, options = {}) {
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+    const safeSource = escapeManagerHtml(toManagerUrl(source));
+    const label = escapeManagerHtml(getManagerViewerLabel(resolved, kind));
+
+    if (!source || kind === 'none') {
+      stage.innerHTML = options.emptyHtml || '<div class="manager-media-viewer-message">No media</div>';
+      return;
+    }
+
+    const renderer = managerMediaRenderers.get(kind);
+    if (renderer && typeof renderer.preview === 'function') {
+      const custom = await renderer.preview(resolved, {
+        ...options,
+        viewer: true
+      }, stage);
+      if (typeof custom === 'string') stage.innerHTML = custom;
+      return;
+    }
+
+    if (kind === 'image') {
+      stage.innerHTML = `<img src="${safeSource}" alt="${label}">`;
+      return;
+    }
+
+    if (kind === 'video') {
+      const time = getManagerThumbnailTime(resolved, options);
+      stage.innerHTML = `<video controls autoplay preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+
+      const player = stage.querySelector('video');
+      if (player) {
+        const startPlayback = () => {
+          try {
+            if (time > 0 && player.currentTime < time) player.currentTime = time;
+          } catch (error) {}
+          player.play().catch(() => {});
+        };
+
+        if (player.readyState >= 1) startPlayback();
+        else player.addEventListener('loadedmetadata', startPlayback, { once: true });
+      }
+      return;
+    }
+
+    if (kind === 'youtube') {
+      const youtubeId = getManagerYouTubeId(source);
+      stage.innerHTML = youtubeId
+        ? `<iframe src="https://www.youtube.com/embed/${escapeManagerHtml(youtubeId)}?autoplay=1" title="${label}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+        : `<div class="manager-media-viewer-message">This video cannot be embedded.</div>`;
+      return;
+    }
+
+    if (kind === 'pdf') {
+      /*
+       * Viewer mode intentionally uses the browser PDF viewer, not PDF.js canvas.
+       * A canvas only renders one page; the iframe keeps the whole PDF scrollable.
+       */
+      stage.innerHTML = `<iframe src="${safeSource}#view=FitH" title="${label}"></iframe>`;
+      return;
+    }
+
+    if (kind === 'text') {
+      try {
+        const response = await fetch(toManagerUrl(source), { credentials: 'same-origin' });
+        if (!response.ok) throw new Error('Text preview could not be loaded.');
+        const body = await response.text();
+        stage.innerHTML = `<pre>${escapeManagerHtml(body.slice(0, Number(options.maxTextLength || 100000)))}</pre>`;
+      } catch (error) {
+        console.error(error);
+        stage.innerHTML = `<iframe src="${safeSource}" title="${label}"></iframe>`;
+      }
+      return;
+    }
+
+    if (kind === 'document' || kind === 'presentation') {
+      const officeViewerUrl = getManagerOfficeViewerUrl(source);
+      if (officeViewerUrl) {
+        stage.innerHTML = `<iframe src="${escapeManagerHtml(officeViewerUrl)}" title="${label}" allowfullscreen></iframe>`;
+      } else {
+        stage.innerHTML = `
+          <div class="manager-media-viewer-message">
+            This document cannot be embedded in the browser from its current source.
+            Use “Open in new tab” above to view or download it.
+          </div>
+        `;
+      }
+      return;
+    }
+
+    if (kind === 'link' || kind === 'file') {
+      stage.innerHTML = `<iframe src="${safeSource}" title="${label}"></iframe>`;
+      return;
+    }
+
+    stage.innerHTML = `<div class="manager-media-viewer-message">Preview is not available for this media type.</div>`;
+  }
+
+  async function openManagerMediaViewer(media, options = {}) {
+    const resolved = options.resolved === true
+      ? media
+      : await resolveManagerMedia(media, options);
+
+    const source = getManagerMediaSource(resolved);
+    const kind = getManagerMediaKind(resolved, options);
+    if (!source || kind === 'none') return resolved;
+
+    const viewer = ensureManagerMediaViewer();
+    const body = viewer.querySelector('[data-manager-media-viewer-body]');
+    const title = viewer.querySelector('#manager-media-viewer-title');
+    const openLink = viewer.querySelector('[data-manager-media-viewer-open]');
+
+    if (title) title.textContent = getManagerViewerLabel(resolved, kind);
+
+    if (openLink) {
+      openLink.href = toManagerUrl(source);
+      openLink.hidden = kind === 'youtube';
+    }
+
+    viewer.classList.add('open');
+    viewer.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('manager-media-viewer-open');
+
+    if (body) {
+      body.innerHTML = '<div class="manager-media-viewer-message">Loading...</div>';
+      await renderManagerMediaViewerContent(body, resolved, options);
+    }
+
+    viewer.querySelector('[data-manager-media-viewer-close]')?.focus();
+    return resolved;
+  }
+
   async function mountManagerMedia(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1046,13 +1440,9 @@
     const trigger = stage.querySelector('[data-manager-media-action="preview"]');
     if (trigger) {
       trigger.addEventListener('click', async () => {
-        stage.classList.add(options.playingClass || 'is-playing');
-
-        await renderManagerMediaPreview(stage, resolved, {
+        await openManagerMediaViewer(resolved, {
           ...options,
-          resolved: true,
-          controls: options.controls !== false,
-          autoplay: kind === 'video' ? options.autoplay !== false : false
+          resolved: true
         });
       });
     }
@@ -1080,6 +1470,8 @@
     findAssetBySource: findManagerMediaAssetBySource,
     renderThumbnail: renderManagerMediaThumbnail,
     renderPreview: renderManagerMediaPreview,
+    openViewer: openManagerMediaViewer,
+    closeViewer: closeManagerMediaViewer,
     mount: mountManagerMedia,
     registerRenderer: registerManagerMediaRenderer
   };
