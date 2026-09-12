@@ -51,6 +51,20 @@
 .sns-list-title{font-weight:700}
 .sns-published-yes{font-weight:800}
 .sns-published-no{color:#6b7b8d}
+
+.sns-media-candidates{display:grid;gap:10px;margin-top:8px}
+.sns-media-candidate{display:grid;grid-template-columns:auto 88px minmax(0,1fr);gap:12px;align-items:center;padding:10px 12px;border:1px solid #dbe3ec;border-radius:8px;background:#fff;cursor:pointer}
+.sns-media-candidate:has(input:checked){border-color:#1d4ed8;box-shadow:0 0 0 1px #1d4ed8 inset;background:#f8fbff}
+.sns-media-candidate input{margin:0}
+.sns-media-thumb{width:88px;height:60px;border:1px solid #dbe3ec;border-radius:6px;background:#f7f9fb;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.sns-media-thumb img,.sns-media-thumb video{width:100%;height:100%;object-fit:cover}
+.sns-media-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}
+.sns-media-thumb .sns-media-thumb-label{font-size:10px;font-weight:800;color:#64748b;text-align:center;padding:4px}
+.sns-media-info{min-width:0}
+.sns-media-info strong{display:block;font-size:13px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sns-media-info small{display:block;margin-top:3px;color:#64748b}
+.sns-asset-image-picker{margin-top:12px}
+
 </style>
 </head>
 
@@ -423,11 +437,18 @@
         </div>
 
         <div class="sns-compose-field">
-          <label for="share-publish-media">Publish Media</label>
-          <select id="share-publish-media">
-            <option value="">No Media</option>
-          </select>
-          <small>Choose one media item to publish. Knowledge Media and all sendable Asset Library media are listed together. <a href="asset-library.html" target="_blank" rel="noopener">Upload / manage assets ↗</a></small>
+          <label>Publish Media</label>
+          <small>Knowledge media are listed automatically. Optionally add one image from Asset Library, then choose exactly one item to publish.</small>
+
+          <div id="share-media-candidates" class="sns-media-candidates"></div>
+
+          <div class="sns-asset-image-picker">
+            <label for="share-asset-image">Add Image from Asset Library</label>
+            <select id="share-asset-image">
+              <option value="">No additional image</option>
+            </select>
+            <small>Optional. Adds one Asset Library image to the candidates above. <a href="asset-library.html" target="_blank" rel="noopener">Upload / manage assets ↗</a></small>
+          </div>
         </div>
 
         <div class="sns-compose-field">
@@ -1078,96 +1099,150 @@
       return String(asset?.url || asset?.pathname || '').trim();
     }
 
-    function populatePublishMediaOptions(item, language, selectedValue = '') {
-      const select = document.getElementById('share-publish-media');
+    function mediaCandidateThumbnail(url, mediaType) {
+      const value = String(url || '').trim();
+      const safeUrl = escapeHtml(value);
+      const lower = value.toLowerCase().split('?')[0].split('#')[0];
+
+      if (!value) {
+        return '<div class="sns-media-thumb"><span class="sns-media-thumb-label">NO MEDIA</span></div>';
+      }
+
+      if (mediaType === 'Image' || /\.(jpg|jpeg|png|webp|gif)$/i.test(lower)) {
+        return `<div class="sns-media-thumb"><img src="${safeUrl}" alt=""></div>`;
+      }
+
+      if (mediaType === 'Video' || /\.(mp4|mov|m4v|webm)$/i.test(lower)) {
+        return `<div class="sns-media-thumb"><video src="${safeUrl}#t=0.1" muted preload="metadata"></video></div>`;
+      }
+
+      if (mediaType === 'Document' || /\.pdf$/i.test(lower)) {
+        return `<div class="sns-media-thumb"><iframe src="${safeUrl}#page=1&view=FitH" title="PDF preview"></iframe></div>`;
+      }
+
+      return '<div class="sns-media-thumb"><span class="sns-media-thumb-label">MEDIA</span></div>';
+    }
+
+    function populateAssetImageOptions(selectedKey = '') {
+      const select = document.getElementById('share-asset-image');
       if (!select) return;
 
-      const knowledgeOptions = getKnowledgeMediaItems(item, language)
-        .map((entry, index) => {
-          const media = resolveMediaItem(entry);
-          const mediaType = resolveSnsMediaType(media.type);
-          if (mediaType === 'None' || !media.url) return '';
-          const label = entry.title || media.assetKey || media.url || `${media.type || 'Media'} ${index + 1}`;
-          return `<option value="knowledge:${index}">[Knowledge] ${escapeHtml(label)} · ${escapeHtml(media.type || mediaType)}</option>`;
-        })
-        .join('');
-
-      const assetOptions = assetRegistry
+      const options = assetRegistry
         .map(asset => {
           const key = String(asset?.key || '').trim();
           const mediaType = resolveSnsMediaType(asset?.type);
           const url = getAssetUrl(asset);
-          if (!key || mediaType === 'None' || !url) return '';
+          if (!key || mediaType !== 'Image' || !url) return '';
           const label = String(asset?.name || asset?.fileName || key).trim();
-          return `<option value="asset:${escapeHtml(key)}">[Asset Library] ${escapeHtml(label)} · ${escapeHtml(asset.type || mediaType)}</option>`;
+          return `<option value="${escapeHtml(key)}">${escapeHtml(label)} · ${escapeHtml(asset.type || 'image')}</option>`;
         })
         .join('');
 
       select.innerHTML =
-        '<option value="">No Media</option>' +
-        (knowledgeOptions ? `<optgroup label="Knowledge Media">${knowledgeOptions}</optgroup>` : '') +
-        (assetOptions ? `<optgroup label="Asset Library">${assetOptions}</optgroup>` : '');
+        '<option value="">No additional image</option>' +
+        options;
 
-      select.value = selectedValue || '';
-      if (selectedValue && select.value !== selectedValue) select.value = '';
+      select.value = selectedKey || '';
+      if (selectedKey && select.value !== selectedKey) select.value = '';
     }
 
-    function applyPublishMediaSelection(item, language, selection) {
-      const mediaTypeField = document.getElementById('share-media-type');
-      const mediaFileField = document.getElementById('share-media-file');
-      const value = String(selection || '').trim();
+    function getMediaCandidates(item, language, assetImageKey = '') {
+      const candidates = [{
+        id: 'none',
+        source: 'No Media',
+        label: 'No Media',
+        mediaType: 'None',
+        mediaFile: '',
+        assetKey: ''
+      }];
 
-      selectedAssetKey = '';
-      mediaTypeField.value = 'None';
-      mediaFileField.value = '';
-
-      if (!value) return;
-
-      if (value.startsWith('knowledge:')) {
-        const index = Number(value.slice('knowledge:'.length));
-        const list = getKnowledgeMediaItems(item, language);
-        const media = resolveMediaItem(list[index] || {});
+      getKnowledgeMediaItems(item, language).forEach((entry, index) => {
+        const media = resolveMediaItem(entry);
         const mediaType = resolveSnsMediaType(media.type);
         if (mediaType === 'None' || !media.url) return;
-        selectedAssetKey = media.assetKey || '';
-        mediaTypeField.value = mediaType;
-        mediaFileField.value = media.url;
-        return;
+
+        candidates.push({
+          id: `knowledge:${index}`,
+          source: 'Knowledge',
+          label: entry.title || media.assetKey || media.url || `Knowledge Media ${index + 1}`,
+          mediaType,
+          mediaFile: media.url,
+          assetKey: media.assetKey || ''
+        });
+      });
+
+      const assetKey = String(assetImageKey || '').trim();
+      if (assetKey) {
+        const asset = findAssetByKey(assetKey);
+        const mediaType = resolveSnsMediaType(asset?.type);
+        const mediaFile = getAssetUrl(asset);
+
+        if (asset && mediaType === 'Image' && mediaFile) {
+          candidates.push({
+            id: `asset:${assetKey}`,
+            source: 'Asset Library',
+            label: String(asset?.name || asset?.fileName || assetKey).trim(),
+            mediaType,
+            mediaFile,
+            assetKey
+          });
+        }
       }
 
-      if (value.startsWith('asset:')) {
-        const key = value.slice('asset:'.length);
-        const asset = findAssetByKey(key);
-        if (!asset) return;
-        const mediaType = resolveSnsMediaType(asset.type);
-        const url = getAssetUrl(asset);
-        if (mediaType === 'None' || !url) return;
-        selectedAssetKey = String(asset.key || '').trim();
-        mediaTypeField.value = mediaType;
-        mediaFileField.value = url;
-      }
+      return candidates;
     }
 
-    function findPublishMediaSelection(item, language, assetKey, mediaFile) {
-      const key = String(assetKey || '').trim();
-      const file = String(mediaFile || '').trim();
+    function renderMediaCandidates(item, language, selectedId = 'none', assetImageKey = '') {
+      const wrap = document.getElementById('share-media-candidates');
+      if (!wrap) return;
 
-      if (key && findAssetByKey(key)) {
-        return `asset:${key}`;
-      }
+      const candidates = getMediaCandidates(item, language, assetImageKey);
+      const chosenId = candidates.some(candidate => candidate.id === selectedId)
+        ? selectedId
+        : 'none';
 
-      const knowledgeList = getKnowledgeMediaItems(item, language);
-      const knowledgeIndex = knowledgeList.findIndex(entry => {
-        const media = resolveMediaItem(entry);
-        return file && IXLManager.sameUrl(media.url, file);
-      });
-      if (knowledgeIndex >= 0) return `knowledge:${knowledgeIndex}`;
+      wrap.innerHTML = candidates.map(candidate => {
+        const checked = candidate.id === chosenId ? ' checked' : '';
+        return `
+          <label class="sns-media-candidate">
+            <input type="radio" name="share-media-choice" value="${escapeHtml(candidate.id)}"${checked}>
+            ${mediaCandidateThumbnail(candidate.mediaFile, candidate.mediaType)}
+            <span class="sns-media-info">
+              <strong>${escapeHtml(candidate.label)}</strong>
+              <small>${escapeHtml(candidate.source)} · ${escapeHtml(candidate.mediaType)}</small>
+            </span>
+          </label>
+        `;
+      }).join('');
 
-      const asset = assetRegistry.find(entry => {
-        const url = getAssetUrl(entry);
-        return file && url && IXLManager.sameUrl(url, file);
-      });
-      return asset?.key ? `asset:${asset.key}` : '';
+      applyMediaCandidateSelection(item, language, chosenId, assetImageKey);
+    }
+
+    function applyMediaCandidateSelection(item, language, selectedId, assetImageKey = '') {
+      const mediaTypeField = document.getElementById('share-media-type');
+      const mediaFileField = document.getElementById('share-media-file');
+      const candidates = getMediaCandidates(item, language, assetImageKey);
+      const candidate = candidates.find(entry => entry.id === selectedId) || candidates[0];
+
+      selectedAssetKey = candidate.assetKey || '';
+      mediaTypeField.value = candidate.mediaType || 'None';
+      mediaFileField.value = candidate.mediaFile || '';
+    }
+
+    function findMediaCandidateSelection(item, language, assetKey, mediaFile, assetImageKey = '') {
+      const wantedKey = String(assetKey || '').trim();
+      const wantedFile = String(mediaFile || '').trim();
+      const candidates = getMediaCandidates(item, language, assetImageKey);
+
+      const match = candidates.find(candidate =>
+        candidate.id !== 'none' &&
+        (
+          (wantedKey && candidate.assetKey === wantedKey) ||
+          (wantedFile && IXLManager.sameUrl(candidate.mediaFile, wantedFile))
+        )
+      );
+
+      return match ? match.id : 'none';
     }
 
 
@@ -1183,7 +1258,10 @@
         assetRegistry = [];
       }
       const ctx = getSelectedVersionContext();
-      if (ctx) populatePublishMediaOptions(ctx.item, ctx.language, '');
+      if (ctx) {
+        populateAssetImageOptions('');
+        renderMediaCandidates(ctx.item, ctx.language, 'none', '');
+      }
     }
 
     async function loadDistributionHistoryData() {
@@ -1362,7 +1440,7 @@
         external: document.getElementById('share-external-link'),
         mediaType: document.getElementById('share-media-type'),
         mediaFile: document.getElementById('share-media-file'),
-        publishMedia: document.getElementById('share-publish-media'),
+        assetImage: document.getElementById('share-asset-image'),
         language: document.getElementById('share-language')
       };
 
@@ -1402,8 +1480,8 @@
         : '';
 
       fields.external.value = '';
-      populatePublishMediaOptions(item, language, '');
-      applyPublishMediaSelection(item, language, '');
+      populateAssetImageOptions('');
+      renderMediaCandidates(item, language, 'none', '');
 
       if (
         fields.external.value &&
@@ -1471,13 +1549,28 @@
         document.getElementById('share-media-type').value=tx.mediaType||'None';
         document.getElementById('share-media-file').value=tx.mediaFile||'';
         selectedAssetKey=tx.assetKey||'';
-        const publishSelection = findPublishMediaSelection(
+        const restoredAssetImageKey =
+          (tx.mediaType || '') === 'Image' &&
+          !!findAssetByKey(tx.assetKey || '')
+            ? (tx.assetKey || '')
+            : '';
+
+        populateAssetImageOptions(restoredAssetImageKey);
+
+        const publishSelection = findMediaCandidateSelection(
           ctx.item,
           ctx.language,
           tx.assetKey || '',
-          tx.mediaFile || ''
+          tx.mediaFile || '',
+          restoredAssetImageKey
         );
-        populatePublishMediaOptions(ctx.item, ctx.language, publishSelection);
+
+        renderMediaCandidates(
+          ctx.item,
+          ctx.language,
+          publishSelection,
+          restoredAssetImageKey
+        );
         const channelRadio=document.querySelector(`input[name="sns-channel"][value="${CSS.escape(tx.channel||'LinkedIn')}"]`);
         if(channelRadio) channelRadio.checked=true;
       } else {
@@ -1490,10 +1583,43 @@
       showSnsScreen('editor');
     }
 
-    document.getElementById('share-publish-media')?.addEventListener('change', event => {
+    document.getElementById('share-media-candidates')?.addEventListener('change', event => {
+      const radio = event.target.closest('input[name="share-media-choice"]');
+      if (!radio) return;
+
       const ctx = getSelectedVersionContext();
       if (!ctx) return;
-      applyPublishMediaSelection(ctx.item, ctx.language, event.target.value);
+
+      const assetImageKey =
+        document.getElementById('share-asset-image')?.value || '';
+
+      applyMediaCandidateSelection(
+        ctx.item,
+        ctx.language,
+        radio.value,
+        assetImageKey
+      );
+    });
+
+    document.getElementById('share-asset-image')?.addEventListener('change', event => {
+      const ctx = getSelectedVersionContext();
+      if (!ctx) return;
+
+      const previousSelection =
+        document.querySelector('input[name="share-media-choice"]:checked')?.value || 'none';
+
+      const nextAssetKey = event.target.value || '';
+      const nextSelection =
+        previousSelection.startsWith('asset:')
+          ? (nextAssetKey ? `asset:${nextAssetKey}` : 'none')
+          : previousSelection;
+
+      renderMediaCandidates(
+        ctx.item,
+        ctx.language,
+        nextSelection,
+        nextAssetKey
+      );
     });
 
     document.getElementById('sns-review-edit')?.addEventListener('click',populateComposerFromReview);
