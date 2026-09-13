@@ -197,8 +197,6 @@
     const commonMedia = window.IXLManager?.media;
     if (commonMedia?.getSourceUrl) return commonMedia.getSourceUrl(asset);
 
-    // Manager Common is the canonical resolver. If it is unavailable,
-    // only ordinary stored URLs/paths can be resolved safely here.
     if (getStorageProvider(asset) === 'onedrive') return '';
     return String(asset?.url || asset?.path || asset?.pathname || '').trim();
   }
@@ -1221,7 +1219,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
 
         selectedOneDriveItem = {
           ...item,
-          itemId: item.itemId,
+          storageProvider: 'onedrive',
+          itemId: item.id,
           driveId: oneDriveDriveId,
           storageConnection: oneDriveConnectionId,
           parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
@@ -1293,7 +1292,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       storageConnection: item.storageConnection,
       relativePath: item.relativePath,
       driveId: item.driveId,
-      itemId: item.itemId,
+      itemId: item.id,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
       tracks: Array.isArray(item.tracks) ? item.tracks : [],
@@ -1308,7 +1307,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       storageConnection: item.storageConnection,
       relativePath: item.relativePath,
       driveId: item.driveId,
-      itemId: item.itemId,
+      itemId: item.id,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
       tracks: Array.isArray(item.tracks) ? item.tracks : []

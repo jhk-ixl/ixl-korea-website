@@ -814,16 +814,6 @@
       ''
     ).trim();
 
-    const source = String(
-      options.sourceUrl ||
-      registered?.url ||
-      registered?.pathname ||
-      registered?.path ||
-      registered?.asset ||
-      inputSource ||
-      ''
-    ).trim();
-
     const registeredThumbnailTime =
       registered?.thumbnailTime === null ||
       registered?.thumbnailTime === undefined ||
@@ -852,11 +842,22 @@
     const merged = {
       ...input,
       ...(registered || {}),
-      sourceUrl: source,
-      url: source,
       assetKey: authoritativeAssetKey,
       thumbnailTime: authoritativeThumbnailTime
     };
+
+    // Resolve once, after provider metadata has been merged.
+    // OneDrive uses storageConnection + driveId + itemId.
+    // relativePath remains metadata/recovery data, not a browser URL.
+    const source = String(
+      options.sourceUrl ||
+      getManagerMediaSource(merged) ||
+      inputSource ||
+      ''
+    ).trim();
+
+    merged.sourceUrl = source;
+    merged.url = source;
 
     merged.kind = getManagerMediaKind(merged, options);
     merged.thumbnailTime = getManagerThumbnailTime(merged, {
