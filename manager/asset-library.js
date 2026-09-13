@@ -114,6 +114,36 @@
     return oneDriveConnections.find(item => item.id === id)?.label || id || 'OneDrive';
   }
 
+
+  function getOneDriveConnection(connectionId) {
+    const id = String(connectionId || '').trim();
+    return oneDriveConnections.find(item => item.id === id) || null;
+  }
+
+  function startOneDriveSignIn(connectionId) {
+    const id = String(connectionId || '').trim();
+    if (!id) return;
+    const returnPath = `${location.pathname}?mode=upload`;
+    const params = new URLSearchParams({ connection: id, return: returnPath });
+    location.href = `/api/onedrive-auth?${params}`;
+  }
+
+  function handleOneDriveCallbackStatus() {
+    const params = new URLSearchParams(location.search);
+    const status = params.get('onedrive');
+    if (!status) return;
+    const message = params.get('onedriveMessage') || '';
+    if (status === 'connected') {
+      alert('Personal OneDrive connected. You can now browse and register files.');
+    } else if (status === 'error') {
+      alert(message || 'Personal OneDrive connection failed.');
+    }
+    params.delete('onedrive');
+    params.delete('onedriveMessage');
+    const clean = `${location.pathname}${params.toString() ? `?${params}` : ''}`;
+    history.replaceState(null, '', clean);
+  }
+
   async function loadOneDriveConnections() {
     const select = $('onedrive-storage-connection');
     try {
@@ -1129,7 +1159,11 @@ UPDATE will make all of these usages point to the new file. Continue?`
 
     const response = await fetch(`${API_ONEDRIVE}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Failed to browse OneDrive.');
+    if (!response.ok) {
+      const error = new Error(data.error || 'Failed to browse OneDrive.');
+      error.code = data.code || '';
+      throw error;
+    }
 
     oneDriveDriveId = data.driveId || oneDriveDriveId;
     oneDriveConnectionId = data.storageConnection || oneDriveConnectionId;
@@ -1194,6 +1228,13 @@ UPDATE will make all of these usages point to the new file. Continue?`
     if (!oneDriveConnections.length) await loadOneDriveConnections();
     oneDriveConnectionId = select?.value || oneDriveConnectionId || oneDriveConnections[0]?.id || '';
     if (!oneDriveConnectionId) return alert('No OneDrive storage connection is configured.');
+
+    const connection = getOneDriveConnection(oneDriveConnectionId);
+    if (connection?.authType === 'personal' && !connection.connected) {
+      startOneDriveSignIn(oneDriveConnectionId);
+      return;
+    }
+
     oneDriveConnectionLabel = getOneDriveConnectionLabel(oneDriveConnectionId);
     oneDriveDriveId = '';
     oneDriveStack = [];
@@ -1202,6 +1243,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
       await loadOneDriveFolder();
     } catch (error) {
       $('onedrive-browser-modal').hidden = true;
+      if (error?.code === 'ONEDRIVE_AUTH_REQUIRED') {
+        startOneDriveSignIn(oneDriveConnectionId);
+        return;
+      }
       alert(error.message || 'OneDrive could not be opened.');
     }
   }
@@ -1465,6 +1510,7 @@ Key: ${registered.key || key}`);
   }
 
   async function initMode() {
+    handleOneDriveCallbackStatus();
     setAssetDetailActive(false);
     const params = commonNavigation?.getParams() || new URLSearchParams(location.search);
     const editKey = params.get('edit');

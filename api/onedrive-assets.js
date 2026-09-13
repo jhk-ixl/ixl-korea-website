@@ -1,0 +1,188 @@
+import { requireManager } from '../lib/manager-auth-utils.js';
+import {
+  cleanConnectionId,
+  getOneDriveAccessToken,
+  getOneDriveConnection,
+  isConnectionAuthorized,
+  readOneDriveConnections,
+  resolveConnectionDriveId
+} from '../lib/onedrive-auth.js';
+
+const GRAPH = 'https://graph.microsoft.com/v1.0';
+
+function publicConnection(req, connection) {
+  return {
+    id: connection.id,
+    label: connection.label,
+    authType: connection.authType,
+    connected: isConnectionAuthorized(req, connection)
+  };
+}
+
+async function graph(path, token, options = {}) {
+  const response = await fetch(`${GRAPH}${path}`, {
+    ...options,
+    headers: { Authorization: `Bearer ${token}`, ...(options.headers || {}) },
+    redirect: options.redirect || 'follow'
+  });
+  if (!response.ok) {
+    let message = `Microsoft Graph request failed (${response.status}).`;
+    try {
+      const data = await response.json();
+      message = data?.error?.message || message;
+    } catch {}
+    const error = new Error(message);
+    error.statusCode = response.status;
+    throw error;
+  }
+  return response;
+}
+
+function stripGraphRootPath(parentPath, driveId) {
+  let value = String(parentPath || '').replace(/\\/g, '/');
+  const markers = [
+    `/drives/${driveId}/root:`,
+    `/drive/root:`,
+    `/drives/${driveId}/root`,
+    `/drive/root`
+  ];
+  for (const marker of markers) {
+    const index = value.toLowerCase().indexOf(marker.toLowerCase());
+    if (index >= 0) {
+      value = value.slice(index + marker.length);
+      break;
+    }
+  }
+  return value.replace(/^\/+|\/+$/g, '');
+}
+
+function buildRelativePath(item, driveId) {
+  const parent = stripGraphRootPath(item?.parentReference?.path, driveId);
+  const name = String(item?.name || '').replace(/^\/+|\/+$/g, '');
+  return `/${[parent, name].filter(Boolean).join('/')}`.replace(/\/+/g, '/');
+}
+
+function normalizeItem(item, driveId, storageConnection) {
+  return {
+    id: item.id || '',
+    driveId: driveId || '',
+    storageConnection: storageConnection || '',
+    name: item.name || '',
+    size: Number(item.size || 0),
+    webUrl: item.webUrl || '',
+    mimeType: item.file?.mimeType || '',
+    isFolder: Boolean(item.folder),
+    childCount: Number(item.folder?.childCount || 0),
+    parentId: item.parentReference?.id || '',
+    parentPath: item.parentReference?.path || '',
+    relativePath: buildRelativePath(item, driveId),
+    lastModifiedDateTime: item.lastModifiedDateTime || ''
+  };
+}
+
+async function getContext(connectionId, req, res) {
+  const connection = getOneDriveConnection(connectionId);
+  const token = await getOneDriveAccessToken(connection, req, res);
+  const driveId = await resolveConnectionDriveId(connection, token, graph);
+  return { connection, token, driveId };
+}
+
+function requireDriveMatch(requestedDriveId, configuredDriveId) {
+  if (requestedDriveId && requestedDriveId !== configuredDriveId) {
+    const error = new Error('The requested driveId does not belong to the selected storageConnection.');
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
+function encodePath(relativePath) {
+  const normalized = String(relativePath || '').trim().replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!normalized) return '';
+  return normalized.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+}
+
+export default async function handler(req, res) {
+  try {
+    await requireManager(req, res);
+    if (res.headersSent) return;
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed.' });
+
+    const action = String(req.query?.action || 'connections').toLowerCase();
+
+    if (action === 'connections') {
+      const connections = readOneDriveConnections().map(connection => publicConnection(req, connection));
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json({ connections });
+    }
+
+    const storageConnection = cleanConnectionId(req.query?.connection || req.query?.storageConnection);
+    const { connection, token, driveId } = await getContext(storageConnection, req, res);
+    requireDriveMatch(String(req.query?.driveId || '').trim(), driveId);
+
+    if (action === 'children') {
+      const requestedItemId = String(req.query?.itemId || '').trim();
+      const endpoint = requestedItemId
+        ? `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(requestedItemId)}/children?$select=id,name,size,webUrl,file,folder,parentReference,lastModifiedDateTime&$top=200`
+        : `/drives/${encodeURIComponent(driveId)}/root/children?$select=id,name,size,webUrl,file,folder,parentReference,lastModifiedDateTime&$top=200`;
+      const response = await graph(endpoint, token);
+      const data = await response.json();
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json({
+        storageConnection: connection.id,
+        connectionLabel: connection.label,
+        driveId,
+        parentItemId: requestedItemId,
+        items: (data.value || []).map(item => normalizeItem(item, driveId, connection.id))
+      });
+    }
+
+    if (action === 'item' || action === 'resolve') {
+      const itemId = String(req.query?.itemId || '').trim();
+      if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,size,webUrl,file,folder,parentReference,lastModifiedDateTime,@microsoft.graph.downloadUrl`, token);
+      const item = await response.json();
+      const result = normalizeItem(item, driveId, connection.id);
+      result.downloadUrl = item['@microsoft.graph.downloadUrl'] || '';
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json(result);
+    }
+
+    if (action === 'resolve-path') {
+      const relativePath = String(req.query?.relativePath || '').trim();
+      const encoded = encodePath(relativePath);
+      if (!encoded) return res.status(400).json({ error: 'relativePath is required.' });
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/root:/${encoded}?$select=id,name,size,webUrl,file,folder,parentReference,lastModifiedDateTime`, token);
+      const item = await response.json();
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json(normalizeItem(item, driveId, connection.id));
+    }
+
+    if (action === 'content') {
+      const itemId = String(req.query?.itemId || '').trim();
+      if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,@microsoft.graph.downloadUrl`, token);
+      const item = await response.json();
+      const url = item['@microsoft.graph.downloadUrl'] || '';
+      if (!url) return res.status(404).json({ error: 'OneDrive content URL is unavailable.' });
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.redirect(302, url);
+    }
+
+    if (action === 'thumbnail') {
+      const itemId = String(req.query?.itemId || '').trim();
+      if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/thumbnails?$select=large,medium,small`, token);
+      const data = await response.json();
+      const set = data.value?.[0] || {};
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json({ url: set.large?.url || set.medium?.url || set.small?.url || '' });
+    }
+
+    return res.status(400).json({ error: 'Invalid OneDrive action.' });
+  } catch (error) {
+    console.error('OneDrive asset API:', error);
+    const payload = { error: error.message || 'OneDrive request failed.' };
+    if (error.code === 'ONEDRIVE_AUTH_REQUIRED') payload.code = error.code;
+    return res.status(error.statusCode || 500).json(payload);
+  }
+}
