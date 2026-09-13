@@ -638,19 +638,6 @@
     }).join('');
   }
 
-  function bindManagerVideoError(player, stage, resolved) {
-    if (!player || !stage) return;
-    player.addEventListener('error', () => {
-      const source = getManagerMediaSource(resolved);
-      const ext = getManagerMediaExtension(source || resolved?.name || resolved?.fileName || '');
-      const codecHint = ['mov', 'm4v'].includes(ext) || ['mov', 'm4v'].includes(getManagerMediaType(resolved)) ? ' This MOV/M4V file may use a codec that Chrome cannot decode. H.264/AAC in MP4 is the safest browser format.' : '';
-      const message = document.createElement('div');
-      message.className = 'manager-media-error';
-      message.textContent = `Video metadata/playback could not be loaded.${codecHint}`;
-      stage.appendChild(message);
-    }, { once: true });
-  }
-
 
   function getManagerMediaType(media) {
     return String(
@@ -1114,7 +1101,6 @@
       const thumbnailTime = getManagerThumbnailTime(resolved, options);
 
       if (player) {
-        bindManagerVideoError(player, stage, resolved);
         const startPlayback = () => {
           try {
             if (thumbnailTime > 0) player.currentTime = thumbnailTime;
@@ -1427,7 +1413,6 @@
 
       const player = stage.querySelector('video');
       if (player) {
-        bindManagerVideoError(player, stage, resolved);
         const startPlayback = () => {
           try {
             if (time > 0 && player.currentTime < time) player.currentTime = time;

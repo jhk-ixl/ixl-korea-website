@@ -98,17 +98,6 @@
     return String(asset?.storageProvider || (asset?.driveId && asset?.itemId ? 'onedrive' : 'vercel')).toLowerCase();
   }
 
-  function getOneDriveContentUrl(asset) {
-    if (!asset?.storageConnection || !asset?.driveId || !asset?.itemId) return '';
-    const params = new URLSearchParams({
-      action: 'content',
-      connection: asset.storageConnection,
-      driveId: asset.driveId,
-      itemId: asset.itemId
-    });
-    return `${API_ONEDRIVE}?${params}`;
-  }
-
   async function loadOneDriveCaptionTracks(asset) {
     if (!asset?.storageConnection || !asset?.driveId || !asset?.itemId) return [];
     if (!isVideoType(getExtension(asset.name || asset.relativePath || asset.pathname || ''))) return [];
@@ -205,7 +194,12 @@
   }
 
   function getAssetSourceUrl(asset) {
-    if (getStorageProvider(asset) === 'onedrive') return getOneDriveContentUrl(asset);
+    const commonMedia = window.IXLManager?.media;
+    if (commonMedia?.getSourceUrl) return commonMedia.getSourceUrl(asset);
+
+    // Manager Common is the canonical resolver. If it is unavailable,
+    // only ordinary stored URLs/paths can be resolved safely here.
+    if (getStorageProvider(asset) === 'onedrive') return '';
     return String(asset?.url || asset?.path || asset?.pathname || '').trim();
   }
 
@@ -1227,6 +1221,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
 
         selectedOneDriveItem = {
           ...item,
+          itemId: item.itemId,
           driveId: oneDriveDriveId,
           storageConnection: oneDriveConnectionId,
           parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
@@ -1237,7 +1232,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
 
         $('asset-upload-key').value = createAssetKey(item.name);
         renderSelectedOneDriveItem();
-        const source = getOneDriveContentUrl(selectedOneDriveItem);
+        const source = getAssetSourceUrl(selectedOneDriveItem);
         await renderPreview('upload-preview', {
           ...selectedOneDriveItem,
           pathname: selectedOneDriveItem.relativePath,
@@ -1298,7 +1293,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       storageConnection: item.storageConnection,
       relativePath: item.relativePath,
       driveId: item.driveId,
-      itemId: item.id,
+      itemId: item.itemId,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
       tracks: Array.isArray(item.tracks) ? item.tracks : [],
@@ -1313,7 +1308,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       storageConnection: item.storageConnection,
       relativePath: item.relativePath,
       driveId: item.driveId,
-      itemId: item.id,
+      itemId: item.itemId,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
       tracks: Array.isArray(item.tracks) ? item.tracks : []
