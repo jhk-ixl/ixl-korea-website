@@ -1,6 +1,12 @@
 {
   "rewrites": [
     { "source": "/auth", "destination": "/api/auth" },
-    { "source": "/callback", "destination": "/api/callback" }
+    { "source": "/callback", "destination": "/api/callback" },
+
+    { "source": "/api/manager-callback", "destination": "/api/manager-auth?action=callback" },
+    { "source": "/api/manager-session", "destination": "/api/manager-auth?action=session" },
+
+    { "source": "/api/onedrive-auth", "destination": "/api/onedrive-assets?action=auth" },
+    { "source": "/api/onedrive-callback", "destination": "/api/onedrive-assets?action=callback" }
   ]
 }

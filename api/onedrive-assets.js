@@ -1,14 +1,26 @@
 import { requireManager } from '../lib/manager-auth-utils.js';
 import {
+  buildPersonalAuthorizeUrl,
   cleanConnectionId,
+  createOAuthState,
+  exchangePersonalAuthorizationCode,
   getOneDriveAccessToken,
   getOneDriveConnection,
   isConnectionAuthorized,
   readOneDriveConnections,
-  resolveConnectionDriveId
+  resolveConnectionDriveId,
+  setStoredRefreshToken,
+  verifyOAuthState
 } from '../lib/onedrive-auth.js';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
+
+function appendOAuthStatus(returnPath, status, message = '') {
+  const url = new URL(returnPath, 'https://ixlkorea.local');
+  url.searchParams.set('onedrive', status);
+  if (message) url.searchParams.set('onedriveMessage', message.slice(0, 180));
+  return `${url.pathname}${url.search}`;
+}
 
 function publicConnection(req, connection) {
   return {
@@ -25,6 +37,7 @@ async function graph(path, token, options = {}) {
     headers: { Authorization: `Bearer ${token}`, ...(options.headers || {}) },
     redirect: options.redirect || 'follow'
   });
+
   if (!response.ok) {
     let message = `Microsoft Graph request failed (${response.status}).`;
     try {
@@ -35,6 +48,7 @@ async function graph(path, token, options = {}) {
     error.statusCode = response.status;
     throw error;
   }
+
   return response;
 }
 
@@ -42,10 +56,11 @@ function stripGraphRootPath(parentPath, driveId) {
   let value = String(parentPath || '').replace(/\\/g, '/');
   const markers = [
     `/drives/${driveId}/root:`,
-    `/drive/root:`,
+    '/drive/root:',
     `/drives/${driveId}/root`,
-    `/drive/root`
+    '/drive/root'
   ];
+
   for (const marker of markers) {
     const index = value.toLowerCase().indexOf(marker.toLowerCase());
     if (index >= 0) {
@@ -53,6 +68,7 @@ function stripGraphRootPath(parentPath, driveId) {
       break;
     }
   }
+
   return value.replace(/^\/+|\/+$/g, '');
 }
 
@@ -101,6 +117,38 @@ function encodePath(relativePath) {
   return normalized.split('/').filter(Boolean).map(encodeURIComponent).join('/');
 }
 
+async function handleOAuthStart(req, res) {
+  const connectionId = String(req.query?.connection || '').trim();
+  const returnPath = String(req.query?.return || '/manager/asset-library.html?mode=upload').trim();
+  const connection = getOneDriveConnection(connectionId);
+  const state = createOAuthState(connection.id, returnPath);
+  return res.redirect(302, buildPersonalAuthorizeUrl(connection, state));
+}
+
+async function handleOAuthCallback(req, res) {
+  const providerError = String(req.query?.error || '').trim();
+  const providerDescription = String(req.query?.error_description || '').trim();
+  const state = verifyOAuthState(req.query?.state);
+  const connection = getOneDriveConnection(state.connectionId);
+
+  if (providerError) {
+    return res.redirect(302, appendOAuthStatus(state.returnPath, 'error', providerDescription || providerError));
+  }
+
+  const code = String(req.query?.code || '').trim();
+  if (!code) {
+    return res.redirect(302, appendOAuthStatus(state.returnPath, 'error', 'Microsoft did not return an authorization code.'));
+  }
+
+  const token = await exchangePersonalAuthorizationCode(connection, code);
+  if (!token.refresh_token) {
+    return res.redirect(302, appendOAuthStatus(state.returnPath, 'error', 'Microsoft did not return a refresh token. Reconnect and consent again.'));
+  }
+
+  setStoredRefreshToken(res, connection.id, token.refresh_token);
+  return res.redirect(302, appendOAuthStatus(state.returnPath, 'connected'));
+}
+
 export default async function handler(req, res) {
   try {
     await requireManager(req, res);
@@ -108,6 +156,9 @@ export default async function handler(req, res) {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed.' });
 
     const action = String(req.query?.action || 'connections').toLowerCase();
+
+    if (action === 'auth') return handleOAuthStart(req, res);
+    if (action === 'callback') return handleOAuthCallback(req, res);
 
     if (action === 'connections') {
       const connections = readOneDriveConnections().map(connection => publicConnection(req, connection));
@@ -180,7 +231,13 @@ export default async function handler(req, res) {
 
     return res.status(400).json({ error: 'Invalid OneDrive action.' });
   } catch (error) {
-    console.error('OneDrive asset API:', error);
+    console.error('OneDrive API:', error);
+
+    const action = String(req.query?.action || '').toLowerCase();
+    if (action === 'callback') {
+      return res.status(error.statusCode || 500).send(`OneDrive connection failed: ${String(error.message || 'Unknown error')}`);
+    }
+
     const payload = { error: error.message || 'OneDrive request failed.' };
     if (error.code === 'ONEDRIVE_AUTH_REQUIRED') payload.code = error.code;
     return res.status(error.statusCode || 500).json(payload);
