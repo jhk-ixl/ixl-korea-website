@@ -759,8 +759,16 @@ export default async function handler(req, res) {
   }
 
   async function assertKnowledgeMediaAssetsExist(item) {
-    if (!item || !Array.isArray(item.media)) return;
-    const keys = [...new Set(item.media.map(media => media.assetKey).filter(Boolean))];
+    if (!item) return;
+
+    const media = ['ko', 'other']
+      .flatMap(versionKey =>
+        Array.isArray(item?.versions?.[versionKey]?.media)
+          ? item.versions[versionKey].media
+          : []
+      );
+
+    const keys = [...new Set(media.map(entry => entry.assetKey).filter(Boolean))];
     for (const key of keys) {
       await assertUsageAssetExists(key);
     }
@@ -1105,21 +1113,9 @@ export default async function handler(req, res) {
   }
 
 
-  function normalizeKnowledgeVersion(value = {}) {
-    return {
-      title: cleanString(value.title),
-      summary: cleanString(value.summary),
-      body: String(value.body ?? ''),
-      contentSource: normalizeKnowledgeContentSource(value.contentSource)
-    };
-  }
-
-
   function normalizeKnowledgeMediaItem(value = {}) {
     const type = cleanString(value.type).toLowerCase();
-    const language = cleanString(value.language || 'common').toLowerCase();
     const allowedTypes = ['image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'];
-    const allowedLanguages = ['ko', 'other', 'common'];
 
     if (!allowedTypes.includes(type)) {
       const error = new Error('Invalid Knowledge Media Type.');
@@ -1127,15 +1123,8 @@ export default async function handler(req, res) {
       throw error;
     }
 
-    if (!allowedLanguages.includes(language)) {
-      const error = new Error('Invalid Knowledge Media Language.');
-      error.statusCode = 400;
-      throw error;
-    }
-
     const item = {
       type,
-      language,
       title: cleanString(value.title),
       assetKey: slugifyKey(value.assetKey),
       asset: cleanString(value.asset),
@@ -1160,50 +1149,88 @@ export default async function handler(req, res) {
   }
 
 
-  function normalizeLegacyKnowledgeMedia(body = {}) {
-    const output = [];
-    const media = body.representativeMedia || {};
-    const legacyType = cleanString(media.type || 'none').toLowerCase();
-
-    ['ko', 'other'].forEach(language => {
-      const value = media[language] || {};
-      const assetKey = slugifyKey(value.assetKey);
-      const asset = cleanString(value.asset);
-      const url = cleanString(value.url);
-      if (!assetKey && !asset && !url) return;
-
-      let type = legacyType;
-      if (!type || type === 'none') {
-        const source = String(asset || url).toLowerCase();
-        if (/\.pdf(?:$|[?#])/.test(source)) type = 'pdf';
-        else if (/\.(?:mp4|mov|m4v|webm)(?:$|[?#])/.test(source) || /youtube|youtu\.be|vimeo/.test(source)) type = 'video';
-        else if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(source)) type = 'image';
-        else if (/\.md(?:$|[?#])/.test(source)) type = 'markdown';
-        else if (/\.(?:ppt|pptx)(?:$|[?#])/.test(source)) type = 'presentation';
-        else if (/\.(?:doc|docx|txt)(?:$|[?#])/.test(source)) type = 'document';
-        else type = /^https?:\/\//i.test(url) ? 'external' : 'document';
-      }
-
-      output.push(normalizeKnowledgeMediaItem({ type, language, assetKey, asset, url }));
-    });
-
-    if (!output.length) {
-      const assetKey = slugifyKey(body.assetKey);
-      const asset = cleanString(body.asset);
-      const url = cleanString(body.url);
-      if (assetKey || asset || url) {
-        const source = String(asset || url).toLowerCase();
-        let type = /^https?:\/\//i.test(url) && !assetKey && !asset ? 'external' : 'document';
-        if (/\.pdf(?:$|[?#])/.test(source)) type = 'pdf';
-        else if (/\.(?:mp4|mov|m4v|webm)(?:$|[?#])/.test(source) || /youtube|youtu\.be|vimeo/.test(source)) type = 'video';
-        else if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(source)) type = 'image';
-        output.push(normalizeKnowledgeMediaItem({ type, language: 'common', assetKey, asset, url }));
-      }
+  function inferLegacyKnowledgeMediaType(value = {}) {
+    const explicit = cleanString(value.type).toLowerCase();
+    if (['image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'].includes(explicit)) {
+      return explicit;
     }
 
-    return output;
+    const source = String(value.asset || value.url || '').toLowerCase();
+    if (/\.pdf(?:$|[?#])/.test(source)) return 'pdf';
+    if (/\.(?:mp4|mov|m4v|webm)(?:$|[?#])/.test(source) || /youtube|youtu\.be|vimeo/.test(source)) return 'video';
+    if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(source)) return 'image';
+    if (/\.md(?:$|[?#])/.test(source)) return 'markdown';
+    if (/\.(?:ppt|pptx)(?:$|[?#])/.test(source)) return 'presentation';
+    if (/\.(?:doc|docx|txt)(?:$|[?#])/.test(source)) return 'document';
+    return /^https?:\/\//i.test(value.url || '') ? 'external' : 'document';
   }
 
+
+  function getLegacyKnowledgeMediaForVersion(body = {}, versionKey) {
+    if (Array.isArray(body.media)) {
+      return body.media
+        .filter(value => {
+          const language = cleanString(value?.language).toLowerCase();
+          return language === versionKey || language === 'common';
+        })
+        .map(value => normalizeKnowledgeMediaItem({
+          ...value,
+          type: inferLegacyKnowledgeMediaType(value)
+        }));
+    }
+
+    const representative = body.representativeMedia || {};
+    const value = representative[versionKey] || {};
+    const assetKey = slugifyKey(value.assetKey);
+    const asset = cleanString(value.asset);
+    const url = cleanString(value.url);
+
+    if (assetKey || asset || url) {
+      return [normalizeKnowledgeMediaItem({
+        type: inferLegacyKnowledgeMediaType({ ...value, type: representative.type }),
+        title: cleanString(value.title),
+        assetKey,
+        asset,
+        url
+      })];
+    }
+
+    // Old single-media records had no language. Preserve them in both
+    // versions during migration so saving cannot silently lose the asset.
+    const fallbackAssetKey = slugifyKey(body.assetKey);
+    const fallbackAsset = cleanString(body.asset);
+    const fallbackUrl = cleanString(body.url);
+
+    if (fallbackAssetKey || fallbackAsset || fallbackUrl) {
+      return [normalizeKnowledgeMediaItem({
+        type: inferLegacyKnowledgeMediaType({
+          assetKey: fallbackAssetKey,
+          asset: fallbackAsset,
+          url: fallbackUrl
+        }),
+        assetKey: fallbackAssetKey,
+        asset: fallbackAsset,
+        url: fallbackUrl
+      })];
+    }
+
+    return [];
+  }
+
+
+  function normalizeKnowledgeVersion(value = {}, legacyBody = {}, versionKey = '') {
+    const media = Array.isArray(value.media)
+      ? value.media.map(normalizeKnowledgeMediaItem)
+      : getLegacyKnowledgeMediaForVersion(legacyBody, versionKey);
+
+    return {
+      title: cleanString(value.title),
+      summary: cleanString(value.summary),
+      body: String(value.body ?? ''),
+      contentSource: normalizeKnowledgeContentSource(value.contentSource),
+      media
+    };
+  }
 
   function hasKnowledgeVersionContent(version) {
     const contentSource = version?.contentSource || {};
@@ -1292,8 +1319,8 @@ export default async function handler(req, res) {
     }
 
     const versions = {
-      ko: normalizeKnowledgeVersion(body.versions?.ko),
-      other: normalizeKnowledgeVersion(body.versions?.other)
+      ko: normalizeKnowledgeVersion(body.versions?.ko, body, 'ko'),
+      other: normalizeKnowledgeVersion(body.versions?.other, body, 'other')
     };
     const koHasAny = hasKnowledgeVersionContent(versions.ko);
     const otherHasAny = hasKnowledgeVersionContent(versions.other);
@@ -1309,10 +1336,6 @@ export default async function handler(req, res) {
       throw error;
     }
 
-    const media = Array.isArray(body.media)
-      ? body.media.map(normalizeKnowledgeMediaItem)
-      : normalizeLegacyKnowledgeMedia(body);
-
     return {
       knowledgeId, type,
       topics: normalizeStringArray(body.topics),
@@ -1321,7 +1344,7 @@ export default async function handler(req, res) {
       tags: normalizeStringArray(body.tags),
       externalSources: normalizeStringArray(body.externalSources),
       access, publicationStatus, date, dateLabel, slug, author, source,
-      versions, media, featured
+      versions, featured
     };
   }
 

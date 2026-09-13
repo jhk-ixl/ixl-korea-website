@@ -658,7 +658,7 @@
     }
 
   
-    .knowledge-media-list{grid-column:1/-1;display:grid;gap:12px}.knowledge-media-toolbar{display:flex;justify-content:flex-end}.knowledge-media-row{border:1px solid #d7e0e8;border-radius:12px;padding:14px;background:#fff;display:grid;grid-template-columns:150px 150px minmax(160px,1fr) auto;gap:10px;align-items:end}.knowledge-media-row .full{grid-column:1/-1}.knowledge-media-row label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#38536d}.knowledge-media-row input,.knowledge-media-row select{width:100%;box-sizing:border-box}.knowledge-media-asset{font-size:12px;color:#526b82;overflow-wrap:anywhere}.knowledge-media-actions{display:flex;gap:8px;align-items:center}.knowledge-media-empty{padding:18px;border:1px dashed #bccbd8;border-radius:10px;color:#667c90;text-align:center}@media(max-width:800px){.knowledge-media-row{grid-template-columns:1fr}.knowledge-media-row .full{grid-column:auto}}
+    .knowledge-media-list{grid-column:1/-1;display:grid;gap:12px}.knowledge-media-toolbar{display:flex;justify-content:flex-end}.knowledge-media-row{border:1px solid #d7e0e8;border-radius:12px;padding:14px;background:#fff;display:grid;grid-template-columns:150px minmax(160px,1fr) auto;gap:10px;align-items:end}.knowledge-media-row .full{grid-column:1/-1}.knowledge-media-row label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#38536d}.knowledge-media-row input,.knowledge-media-row select{width:100%;box-sizing:border-box}.knowledge-media-asset{font-size:12px;color:#526b82;overflow-wrap:anywhere}.knowledge-media-actions{display:flex;gap:8px;align-items:center}.knowledge-media-empty{padding:18px;border:1px dashed #bccbd8;border-radius:10px;color:#667c90;text-align:center}@media(max-width:800px){.knowledge-media-row{grid-template-columns:1fr}.knowledge-media-row .full{grid-column:auto}}
     .knowledge-media-view{grid-column:1/-1}
     .knowledge-media-view>label{margin-bottom:7px}
     .knowledge-media-view-stage{width:180px;height:112px;overflow:hidden;border:1px solid #cfd8e3;border-radius:8px;background:#f5f7f9}
@@ -916,7 +916,7 @@
 
         <div class="knowledge-version-heading">
           CONTENT VERSION
-          <small>Korean 또는 Other를 선택해 같은 편집 영역에서 작성합니다.</small>
+          <small>새 언어 버전을 처음 열면 현재 버전의 내용과 Media를 복사해 시작하며, 저장 후에는 각 버전이 독립적으로 관리됩니다.</small>
         </div>
 
         <div class="knowledge-version-tabs" role="tablist" aria-label="Knowledge content version">
@@ -1259,10 +1259,11 @@
     let activeVersion = 'ko';
 
     let versionDrafts = {
-      ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } },
-      other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } }
+      ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: [] },
+      other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: [] }
     };
 
+    let versionInitialized = { ko: false, other: false };
     let mediaDrafts = [];
     let assetPickerTargetIndex = null;
     let builderReturnToLibrary = false;
@@ -1379,9 +1380,12 @@
     function getSearchText(item) {
       const ko = getVersion(item, 'ko');
       const other = getVersion(item, 'other');
-      const mediaText = Array.isArray(item?.media)
-        ? item.media.map(media => [media.type, media.language, media.title, media.url, media.asset, media.assetKey].join(' ')).join(' ')
-        : '';
+      const versionMedia = ['ko', 'other']
+        .flatMap(versionKey => Array.isArray(item?.versions?.[versionKey]?.media) ? item.versions[versionKey].media : []);
+      const legacyMedia = Array.isArray(item?.media) ? item.media : [];
+      const mediaText = [...versionMedia, ...legacyMedia]
+        .map(media => [media.type, media.title, media.url, media.asset, media.assetKey].join(' '))
+        .join(' ');
 
       return normalize([
         item.date,
@@ -2056,9 +2060,6 @@
     function normalizeMediaDraft(value = {}) {
       return {
         type: String(value.type || 'image').trim().toLowerCase(),
-        language: ['ko', 'other', 'common'].includes(String(value.language || '').toLowerCase())
-          ? String(value.language).toLowerCase()
-          : 'common',
         title: String(value.title || '').trim(),
         assetKey: String(value.assetKey || '').trim(),
         asset: String(value.asset || '').trim(),
@@ -2066,10 +2067,52 @@
       };
     }
 
-    function getKnowledgeMediaItems(item) {
-      return Array.isArray(item?.media)
-        ? item.media.map(normalizeMediaDraft)
-        : [];
+    function getKnowledgeMediaItems(item, versionKey) {
+      const canonical = item?.versions?.[versionKey]?.media;
+      if (Array.isArray(canonical)) {
+        return canonical.map(normalizeMediaDraft);
+      }
+
+      // Backward compatibility for old Knowledge records.
+      // "common" existed in the legacy model, so migrate it into each
+      // language version when that old record is next edited and saved.
+      if (Array.isArray(item?.media)) {
+        return item.media
+          .filter(media => {
+            const language = String(media?.language || '').trim().toLowerCase();
+            return language === versionKey || language === 'common';
+          })
+          .map(normalizeMediaDraft);
+      }
+
+      return [];
+    }
+
+    function cloneKnowledgeVersionDraft(source = {}) {
+      return {
+        title: String(source.title || ''),
+        summary: String(source.summary || ''),
+        body: String(source.body || ''),
+        contentSource: {
+          type: source.contentSource?.type || 'builder-markdown',
+          ref: String(source.contentSource?.ref || ''),
+          path: String(source.contentSource?.path || '')
+        },
+        media: Array.isArray(source.media)
+          ? source.media.map(media => normalizeMediaDraft({ ...media }))
+          : []
+      };
+    }
+
+    function versionDraftHasAny(draft = {}) {
+      return Boolean(
+        String(draft.title || '').trim() ||
+        String(draft.summary || '').trim() ||
+        String(draft.body || '').trim() ||
+        (draft.contentSource?.type === 'cms-markdown' &&
+          (String(draft.contentSource?.ref || '').trim() || String(draft.contentSource?.path || '').trim())) ||
+        (Array.isArray(draft.media) && draft.media.length)
+      );
     }
 
     async function mountMediaEditorView(stage, media, asset) {
@@ -2128,11 +2171,6 @@
           <div><label>Type</label><select data-media-field="type">
             ${['image','video','pdf','markdown','presentation','document','external'].map(type => `<option value="${type}" ${media.type===type?'selected':''}>${type === 'external' ? 'External Link' : type.charAt(0).toUpperCase()+type.slice(1)}</option>`).join('')}
           </select></div>
-          <div><label>Language</label><select data-media-field="language">
-            <option value="common" ${media.language==='common'?'selected':''}>Common</option>
-            <option value="ko" ${media.language==='ko'?'selected':''}>Korean</option>
-            <option value="other" ${media.language==='other'?'selected':''}>Other</option>
-          </select></div>
           <div><label>Title / Label (optional)</label><input type="text" data-media-field="title" value="${escapeHtml(media.title)}" placeholder="Optional media label"></div>
           <div class="knowledge-media-actions"><button type="button" class="insights-small-btn" data-media-remove>Remove</button></div>
           <div class="full" ${isExternal?'hidden':''}>
@@ -2151,7 +2189,7 @@
     }
 
     function addMediaResource() {
-      mediaDrafts.push(normalizeMediaDraft({ type: 'image', language: 'common' }));
+      mediaDrafts.push(normalizeMediaDraft({ type: 'image' }));
       renderMediaEditor();
     }
 
@@ -2227,6 +2265,8 @@
         ref: document.getElementById('edit-content-ref').value.trim(),
         path: document.getElementById('edit-content-path').value.trim()
       };
+      draft.media = mediaDrafts.map(media => normalizeMediaDraft({ ...media }));
+      versionInitialized[activeVersion] = true;
     }
 
     function loadActiveVersionIntoEditor() {
@@ -2249,13 +2289,25 @@
       preview.classList.remove('open');
       preview.innerHTML = '';
       populateCmsArticleOptions();
+      mediaDrafts = Array.isArray(draft.media)
+        ? draft.media.map(media => normalizeMediaDraft({ ...media }))
+        : [];
       renderMediaEditor();
       updateContentSourceEditorVisibility();
     }
 
     function switchVersion(nextVersion) {
       if (!['ko', 'other'].includes(nextVersion) || nextVersion === activeVersion) return;
+
       syncEditorToActiveVersion();
+
+      // A new language version starts as a full copy of the currently
+      // edited version. After the first switch/save it becomes independent.
+      if (!versionInitialized[nextVersion] && !versionDraftHasAny(versionDrafts[nextVersion])) {
+        versionDrafts[nextVersion] = cloneKnowledgeVersionDraft(versionDrafts[activeVersion]);
+        versionInitialized[nextVersion] = true;
+      }
+
       activeVersion = nextVersion;
       loadActiveVersionIntoEditor();
     }
@@ -2588,10 +2640,7 @@
 
     function getDetailMedia(item) {
       const preferredVersion = chooseInitialKnowledgeVersion(item);
-      const candidates = getKnowledgeMediaItems(item);
-      const media = candidates.find(entry => entry.language === preferredVersion) ||
-                    candidates.find(entry => entry.language === 'common') ||
-                    candidates[0] || {};
+      const media = getKnowledgeMediaItems(item, preferredVersion)[0] || {};
 
       return {
         type: media.type || inferMediaType(media),
@@ -2681,9 +2730,10 @@
       editingIndex = null;
       activeVersion = 'ko';
       versionDrafts = {
-        ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } },
-        other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' } }
+        ko: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: [] },
+        other: { title: '', summary: '', body: '', contentSource: { type: 'builder-markdown', ref: '', path: '' }, media: [] }
       };
+      versionInitialized = { ko: false, other: false };
       mediaDrafts = [];
       assetPickerTargetIndex = null;
 
@@ -2768,6 +2818,7 @@
 
       ['ko', 'other'].forEach(versionKey => {
         const version = getVersion(item, versionKey);
+        const versionMedia = getKnowledgeMediaItems(item, versionKey);
         versionDrafts[versionKey] = {
           title: version.title || '',
           summary: version.summary || '',
@@ -2776,11 +2827,13 @@
             type: version.contentSource?.type || 'builder-markdown',
             ref: version.contentSource?.ref || '',
             path: version.contentSource?.path || ''
-          }
+          },
+          media: versionMedia
         };
+        versionInitialized[versionKey] =
+          hasKnowledgeVersionContent(version) || versionMedia.length > 0;
       });
 
-      mediaDrafts = getKnowledgeMediaItems(item);
       activeVersion = chooseInitialKnowledgeVersion(item);
       loadActiveVersionIntoEditor();
       clearMessage();
@@ -2884,13 +2937,19 @@
           title: versionDrafts.ko.title.trim(),
           summary: versionDrafts.ko.summary.trim(),
           body: versionDrafts.ko.body,
-          contentSource: { ...versionDrafts.ko.contentSource }
+          contentSource: { ...versionDrafts.ko.contentSource },
+          media: Array.isArray(versionDrafts.ko.media)
+            ? versionDrafts.ko.media.map(normalizeMediaDraft)
+            : []
         },
         other: {
           title: versionDrafts.other.title.trim(),
           summary: versionDrafts.other.summary.trim(),
           body: versionDrafts.other.body,
-          contentSource: { ...versionDrafts.other.contentSource }
+          contentSource: { ...versionDrafts.other.contentSource },
+          media: Array.isArray(versionDrafts.other.media)
+            ? versionDrafts.other.media.map(normalizeMediaDraft)
+            : []
         }
       };
 
@@ -2935,8 +2994,7 @@
         programs: inputToArray(document.getElementById('edit-programs').value),
         tags: inputToArray(document.getElementById('edit-tags').value),
         externalSources: getSelectedExternalSourceIds(),
-        versions,
-        media: mediaDrafts.map(normalizeMediaDraft)
+        versions
       };
 
       const isEdit = editingIndex !== null;
