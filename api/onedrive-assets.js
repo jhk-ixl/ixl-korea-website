@@ -295,6 +295,28 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      // WebVTT <track> is subject to stricter cross-origin rules than video.
+      // Keep video/file delivery as the normal 302 redirect, but serve caption
+      // text through this same-origin endpoint when track=1 is requested.
+      const trackMode = String(req.query?.track || '').trim() === '1';
+      if (trackMode) {
+        const trackResponse = await fetch(url, {
+          method: 'GET',
+          redirect: 'follow'
+        });
+
+        if (!trackResponse.ok) {
+          const error = new Error(`OneDrive caption content request failed (${trackResponse.status}).`);
+          error.statusCode = trackResponse.status;
+          throw error;
+        }
+
+        const body = await trackResponse.text();
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+        return res.status(200).send(body);
+      }
+
       res.setHeader('Cache-Control', 'private, no-store');
       return res.redirect(302, url);
     }

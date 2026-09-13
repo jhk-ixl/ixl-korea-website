@@ -612,7 +612,13 @@
     if (!track) return '';
     const provider = String(track.storageProvider || media?.storageProvider || '').trim().toLowerCase();
     if (provider === 'onedrive' && (track.storageConnection || media?.storageConnection) && (track.driveId || media?.driveId) && track.itemId) {
-      const params = new URLSearchParams({ action: 'content', connection: track.storageConnection || media.storageConnection, driveId: track.driveId || media.driveId, itemId: track.itemId });
+      const params = new URLSearchParams({
+        action: 'content',
+        connection: track.storageConnection || media.storageConnection,
+        driveId: track.driveId || media.driveId,
+        itemId: track.itemId,
+        track: '1'
+      });
       return `/api/onedrive-assets?${params}`;
     }
     return String(track.url || track.src || '').trim();
