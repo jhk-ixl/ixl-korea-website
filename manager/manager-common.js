@@ -914,7 +914,7 @@
     }
 
     if (kind === 'pdf') {
-      return `<span class="manager-media-file-placeholder">PDF</span>`;
+      return `<a class="manager-media-open-link" href="${safeSource}" target="_blank" rel="noopener noreferrer">Open PDF</a>`;
     }
 
     if (kind === 'document' || kind === 'presentation') {
@@ -928,77 +928,139 @@
 
 
 
-  let managerPdfJsPromise = null;
-
-  function ensureManagerPdfJs() {
-    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-    if (managerPdfJsPromise) return managerPdfJsPromise;
-
-    managerPdfJsPromise = new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-manager-pdfjs]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
-        existing.addEventListener('error', reject, { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      script.dataset.managerPdfjs = 'true';
-      script.onload = () => {
-        if (window.pdfjsLib) {
-          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-          resolve(window.pdfjsLib);
-        } else {
-          reject(new Error('PDF.js did not initialize.'));
-        }
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    }).finally(() => {
-      if (!window.pdfjsLib) managerPdfJsPromise = null;
-    });
-
-    return managerPdfJsPromise;
+  function isManagerDocumentKind(kind) {
+    return ['pdf', 'document', 'presentation'].includes(String(kind || '').toLowerCase());
   }
 
-  async function renderManagerPdfThumbnailCanvas(stage, resolved, options = {}) {
-    const source = getManagerMediaSource(resolved);
-    if (!source) return false;
+  function getManagerOneDriveThumbnailEndpoint(media) {
+    const storageProvider = String(
+      media?.storageProvider ||
+      media?.provider ||
+      media?.storage?.provider ||
+      ''
+    ).trim().toLowerCase();
+
+    if (
+      storageProvider !== 'onedrive' ||
+      !media?.storageConnection ||
+      !media?.driveId ||
+      !media?.itemId
+    ) return '';
+
+    const params = new URLSearchParams({
+      action: 'thumbnail',
+      connection: media.storageConnection,
+      driveId: media.driveId,
+      itemId: media.itemId
+    });
+
+    return `/api/onedrive-assets?${params}`;
+  }
+
+  function ensureManagerDocumentThumbnailStyle() {
+    if (document.getElementById('manager-document-thumbnail-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'manager-document-thumbnail-style';
+    style.textContent = `
+      .manager-document-thumbnail-button {
+        width: 100%;
+        height: 100%;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px;
+        box-sizing: border-box;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .manager-document-thumbnail-button img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+        box-shadow: 0 2px 10px rgba(0,0,0,.12);
+      }
+
+      .manager-document-thumbnail-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 120px;
+        min-height: 150px;
+        padding: 18px;
+        box-sizing: border-box;
+        border: 1px solid #d7dee7;
+        border-radius: 8px;
+        background: #fff;
+        color: #334a62;
+        font-size: 14px;
+        font-weight: 700;
+        text-align: center;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  async function getManagerOneDriveThumbnailUrl(media) {
+    const endpoint = getManagerOneDriveThumbnailEndpoint(media);
+    if (!endpoint) return '';
 
     try {
-      const pdfjsLib = await ensureManagerPdfJs();
-      const task = pdfjsLib.getDocument({
-        url: toManagerUrl(source),
-        withCredentials: true
+      const response = await fetch(endpoint, {
+        credentials: 'same-origin',
+        cache: 'no-store'
       });
-      const pdf = await task.promise;
-      const page = await pdf.getPage(1);
-      const baseViewport = page.getViewport({ scale: 1 });
-      const maxWidth = Number(options.pdfThumbnailWidth || stage.clientWidth || 520);
-      const scale = Math.max(0.2, Math.min(1.5, maxWidth / Math.max(1, baseViewport.width)));
-      const viewport = page.getViewport({ scale });
-
-      const canvas = document.createElement('canvas');
-      canvas.className = 'manager-media-pdf-thumbnail';
-      canvas.width = Math.ceil(viewport.width);
-      canvas.height = Math.ceil(viewport.height);
-      canvas.style.maxWidth = '100%';
-      canvas.style.maxHeight = '100%';
-      canvas.style.objectFit = 'contain';
-
-      stage.replaceChildren(canvas);
-      await page.render({
-        canvasContext: canvas.getContext('2d'),
-        viewport
-      }).promise;
-
-      return true;
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error || 'OneDrive thumbnail lookup failed.');
+      return String(data?.url || '').trim();
     } catch (error) {
-      console.error('PDF thumbnail could not be rendered.', error);
-      return false;
+      console.error('OneDrive thumbnail lookup failed:', error);
+      return '';
     }
+  }
+
+  async function renderManagerDocumentThumbnail(stage, resolved, options = {}) {
+    const kind = getManagerMediaKind(resolved, options);
+    if (!isManagerDocumentKind(kind)) return false;
+
+    const thumbnailUrl = await getManagerOneDriveThumbnailUrl(resolved);
+    if (!thumbnailUrl) return false;
+
+    ensureManagerDocumentThumbnailStyle();
+
+    const label = String(
+      resolved?.name ||
+      resolved?.fileName ||
+      resolved?.title ||
+      (kind === 'pdf' ? 'PDF' : kind === 'presentation' ? 'Presentation' : 'Document')
+    ).trim();
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'manager-document-thumbnail-button';
+    button.dataset.managerMediaAction = 'preview';
+    button.setAttribute('aria-label', `Open ${label}`);
+
+    const image = document.createElement('img');
+    image.src = thumbnailUrl;
+    image.alt = `${label} thumbnail`;
+    image.loading = 'eager';
+
+    button.appendChild(image);
+    stage.replaceChildren(button);
+
+    button.addEventListener('click', async () => {
+      await openManagerMedia(resolved, {
+        ...options,
+        resolved: true
+      });
+    });
+
+    return true;
   }
 
   async function renderManagerMediaThumbnail(target, media, options = {}) {
@@ -1013,8 +1075,8 @@
 
     const kind = getManagerMediaKind(resolved, options);
 
-    if (kind === 'pdf') {
-      const rendered = await renderManagerPdfThumbnailCanvas(stage, resolved, options);
+    if (isManagerDocumentKind(kind)) {
+      const rendered = await renderManagerDocumentThumbnail(stage, resolved, options);
       if (rendered) return resolved;
     }
 
@@ -1043,6 +1105,11 @@
     if (!source || kind === 'none') {
       stage.innerHTML = options.emptyHtml || '<div class="manager-media-empty">No media</div>';
       return resolved;
+    }
+
+    if (isManagerDocumentKind(kind)) {
+      const rendered = await renderManagerDocumentThumbnail(stage, resolved, options);
+      if (rendered) return resolved;
     }
 
     const renderer = managerMediaRenderers.get(kind);
@@ -1496,14 +1563,15 @@
     const kind = getManagerMediaKind(resolved, options);
     if (!source || kind === 'none') return resolved;
 
-    if (kind === 'pdf') {
+    if (isManagerDocumentKind(kind)) {
       /*
-       * PDF thumbnail is generated locally, but viewing is delegated to the
-       * provider's canonical web viewer. For OneDrive assets, webUrl avoids
-       * treating the Graph /content endpoint as a downloadable file.
+       * Document thumbnails stay inside Manager.
+       * Viewing is delegated to the provider's canonical web viewer.
+       * OneDrive webUrl opens Microsoft/OneDrive's viewer instead of the
+       * Graph /content endpoint, which browsers may download directly.
        */
-      const viewerUrl = String(resolved?.webUrl || '').trim();
-      window.open(toManagerUrl(viewerUrl || source), '_blank', 'noopener,noreferrer');
+      const providerViewerUrl = String(resolved?.webUrl || '').trim();
+      window.open(toManagerUrl(providerViewerUrl || source), '_blank', 'noopener,noreferrer');
       return resolved;
     }
 
@@ -1550,9 +1618,14 @@
 
     stage.replaceChildren(trigger);
 
-    if (kind === 'pdf') {
-      const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
-      if (!rendered) {
+    if (isManagerDocumentKind(kind)) {
+      const thumbnailUrl = await getManagerOneDriveThumbnailUrl(resolved);
+
+      if (thumbnailUrl) {
+        ensureManagerDocumentThumbnailStyle();
+        trigger.classList.add('manager-document-thumbnail-button');
+        trigger.innerHTML = `<img src="${escapeManagerHtml(thumbnailUrl)}" alt="${escapeManagerHtml(getManagerViewerLabel(resolved, kind))} thumbnail">`;
+      } else {
         trigger.innerHTML = managerMediaElementHtml(resolved, {
           ...options,
           mode: 'thumbnail',
