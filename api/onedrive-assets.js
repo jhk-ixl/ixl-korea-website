@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import { requireManager } from '../lib/manager-auth-utils.js';
 import {
   buildPersonalAuthorizeUrl,
@@ -50,6 +51,23 @@ async function graph(path, token, options = {}) {
   }
 
   return response;
+}
+
+
+function copyUpstreamHeader(response, res, name) {
+  const value = response.headers.get(name);
+  if (value) res.setHeader(name, value);
+}
+
+async function pipeFetchBody(response, res) {
+  if (!response.body) return res.end();
+  const stream = Readable.fromWeb(response.body);
+  stream.on('error', error => {
+    console.error('OneDrive content stream:', error);
+    if (!res.headersSent) res.status(502).json({ error: 'OneDrive content stream failed.' });
+    else res.destroy(error);
+  });
+  stream.pipe(res);
 }
 
 function stripGraphRootPath(parentPath, driveId) {
@@ -263,12 +281,49 @@ export default async function handler(req, res) {
     if (action === 'content') {
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
-      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,@microsoft.graph.downloadUrl`, token);
-      const item = await response.json();
+
+      // Resolve the current OneDrive download URL and proxy the bytes through
+      // this same-origin API endpoint. This keeps <video> and <track> requests
+      // on the Manager origin and preserves HTTP Range requests (206), which
+      // browsers need for duration/seek metadata and progressive playback.
+      const metaResponse = await graph(
+        `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,file,size,@microsoft.graph.downloadUrl`,
+        token
+      );
+      const item = await metaResponse.json();
       const url = item['@microsoft.graph.downloadUrl'] || '';
       if (!url) return res.status(404).json({ error: 'OneDrive content URL is unavailable.' });
+
+      const upstreamHeaders = {};
+      const range = String(req.headers?.range || '').trim();
+      if (range) upstreamHeaders.Range = range;
+
+      const upstream = await fetch(url, {
+        method: 'GET',
+        headers: upstreamHeaders,
+        redirect: 'follow'
+      });
+
+      if (!upstream.ok && upstream.status !== 206) {
+        const error = new Error(`OneDrive content request failed (${upstream.status}).`);
+        error.statusCode = upstream.status;
+        throw error;
+      }
+
+      res.status(upstream.status);
       res.setHeader('Cache-Control', 'private, no-store');
-      return res.redirect(302, url);
+      res.setHeader('Accept-Ranges', upstream.headers.get('accept-ranges') || 'bytes');
+
+      copyUpstreamHeader(upstream, res, 'content-length');
+      copyUpstreamHeader(upstream, res, 'content-range');
+      copyUpstreamHeader(upstream, res, 'etag');
+      copyUpstreamHeader(upstream, res, 'last-modified');
+
+      let contentType = upstream.headers.get('content-type') || item.file?.mimeType || '';
+      if (/\.vtt$/i.test(String(item.name || ''))) contentType = 'text/vtt; charset=utf-8';
+      if (contentType) res.setHeader('Content-Type', contentType);
+
+      return pipeFetchBody(upstream, res);
     }
 
     if (action === 'thumbnail') {
