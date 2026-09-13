@@ -914,7 +914,7 @@
     }
 
     if (kind === 'pdf') {
-      return `<a class="manager-media-open-link" href="${safeSource}" target="_blank" rel="noopener noreferrer">Open PDF</a>`;
+      return `<span class="manager-media-file-placeholder">PDF</span>`;
     }
 
     if (kind === 'document' || kind === 'presentation') {
@@ -927,6 +927,80 @@
   }
 
 
+
+  let managerPdfJsPromise = null;
+
+  function ensureManagerPdfJs() {
+    if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (managerPdfJsPromise) return managerPdfJsPromise;
+
+    managerPdfJsPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-manager-pdfjs]');
+      if (existing) {
+        existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
+        existing.addEventListener('error', reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.dataset.managerPdfjs = 'true';
+      script.onload = () => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          resolve(window.pdfjsLib);
+        } else {
+          reject(new Error('PDF.js did not initialize.'));
+        }
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    }).finally(() => {
+      if (!window.pdfjsLib) managerPdfJsPromise = null;
+    });
+
+    return managerPdfJsPromise;
+  }
+
+  async function renderManagerPdfThumbnailCanvas(stage, resolved, options = {}) {
+    const source = getManagerMediaSource(resolved);
+    if (!source) return false;
+
+    try {
+      const pdfjsLib = await ensureManagerPdfJs();
+      const task = pdfjsLib.getDocument({
+        url: toManagerUrl(source),
+        withCredentials: true
+      });
+      const pdf = await task.promise;
+      const page = await pdf.getPage(1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const maxWidth = Number(options.pdfThumbnailWidth || stage.clientWidth || 520);
+      const scale = Math.max(0.2, Math.min(1.5, maxWidth / Math.max(1, baseViewport.width)));
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'manager-media-pdf-thumbnail';
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '100%';
+      canvas.style.objectFit = 'contain';
+
+      stage.replaceChildren(canvas);
+      await page.render({
+        canvasContext: canvas.getContext('2d'),
+        viewport
+      }).promise;
+
+      return true;
+    } catch (error) {
+      console.error('PDF thumbnail could not be rendered.', error);
+      return false;
+    }
+  }
+
   async function renderManagerMediaThumbnail(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -936,6 +1010,13 @@
     const resolved = options.resolved === true
       ? media
       : await resolveManagerMedia(media, options);
+
+    const kind = getManagerMediaKind(resolved, options);
+
+    if (kind === 'pdf') {
+      const rendered = await renderManagerPdfThumbnailCanvas(stage, resolved, options);
+      if (rendered) return resolved;
+    }
 
     stage.innerHTML = managerMediaElementHtml(resolved, {
       ...options,
@@ -1417,10 +1498,12 @@
 
     if (kind === 'pdf') {
       /*
-       * PDF is always delegated to the browser/Acrobat viewer.
-       * Keep the calling Manager screen intact and open exactly one new tab.
+       * PDF thumbnail is generated locally, but viewing is delegated to the
+       * provider's canonical web viewer. For OneDrive assets, webUrl avoids
+       * treating the Graph /content endpoint as a downloadable file.
        */
-      window.open(toManagerUrl(source), '_blank', 'noopener,noreferrer');
+      const viewerUrl = String(resolved?.webUrl || '').trim();
+      window.open(toManagerUrl(viewerUrl || source), '_blank', 'noopener,noreferrer');
       return resolved;
     }
 
@@ -1467,11 +1550,22 @@
 
     stage.replaceChildren(trigger);
 
-    trigger.innerHTML = managerMediaElementHtml(resolved, {
-      ...options,
-      mode: 'thumbnail',
-      controls: false
-    });
+    if (kind === 'pdf') {
+      const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
+      if (!rendered) {
+        trigger.innerHTML = managerMediaElementHtml(resolved, {
+          ...options,
+          mode: 'thumbnail',
+          controls: false
+        });
+      }
+    } else {
+      trigger.innerHTML = managerMediaElementHtml(resolved, {
+        ...options,
+        mode: 'thumbnail',
+        controls: false
+      });
+    }
 
     trigger.addEventListener('click', async () => {
       await openManagerMedia(resolved, {
