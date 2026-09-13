@@ -420,6 +420,23 @@
       "thumbnailTime": 8,
       "uploadedAt": "2026-09-01T08:45:34.000Z",
       "updatedAt": "2026-09-08T17:59:20.674Z"
+    },
+    {
+      "key": "01-welcome-to-the-course",
+      "name": "01_Welcome to the course.mov",
+      "fileName": "01_Welcome to the course.mov",
+      "folder": "IXLKOREA/LMS/영상/1.Welcome To The Course",
+      "pathname": "IXLKOREA/LMS/영상/1.Welcome To The Course/01_Welcome to the course.mov",
+      "url": "",
+      "downloadUrl": "",
+      "type": "mov",
+      "description": "",
+      "size": 23941946,
+      "width": null,
+      "height": null,
+      "thumbnailTime": null,
+      "uploadedAt": "2023-01-02T17:31:56Z",
+      "updatedAt": "2026-09-13T08:32:22.318Z"
     }
   ]
 }
