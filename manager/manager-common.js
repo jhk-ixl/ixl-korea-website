@@ -542,9 +542,7 @@
 
   const MANAGER_MEDIA_DEFAULTS = Object.freeze({
     videoThumbnailTime: 1,
-    pdfScale: 1.35,
-    assetEndpoint: '/api/insights-library?resource=assets',
-    assetProxyEndpoint: '/api/insights-library?resource=assetproxy&url='
+    assetEndpoint: '/api/insights-library?resource=assets'
   });
 
   function escapeManagerHtml(value) {
@@ -916,7 +914,7 @@
     }
 
     if (kind === 'pdf') {
-      return `<iframe src="${safeSource}#page=1&view=FitH" title="${label}"></iframe>`;
+      return `<a class="manager-media-open-link" href="${safeSource}" target="_blank" rel="noopener noreferrer">Open PDF</a>`;
     }
 
     if (kind === 'document' || kind === 'presentation') {
@@ -929,89 +927,6 @@
   }
 
 
-  let managerPdfJsPromise = null;
-
-  async function ensureManagerPdfJs(options = {}) {
-    if (window.pdfjsLib) return window.pdfjsLib;
-    if (managerPdfJsPromise) return managerPdfJsPromise;
-
-    managerPdfJsPromise = new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-ixl-manager-pdfjs]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
-        existing.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = options.pdfJsSrc || 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-      script.async = true;
-      script.dataset.ixlManagerPdfjs = 'true';
-      script.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
-      script.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
-      document.head.appendChild(script);
-    }).catch(error => {
-      managerPdfJsPromise = null;
-      throw error;
-    });
-
-    return managerPdfJsPromise;
-  }
-
-  async function renderManagerPdfThumbnailCanvas(stage, resolved, options = {}) {
-    const source = getManagerMediaSource(resolved);
-    if (!stage || !source) return false;
-
-    try {
-      const pdfjsLib = await ensureManagerPdfJs(options);
-      if (!pdfjsLib) return false;
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        options.pdfWorkerSrc ||
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-      const proxyUrl = source.startsWith('blob:')
-        ? source
-        : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
-
-      const pdf = await pdfjsLib.getDocument(proxyUrl).promise;
-      const page = await pdf.getPage(1);
-      const baseViewport = page.getViewport({ scale: 1 });
-
-      const maxWidth = Math.max(60, Number(options.thumbnailWidth || stage.clientWidth || 180));
-      const maxHeight = Math.max(48, Number(options.thumbnailHeight || stage.clientHeight || 112));
-      const scale = Math.min(
-        maxWidth / baseViewport.width,
-        maxHeight / baseViewport.height
-      );
-
-      const viewport = page.getViewport({ scale: Math.max(scale, 0.1) });
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.floor(viewport.width * ratio));
-      canvas.height = Math.max(1, Math.floor(viewport.height * ratio));
-      canvas.style.width = `${viewport.width}px`;
-      canvas.style.height = `${viewport.height}px`;
-      canvas.style.display = 'block';
-      canvas.style.maxWidth = '100%';
-      canvas.style.maxHeight = '100%';
-      canvas.style.margin = 'auto';
-
-      stage.replaceChildren(canvas);
-
-      await page.render({
-        canvasContext: canvas.getContext('2d'),
-        viewport,
-        transform: ratio === 1 ? null : [ratio, 0, 0, ratio, 0, 0]
-      }).promise;
-
-      return true;
-    } catch (error) {
-      console.error('PDF thumbnail could not be rendered:', error);
-      return false;
-    }
-  }
-
   async function renderManagerMediaThumbnail(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1021,13 +936,6 @@
     const resolved = options.resolved === true
       ? media
       : await resolveManagerMedia(media, options);
-
-    const kind = getManagerMediaKind(resolved, options);
-
-    if (kind === 'pdf') {
-      const rendered = await renderManagerPdfThumbnailCanvas(stage, resolved, options);
-      if (rendered) return resolved;
-    }
 
     stage.innerHTML = managerMediaElementHtml(resolved, {
       ...options,
@@ -1061,39 +969,6 @@
       const custom = await renderer.preview(resolved, options, stage);
       if (typeof custom === 'string') stage.innerHTML = custom;
       return resolved;
-    }
-
-    if (kind === 'pdf' && options.pdfCanvas !== false && window.pdfjsLib) {
-      try {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          options.pdfWorkerSrc ||
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const sameOriginApi =
-          source.startsWith('/api/') ||
-          source.startsWith(`${window.location.origin}/api/`);
-
-        const proxyUrl =
-          source.startsWith('blob:') || sameOriginApi
-            ? source
-            : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
-
-        const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
-        const page = await pdf.getPage(Number(options.pdfPage || 1));
-        const viewport = page.getViewport({
-          scale: Number(options.pdfScale || MANAGER_MEDIA_DEFAULTS.pdfScale)
-        });
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        stage.innerHTML = '';
-        stage.appendChild(canvas);
-        await page.render({ canvasContext: context, viewport }).promise;
-        return resolved;
-      } catch (error) {
-        console.error(error);
-      }
     }
 
     if (kind === 'text' && options.loadText !== false) {
@@ -1592,22 +1467,11 @@
 
     stage.replaceChildren(trigger);
 
-    if (kind === 'pdf') {
-      const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
-      if (!rendered) {
-        trigger.innerHTML = managerMediaElementHtml(resolved, {
-          ...options,
-          mode: 'thumbnail',
-          controls: false
-        });
-      }
-    } else {
-      trigger.innerHTML = managerMediaElementHtml(resolved, {
-        ...options,
-        mode: 'thumbnail',
-        controls: false
-      });
-    }
+    trigger.innerHTML = managerMediaElementHtml(resolved, {
+      ...options,
+      mode: 'thumbnail',
+      controls: false
+    });
 
     trigger.addEventListener('click', async () => {
       await openManagerMedia(resolved, {
