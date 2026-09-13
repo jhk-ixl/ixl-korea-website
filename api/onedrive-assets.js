@@ -223,10 +223,26 @@ export default async function handler(req, res) {
       const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(parentItemId)}/children?$select=id,name,size,webUrl,file,parentReference,lastModifiedDateTime&$top=200`, token);
       const data = await response.json();
       const videoBaseName = getBaseName(videoName);
-      const tracks = (data.value || []).filter(item => item.file && isMatchingCaption(item.name, videoName)).map((item, index) => ({
+      const matchedCaptions = (data.value || [])
+        .filter(item => item.file && isMatchingCaption(item.name, videoName));
+
+      const explicitCaptions = matchedCaptions.filter(item =>
+        getBaseName(item.name).toLowerCase() !== videoBaseName.toLowerCase()
+      );
+
+      const captionItems = explicitCaptions.length ? explicitCaptions : matchedCaptions;
+      const seenLanguages = new Set();
+      const tracks = captionItems.map(item => {
+        const srclang = getCaptionLanguage(item.name, videoBaseName);
+        return { item, srclang };
+      }).filter(entry => {
+        if (seenLanguages.has(entry.srclang)) return false;
+        seenLanguages.add(entry.srclang);
+        return true;
+      }).map(({ item, srclang }, index) => ({
         kind: 'subtitles',
-        label: getCaptionLanguage(item.name, videoBaseName).toUpperCase(),
-        srclang: getCaptionLanguage(item.name, videoBaseName),
+        label: srclang.toUpperCase(),
+        srclang,
         default: index === 0,
         storageProvider: 'onedrive',
         storageConnection: connection.id,

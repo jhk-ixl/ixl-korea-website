@@ -919,6 +919,12 @@
       return `<iframe src="${safeSource}#page=1&view=FitH" title="${label}"></iframe>`;
     }
 
+    if (kind === 'document' || kind === 'presentation') {
+      const officeUrl = String(resolved?.webUrl || '').trim();
+      const href = escapeManagerHtml(officeUrl || toManagerUrl(source));
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">Open in OneDrive</a>`;
+    }
+
     return `<a href="${safeSource}" target="_blank" rel="noopener">View media</a>`;
   }
 
@@ -1063,9 +1069,14 @@
           options.pdfWorkerSrc ||
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        const proxyUrl = source.startsWith('blob:')
-          ? source
-          : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
+        const sameOriginApi =
+          source.startsWith('/api/') ||
+          source.startsWith(`${window.location.origin}/api/`);
+
+        const proxyUrl =
+          source.startsWith('blob:') || sameOriginApi
+            ? source
+            : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
 
         const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
         const page = await pdf.getPage(Number(options.pdfPage || 1));
