@@ -263,10 +263,38 @@ export default async function handler(req, res) {
     if (action === 'content') {
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
-      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,@microsoft.graph.downloadUrl`, token);
-      const item = await response.json();
-      const url = item['@microsoft.graph.downloadUrl'] || '';
-      if (!url) return res.status(404).json({ error: 'OneDrive content URL is unavailable.' });
+
+      // Use Microsoft Graph's canonical content endpoint and keep the
+      // preauthenticated download URL transient. The Graph endpoint returns
+      // a 302 Location header; the browser then follows that URL directly.
+      const endpoint =
+        `${GRAPH}/drives/${encodeURIComponent(driveId)}` +
+        `/items/${encodeURIComponent(itemId)}/content`;
+
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
+        redirect: 'manual'
+      });
+
+      if (response.status !== 301 && response.status !== 302 && response.status !== 303 && response.status !== 307 && response.status !== 308) {
+        let message = `Microsoft Graph content request failed (${response.status}).`;
+        try {
+          const data = await response.json();
+          message = data?.error?.message || message;
+        } catch {}
+        const error = new Error(message);
+        error.statusCode = response.status;
+        throw error;
+      }
+
+      const url = response.headers.get('location') || '';
+      if (!url) {
+        const error = new Error('Microsoft Graph did not return a content redirect URL.');
+        error.statusCode = 502;
+        throw error;
+      }
+
       res.setHeader('Cache-Control', 'private, no-store');
       return res.redirect(302, url);
     }
