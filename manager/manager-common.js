@@ -608,6 +608,50 @@
     ).trim();
   }
 
+  function getManagerMediaTrackSource(track, media) {
+    if (!track) return '';
+    const provider = String(track.storageProvider || media?.storageProvider || '').trim().toLowerCase();
+    if (provider === 'onedrive' && (track.storageConnection || media?.storageConnection) && (track.driveId || media?.driveId) && track.itemId) {
+      const params = new URLSearchParams({ action: 'content', connection: track.storageConnection || media.storageConnection, driveId: track.driveId || media.driveId, itemId: track.itemId });
+      return `/api/onedrive-assets?${params}`;
+    }
+    return String(track.url || track.src || '').trim();
+  }
+
+  function getManagerMediaTracks(media) {
+    if (!Array.isArray(media?.tracks)) return [];
+    return media.tracks.map((track, index) => {
+      const src = getManagerMediaTrackSource(track, media);
+      if (!src) return null;
+      return { kind: String(track.kind || 'subtitles').trim().toLowerCase() || 'subtitles', label: String(track.label || track.srclang || `CC ${index + 1}`).trim(), srclang: String(track.srclang || track.language || 'en').trim().toLowerCase(), default: Boolean(track.default || index === 0), src };
+    }).filter(Boolean);
+  }
+
+  function getManagerMediaTrackHtml(media) {
+    return getManagerMediaTracks(media).map(track => {
+      const safeSrc = escapeManagerHtml(toManagerUrl(track.src));
+      const kind = escapeManagerHtml(track.kind);
+      const label = escapeManagerHtml(track.label);
+      const srclang = escapeManagerHtml(track.srclang);
+      const defaultAttr = track.default ? ' default' : '';
+      return `<track kind="${kind}" label="${label}" srclang="${srclang}" src="${safeSrc}"${defaultAttr}>`;
+    }).join('');
+  }
+
+  function bindManagerVideoError(player, stage, resolved) {
+    if (!player || !stage) return;
+    player.addEventListener('error', () => {
+      const source = getManagerMediaSource(resolved);
+      const ext = getManagerMediaExtension(source || resolved?.name || resolved?.fileName || '');
+      const codecHint = ['mov', 'm4v'].includes(ext) || ['mov', 'm4v'].includes(getManagerMediaType(resolved)) ? ' This MOV/M4V file may use a codec that Chrome cannot decode. H.264/AAC in MP4 is the safest browser format.' : '';
+      const message = document.createElement('div');
+      message.className = 'manager-media-error';
+      message.textContent = `Video metadata/playback could not be loaded.${codecHint}`;
+      stage.appendChild(message);
+    }, { once: true });
+  }
+
+
   function getManagerMediaType(media) {
     return String(
       typeof media === 'object'
@@ -866,7 +910,8 @@
     if (kind === 'video') {
       const time = getManagerThumbnailTime(resolved, options);
       const controls = options.controls ? ' controls' : '';
-      return `<video${controls} muted preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+      const tracks = getManagerMediaTrackHtml(resolved);
+      return `<video${controls} muted preload="metadata" src="${safeSource}#t=${Number(time)}">${tracks}</video>`;
     }
 
     if (kind === 'youtube') {
@@ -1069,6 +1114,7 @@
       const thumbnailTime = getManagerThumbnailTime(resolved, options);
 
       if (player) {
+        bindManagerVideoError(player, stage, resolved);
         const startPlayback = () => {
           try {
             if (thumbnailTime > 0) player.currentTime = thumbnailTime;
@@ -1376,10 +1422,12 @@
 
     if (kind === 'video') {
       const time = getManagerThumbnailTime(resolved, options);
-      stage.innerHTML = `<video controls autoplay preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+      const tracks = getManagerMediaTrackHtml(resolved);
+      stage.innerHTML = `<video controls autoplay preload="metadata" src="${safeSource}#t=${Number(time)}">${tracks}</video>`;
 
       const player = stage.querySelector('video');
       if (player) {
+        bindManagerVideoError(player, stage, resolved);
         const startPlayback = () => {
           try {
             if (time > 0 && player.currentTime < time) player.currentTime = time;

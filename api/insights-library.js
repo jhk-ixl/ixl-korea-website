@@ -1341,6 +1341,24 @@ export default async function handler(req, res) {
       : null;
   }
 
+  function normalizeAssetTracks(value) {
+    if (!Array.isArray(value)) return [];
+    return value.map(track => ({
+      kind: cleanString(track?.kind || 'subtitles').toLowerCase(),
+      label: cleanString(track?.label || ''),
+      srclang: cleanString(track?.srclang || track?.language || '').toLowerCase(),
+      default: Boolean(track?.default),
+      storageProvider: cleanString(track?.storageProvider || '').toLowerCase(),
+      storageConnection: cleanString(track?.storageConnection || ''),
+      driveId: cleanString(track?.driveId || ''),
+      itemId: cleanString(track?.itemId || ''),
+      name: cleanString(track?.name || ''),
+      relativePath: cleanString(track?.relativePath || ''),
+      url: cleanString(track?.url || '')
+    })).filter(track => track.itemId || track.url);
+  }
+
+
   function normalizeAsset(body) {
 
     const fileName =
@@ -1392,6 +1410,30 @@ export default async function handler(req, res) {
     }
 
 
+    const storageProvider =
+      cleanString(body.storageProvider || 'vercel').toLowerCase();
+
+    const storageConnection =
+      cleanString(body.storageConnection);
+
+    const relativePath =
+      cleanString(body.relativePath);
+
+    const driveId =
+      cleanString(body.driveId);
+
+    const itemId =
+      cleanString(body.itemId);
+
+    if (storageProvider === 'onedrive' && (!storageConnection || !relativePath || !driveId || !itemId)) {
+      const error = new Error(
+        'OneDrive assets require storageConnection, relativePath, driveId and itemId.'
+      );
+      error.statusCode = 400;
+      throw error;
+    }
+
+
     return {
 
       key,
@@ -1413,9 +1455,28 @@ export default async function handler(req, res) {
         ),
 
       downloadUrl:
-        cleanString(
-          body.downloadUrl
-        ),
+        storageProvider === 'onedrive'
+          ? ''
+          : cleanString(body.downloadUrl),
+
+      storageProvider,
+
+      storageConnection,
+
+      relativePath,
+
+      driveId,
+
+      itemId,
+
+      webUrl:
+        cleanString(body.webUrl),
+
+      parentItemId:
+        cleanString(body.parentItemId),
+
+      tracks:
+        normalizeAssetTracks(body.tracks),
 
       type:
         cleanString(

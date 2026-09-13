@@ -96,6 +96,25 @@ function normalizeItem(item, driveId, storageConnection) {
   };
 }
 
+function getBaseName(value) {
+  const name = String(value || '').trim();
+  return name.replace(/\.[^.]+$/, '');
+}
+
+function getCaptionLanguage(fileName, videoBaseName) {
+  const stem = getBaseName(fileName);
+  const suffix = stem.slice(videoBaseName.length).replace(/^[._-]+/, '').toLowerCase();
+  const map = { en: 'en', eng: 'en', english: 'en', ko: 'ko', kor: 'ko', korean: 'ko', kr: 'ko', ja: 'ja', jp: 'ja', japanese: 'ja', zh: 'zh', cn: 'zh', chinese: 'zh' };
+  return map[suffix] || suffix || 'en';
+}
+
+function isMatchingCaption(fileName, videoName) {
+  if (!/\.vtt$/i.test(String(fileName || ''))) return false;
+  const videoBase = getBaseName(videoName).toLowerCase();
+  const captionBase = getBaseName(fileName).toLowerCase();
+  return captionBase === videoBase || captionBase.startsWith(`${videoBase}.`) || captionBase.startsWith(`${videoBase}-`) || captionBase.startsWith(`${videoBase}_`);
+}
+
 async function getContext(connectionId, req, res) {
   const connection = getOneDriveConnection(connectionId);
   const token = await getOneDriveAccessToken(connection, req, res);
@@ -185,6 +204,39 @@ export default async function handler(req, res) {
         parentItemId: requestedItemId,
         items: (data.value || []).map(item => normalizeItem(item, driveId, connection.id))
       });
+    }
+
+    if (action === 'captions') {
+      const itemId = String(req.query?.itemId || '').trim();
+      let parentItemId = String(req.query?.parentItemId || '').trim();
+      let videoName = String(req.query?.videoName || '').trim();
+
+      if ((!parentItemId || !videoName) && itemId) {
+        const itemResponse = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,parentReference`, token);
+        const item = await itemResponse.json();
+        parentItemId = parentItemId || item.parentReference?.id || '';
+        videoName = videoName || item.name || '';
+      }
+
+      if (!parentItemId || !videoName) return res.status(400).json({ error: 'parentItemId and videoName are required for caption lookup.' });
+
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(parentItemId)}/children?$select=id,name,size,webUrl,file,parentReference,lastModifiedDateTime&$top=200`, token);
+      const data = await response.json();
+      const videoBaseName = getBaseName(videoName);
+      const tracks = (data.value || []).filter(item => item.file && isMatchingCaption(item.name, videoName)).map((item, index) => ({
+        kind: 'subtitles',
+        label: getCaptionLanguage(item.name, videoBaseName).toUpperCase(),
+        srclang: getCaptionLanguage(item.name, videoBaseName),
+        default: index === 0,
+        storageProvider: 'onedrive',
+        storageConnection: connection.id,
+        driveId,
+        itemId: item.id || '',
+        name: item.name || '',
+        relativePath: buildRelativePath(item, driveId)
+      }));
+      res.setHeader('Cache-Control', 'private, no-store');
+      return res.status(200).json({ tracks });
     }
 
     if (action === 'item' || action === 'resolve') {

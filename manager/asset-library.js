@@ -91,7 +91,7 @@
   }
 
   function isVideoType(value) {
-    return ['video', 'mp4', 'webm'].includes(String(value || '').toLowerCase());
+    return ['video', 'mp4', 'mov', 'm4v', 'webm'].includes(String(value || '').toLowerCase());
   }
 
   function getStorageProvider(asset) {
@@ -107,6 +107,30 @@
       itemId: asset.itemId
     });
     return `${API_ONEDRIVE}?${params}`;
+  }
+
+  async function loadOneDriveCaptionTracks(asset) {
+    if (!asset?.storageConnection || !asset?.driveId || !asset?.itemId) return [];
+    if (!isVideoType(getExtension(asset.name || asset.relativePath || asset.pathname || ''))) return [];
+
+    const params = new URLSearchParams({
+      action: 'captions',
+      connection: asset.storageConnection,
+      driveId: asset.driveId,
+      itemId: asset.itemId,
+      parentItemId: asset.parentItemId || '',
+      videoName: asset.name || ''
+    });
+
+    try {
+      const response = await fetch(`${API_ONEDRIVE}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Caption lookup failed.');
+      return Array.isArray(data.tracks) ? data.tracks : [];
+    } catch (error) {
+      console.error('OneDrive caption lookup failed:', error);
+      return [];
+    }
   }
 
   function getOneDriveConnectionLabel(connectionId) {
@@ -987,6 +1011,7 @@
       itemId: explicit.itemId || asset.itemId || '',
       webUrl: explicit.webUrl || asset.webUrl || '',
       parentItemId: explicit.parentItemId || asset.parentItemId || '',
+      tracks: Array.isArray(explicit.tracks) ? explicit.tracks : (Array.isArray(asset.tracks) ? asset.tracks : []),
       type,
       size: Number(asset.size || 0),
       uploadedAt: asset.uploadedAt || '',
@@ -1208,6 +1233,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
           relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`
         };
 
+        selectedOneDriveItem.tracks = await loadOneDriveCaptionTracks(selectedOneDriveItem);
+
         $('asset-upload-key').value = createAssetKey(item.name);
         renderSelectedOneDriveItem();
         const source = getOneDriveContentUrl(selectedOneDriveItem);
@@ -1217,7 +1244,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
           url: source,
           type: getExtension(selectedOneDriveItem.name)
         }, { sourceUrl: source });
-        $('upload-preview-note').textContent = `${oneDriveConnectionLabel} · ${item.name} · ${formatFileSize(item.size)}`;
+        const captionNote = selectedOneDriveItem.tracks?.length ? ` · CC ${selectedOneDriveItem.tracks.length}` : '';
+        $('upload-preview-note').textContent = `${oneDriveConnectionLabel} · ${item.name} · ${formatFileSize(item.size)}${captionNote}`;
         $('onedrive-browser-modal').hidden = true;
       });
     });
@@ -1273,6 +1301,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       itemId: item.id,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
+      tracks: Array.isArray(item.tracks) ? item.tracks : [],
       size: item.size,
       uploadedAt: item.lastModifiedDateTime || ''
     }, {
@@ -1286,7 +1315,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
       driveId: item.driveId,
       itemId: item.id,
       webUrl: item.webUrl || '',
-      parentItemId: item.parentItemId || ''
+      parentItemId: item.parentItemId || '',
+      tracks: Array.isArray(item.tracks) ? item.tracks : []
     });
 
     if (!registered) return;
@@ -1326,7 +1356,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     if (!key) return alert('A valid Asset Key is required.');
 
     const ext = getExtension(file.name);
-    const isVideo = ['mp4', 'webm'].includes(ext);
+    const isVideo = ['mp4', 'mov', 'm4v', 'webm'].includes(ext);
     const thumbnailTimeRaw = $('asset-upload-thumbnail-time').value;
     const thumbnailTime = isVideo ? Number(thumbnailTimeRaw) : null;
 
