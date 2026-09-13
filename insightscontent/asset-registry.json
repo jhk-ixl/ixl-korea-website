@@ -437,6 +437,58 @@
       "thumbnailTime": null,
       "uploadedAt": "2023-01-02T17:31:56Z",
       "updatedAt": "2026-09-13T08:32:22.318Z"
+    },
+    {
+      "key": "innovation-olympics-explainer-video-client-version-02",
+      "name": "Innovation Olympics Explainer Video_Client Version 02.mp4",
+      "fileName": "Innovation Olympics Explainer Video_Client Version 02.mp4",
+      "folder": "IXLKOREA/LMS/영상/홍보영상",
+      "pathname": "IXLKOREA/LMS/영상/홍보영상/Innovation Olympics Explainer Video_Client Version 02.mp4",
+      "url": "",
+      "downloadUrl": "",
+      "storageProvider": "onedrive",
+      "storageConnection": "onedrive-personal",
+      "relativePath": "/IXLKOREA/LMS/영상/홍보영상/Innovation Olympics Explainer Video_Client Version 02.mp4",
+      "driveId": "5ee65e924927d03b",
+      "itemId": "5EE65E924927D03B!se5107d1411d149ebaec622fbe3d1d9ba",
+      "webUrl": "https://onedrive.live.com?cid=5ee65e924927d03b&id=5EE65E924927D03B!se5107d1411d149ebaec622fbe3d1d9ba",
+      "parentItemId": "5EE65E924927D03B!s73503becede843bcaa41bdc844b7aaa2",
+      "tracks": [
+        {
+          "kind": "subtitles",
+          "label": "EN",
+          "srclang": "en",
+          "default": true,
+          "storageProvider": "onedrive",
+          "storageConnection": "onedrive-personal",
+          "driveId": "5ee65e924927d03b",
+          "itemId": "5EE65E924927D03B!s14acee552eb94faa9278a1f381f5106f",
+          "name": "Innovation Olympics Explainer Video_Client Version 02.en.vtt",
+          "relativePath": "/IXLKOREA/LMS/영상/홍보영상/Innovation Olympics Explainer Video_Client Version 02.en.vtt",
+          "url": ""
+        },
+        {
+          "kind": "subtitles",
+          "label": "KO",
+          "srclang": "ko",
+          "default": false,
+          "storageProvider": "onedrive",
+          "storageConnection": "onedrive-personal",
+          "driveId": "5ee65e924927d03b",
+          "itemId": "5EE65E924927D03B!se7a996b8dc704ff2b3fd62101b946760",
+          "name": "Innovation Olympics Explainer Video_Client Version 02.ko.vtt",
+          "relativePath": "/IXLKOREA/LMS/영상/홍보영상/Innovation Olympics Explainer Video_Client Version 02.ko.vtt",
+          "url": ""
+        }
+      ],
+      "type": "mp4",
+      "description": "",
+      "size": 6567807,
+      "width": null,
+      "height": null,
+      "thumbnailTime": 1,
+      "uploadedAt": "2023-09-07T15:37:06Z",
+      "updatedAt": "2026-09-13T12:59:44.195Z"
     }
   ]
 }
