@@ -89,14 +89,6 @@ export default async function handler(req, res) {
     req.method === 'GET' &&
     resource === 'asset-layout';
 
-  const isPublicKnowledge =
-    req.method === 'GET' &&
-    resource === 'public-knowledge';
-
-  const isPublicReadOnly =
-    isPublicAssetLayout ||
-    isPublicKnowledge;
-
 
   /* =========================================
      REQUIRE MANAGER AUTHENTICATION
@@ -105,7 +97,7 @@ export default async function handler(req, res) {
 
   let manager = null;
 
-  if (!isPublicReadOnly) {
+  if (!isPublicAssetLayout) {
     manager = requireManager(req, res);
 
     if (!manager) {
@@ -297,84 +289,7 @@ export default async function handler(req, res) {
     }
   }
 
-  /* =========================================
-     PUBLIC KNOWLEDGE
-     Public + Published only
-     ========================================= */
 
-  if (isPublicKnowledge) {
-    try {
-      const config = DATA_FILES.knowledge;
-
-      const url =
-        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
-        `/contents/${config.path}`;
-
-      const response = await fetch(
-        `${url}?ref=${GITHUB_BRANCH}`,
-        {
-          headers: githubHeaders,
-          cache: 'no-store'
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          'Public Knowledge data could not be loaded.'
-        );
-      }
-
-      const file = await response.json();
-
-      const data = JSON.parse(
-        Buffer
-          .from(file.content || '', 'base64')
-          .toString('utf8')
-      );
-
-      const items =
-        Array.isArray(data?.[config.arrayKey])
-          ? data[config.arrayKey]
-          : [];
-
-      const publicItems =
-        items.filter(item =>
-          String(item?.access || '')
-            .trim()
-            .toLowerCase() === 'public' &&
-          String(item?.publicationStatus || '')
-            .trim()
-            .toLowerCase() === 'published'
-        );
-
-      res.setHeader(
-        'Cache-Control',
-        'no-store, max-age=0'
-      );
-
-      return res
-        .status(200)
-        .json(publicItems);
-
-    } catch (error) {
-      console.error(
-        'Public Knowledge load failed:',
-        error
-      );
-
-      res.setHeader(
-        'Cache-Control',
-        'no-store, max-age=0'
-      );
-
-      return res
-        .status(500)
-        .json({
-          error:
-            'Public Knowledge could not be loaded.'
-        });
-    }
-  }
 
   /* =========================================
      ASSET PROXY
@@ -459,96 +374,6 @@ export default async function handler(req, res) {
     return res.status(200).send(buffer);
   }
 
-  /* =========================================
-     CMS MARKDOWN ARTICLE INDEX
-     Manager-only read of Decap CMS folder collection.
-     ========================================= */
-
-  if (resource === 'cmsarticles') {
-    if (req.method !== 'GET') {
-      res.setHeader('Allow', 'GET');
-      return res.status(405).json({ error: 'Method not allowed.' });
-    }
-
-    const folderUrl =
-      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
-      '/contents/insightscontent/articles';
-
-    const folderResponse = await fetch(
-      `${folderUrl}?ref=${GITHUB_BRANCH}`,
-      { headers: githubHeaders }
-    );
-
-    if (folderResponse.status === 404) {
-      return res.status(200).json([]);
-    }
-
-    if (!folderResponse.ok) {
-      return res.status(folderResponse.status).json({
-        error: 'CMS Markdown Articles could not be loaded.'
-      });
-    }
-
-    const entries = await folderResponse.json();
-    const markdownFiles = Array.isArray(entries)
-      ? entries.filter(entry => entry.type === 'file' && /\.md$/i.test(entry.name || ''))
-      : [];
-
-    function frontmatterValue(text, key) {
-      const match = String(text || '').match(
-        new RegExp('^' + key + ':\\s*(.+)$', 'mi')
-      );
-      if (!match) return '';
-      return match[1].trim().replace(/^['"]|['"]$/g, '');
-    }
-
-    const articles = await Promise.all(
-      markdownFiles.map(async entry => {
-        const fileResponse = await fetch(
-          `${entry.url}?ref=${GITHUB_BRANCH}`,
-          { headers: githubHeaders }
-        );
-
-        if (!fileResponse.ok) {
-          return {
-            contentRef: String(entry.name || '').replace(/\.md$/i, ''),
-            knowledgeId: '',
-            language: 'other',
-            title: String(entry.name || '').replace(/\.md$/i, ''),
-            summary: '',
-            author: '',
-            date: '',
-            path: entry.path || ''
-          };
-        }
-
-        const file = await fileResponse.json();
-        const text = Buffer.from(file.content || '', 'base64').toString('utf8');
-        const fallbackRef = String(entry.name || '').replace(/\.md$/i, '');
-
-        return {
-          contentRef: frontmatterValue(text, 'contentRef') || fallbackRef,
-          knowledgeId: frontmatterValue(text, 'knowledgeId'),
-          language: frontmatterValue(text, 'language') || 'other',
-          title: frontmatterValue(text, 'title') || fallbackRef,
-          summary: frontmatterValue(text, 'summary'),
-          author: frontmatterValue(text, 'author'),
-          date: frontmatterValue(text, 'date'),
-          path: entry.path || ''
-        };
-      })
-    );
-
-    articles.sort((a, b) =>
-      String(b.date || '').localeCompare(String(a.date || '')) ||
-      String(a.title || '').localeCompare(String(b.title || ''))
-    );
-
-    res.setHeader('Cache-Control', 'no-store, max-age=0');
-    return res.status(200).json(articles);
-  }
-
-
   const resourceConfig =
     DATA_FILES[resource];
 
@@ -559,7 +384,7 @@ export default async function handler(req, res) {
       .status(400)
       .json({
         error:
-          'Invalid resource. Use insights, knowledge, cmsarticles, assets, usage, knowledgetypes, topics, industries, programs, tags, accesslevels or externalsources.'
+          'Invalid resource. Use insights, knowledge, assets, usage, knowledgetypes, topics, industries, programs, tags, accesslevels or externalsources.'
       });
   }
 
@@ -755,22 +580,6 @@ export default async function handler(req, res) {
       const error = new Error(`Asset Key "${assetKey}" does not exist in Asset Registry.`);
       error.statusCode = 400;
       throw error;
-    }
-  }
-
-  async function assertKnowledgeMediaAssetsExist(item) {
-    if (!item) return;
-
-    const media = ['ko', 'other']
-      .flatMap(versionKey =>
-        Array.isArray(item?.versions?.[versionKey]?.media)
-          ? item.versions[versionKey].media
-          : []
-      );
-
-    const keys = [...new Set(media.map(entry => entry.assetKey).filter(Boolean))];
-    for (const key of keys) {
-      await assertUsageAssetExists(key);
     }
   }
 
@@ -1101,148 +910,29 @@ export default async function handler(req, res) {
      NORMALIZE INSIGHT
      ========================================= */
 
-  function normalizeKnowledgeContentSource(value = {}) {
-    const type = cleanString(value.type || 'builder-markdown').toLowerCase();
-    const allowed = ['builder-markdown', 'cms-markdown'];
-
-    return {
-      type: allowed.includes(type) ? type : 'builder-markdown',
-      ref: cleanString(value.ref),
-      path: cleanString(value.path)
-    };
-  }
-
-
-  function normalizeKnowledgeMediaItem(value = {}) {
-    const type = cleanString(value.type).toLowerCase();
-    const allowedTypes = ['image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'];
-
-    if (!allowedTypes.includes(type)) {
-      const error = new Error('Invalid Knowledge Media Type.');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    const item = {
-      type,
-      title: cleanString(value.title),
-      assetKey: slugifyKey(value.assetKey),
-      asset: cleanString(value.asset),
-      url: cleanString(value.url)
-    };
-
-    if (type === 'external') {
-      if (!item.url || !/^https?:\/\//i.test(item.url)) {
-        const error = new Error('External Knowledge Media requires an http:// or https:// URL.');
-        error.statusCode = 400;
-        throw error;
-      }
-      item.assetKey = '';
-      item.asset = '';
-    } else if (!item.assetKey && !item.asset) {
-      const error = new Error('Knowledge Media requires an Asset Library item.');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    return item;
-  }
-
-
-  function inferLegacyKnowledgeMediaType(value = {}) {
-    const explicit = cleanString(value.type).toLowerCase();
-    if (['image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'].includes(explicit)) {
-      return explicit;
-    }
-
-    const source = String(value.asset || value.url || '').toLowerCase();
-    if (/\.pdf(?:$|[?#])/.test(source)) return 'pdf';
-    if (/\.(?:mp4|mov|m4v|webm)(?:$|[?#])/.test(source) || /youtube|youtu\.be|vimeo/.test(source)) return 'video';
-    if (/\.(?:jpg|jpeg|png|gif|webp|svg)(?:$|[?#])/.test(source)) return 'image';
-    if (/\.md(?:$|[?#])/.test(source)) return 'markdown';
-    if (/\.(?:ppt|pptx)(?:$|[?#])/.test(source)) return 'presentation';
-    if (/\.(?:doc|docx|txt)(?:$|[?#])/.test(source)) return 'document';
-    return /^https?:\/\//i.test(value.url || '') ? 'external' : 'document';
-  }
-
-
-  function getLegacyKnowledgeMediaForVersion(body = {}, versionKey) {
-    if (Array.isArray(body.media)) {
-      return body.media
-        .filter(value => {
-          const language = cleanString(value?.language).toLowerCase();
-          return language === versionKey || language === 'common';
-        })
-        .map(value => normalizeKnowledgeMediaItem({
-          ...value,
-          type: inferLegacyKnowledgeMediaType(value)
-        }));
-    }
-
-    const representative = body.representativeMedia || {};
-    const value = representative[versionKey] || {};
-    const assetKey = slugifyKey(value.assetKey);
-    const asset = cleanString(value.asset);
-    const url = cleanString(value.url);
-
-    if (assetKey || asset || url) {
-      return [normalizeKnowledgeMediaItem({
-        type: inferLegacyKnowledgeMediaType({ ...value, type: representative.type }),
-        title: cleanString(value.title),
-        assetKey,
-        asset,
-        url
-      })];
-    }
-
-    // Old single-media records had no language. Preserve them in both
-    // versions during migration so saving cannot silently lose the asset.
-    const fallbackAssetKey = slugifyKey(body.assetKey);
-    const fallbackAsset = cleanString(body.asset);
-    const fallbackUrl = cleanString(body.url);
-
-    if (fallbackAssetKey || fallbackAsset || fallbackUrl) {
-      return [normalizeKnowledgeMediaItem({
-        type: inferLegacyKnowledgeMediaType({
-          assetKey: fallbackAssetKey,
-          asset: fallbackAsset,
-          url: fallbackUrl
-        }),
-        assetKey: fallbackAssetKey,
-        asset: fallbackAsset,
-        url: fallbackUrl
-      })];
-    }
-
-    return [];
-  }
-
-
-  function normalizeKnowledgeVersion(value = {}, legacyBody = {}, versionKey = '') {
-    const media = Array.isArray(value.media)
-      ? value.media.map(normalizeKnowledgeMediaItem)
-      : getLegacyKnowledgeMediaForVersion(legacyBody, versionKey);
-
+  function normalizeKnowledgeVersion(value = {}) {
     return {
       title: cleanString(value.title),
       summary: cleanString(value.summary),
-      body: String(value.body ?? ''),
-      contentSource: normalizeKnowledgeContentSource(value.contentSource),
-      media
+      body: String(value.body ?? '')
     };
   }
 
-  function hasKnowledgeVersionContent(version) {
-    const contentSource = version?.contentSource || {};
-    const hasCmsSource =
-      contentSource.type === 'cms-markdown' &&
-      Boolean(contentSource.ref || contentSource.path);
 
+  function normalizeRepresentativeMediaVersion(value = {}) {
+    return {
+      url: cleanString(value.url),
+      asset: cleanString(value.asset),
+      assetKey: slugifyKey(value.assetKey)
+    };
+  }
+
+
+  function hasKnowledgeVersionContent(version) {
     return Boolean(
       version.title ||
       version.summary ||
-      String(version.body || '').trim() ||
-      hasCmsSource
+      String(version.body || '').trim()
     );
   }
 
@@ -1258,19 +948,11 @@ export default async function handler(req, res) {
     const source = cleanString(body.source);
     const access = cleanString(body.access || 'Public');
     const featured = body.featured === true;
-    const publicationStatus = cleanString(
-      body.publicationStatus || (resource === 'insights' ? 'Published' : 'Draft')
-    );
-
-    if (!['Draft', 'Published'].includes(publicationStatus)) {
-      const error = new Error('Invalid Publication Status.');
-      error.statusCode = 400;
-      throw error;
-    }
 
     const allowedTypes = Array.isArray(validation.allowedTypes)
       ? validation.allowedTypes
       : [];
+
     const allowedAccessLevels = Array.isArray(validation.allowedAccessLevels)
       ? validation.allowedAccessLevels
       : [];
@@ -1280,16 +962,19 @@ export default async function handler(req, res) {
       error.statusCode = 400;
       throw error;
     }
+
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       const error = new Error('A valid date in YYYY-MM-DD format is required.');
       error.statusCode = 400;
       throw error;
     }
+
     if (!dateLabel) {
       const error = new Error('Display Label is required.');
       error.statusCode = 400;
       throw error;
     }
+
     if (!allowedAccessLevels.includes(access)) {
       const error = new Error('Invalid Access Level.');
       error.statusCode = 400;
@@ -1298,8 +983,48 @@ export default async function handler(req, res) {
 
     const hasVersionPayload = Boolean(body.versions && typeof body.versions === 'object');
 
-    // Legacy Insights remain supported as their own resource. Knowledge uses one canonical model.
-    if (!hasVersionPayload && resource === 'insights') {
+    let versions;
+    let representativeMedia;
+
+    if (hasVersionPayload) {
+      versions = {
+        ko: normalizeKnowledgeVersion(body.versions.ko),
+        other: normalizeKnowledgeVersion(body.versions.other)
+      };
+
+      const koHasAny = hasKnowledgeVersionContent(versions.ko);
+      const otherHasAny = hasKnowledgeVersionContent(versions.other);
+
+      if (!koHasAny && !otherHasAny) {
+        const error = new Error('At least one Knowledge content version is required.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      if ((koHasAny && (!versions.ko.title || !versions.ko.summary)) ||
+          (otherHasAny && (!versions.other.title || !versions.other.summary))) {
+        const error = new Error('Each used Knowledge version requires Title and Summary.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const media = body.representativeMedia || {};
+      const mediaType = cleanString(media.type || 'none').toLowerCase();
+      const allowedMediaTypes = ['none', 'image', 'video', 'pdf', 'markdown', 'presentation', 'document', 'external'];
+
+      if (!allowedMediaTypes.includes(mediaType)) {
+        const error = new Error('Invalid Representative Media Type.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      representativeMedia = {
+        type: mediaType,
+        ko: normalizeRepresentativeMediaVersion(media.ko),
+        other: normalizeRepresentativeMediaVersion(media.other)
+      };
+    } else {
+      // Legacy Insights / pre-version Knowledge compatibility.
       const title = cleanString(body.title);
       const summary = cleanString(body.summary);
       if (!title || !summary) {
@@ -1307,44 +1032,64 @@ export default async function handler(req, res) {
         error.statusCode = 400;
         throw error;
       }
+
       return {
-        knowledgeId, type,
-        topics: normalizeStringArray(body.topics), industries: normalizeStringArray(body.industries),
-        programs: normalizeStringArray(body.programs), tags: normalizeStringArray(body.tags),
-        externalSources: normalizeStringArray(body.externalSources), access, publicationStatus,
-        date, dateLabel, title, summary, slug, author, source,
-        body: String(body.body ?? ''), url: cleanString(body.url), asset: cleanString(body.asset),
-        assetKey: slugifyKey(body.assetKey), featured
+        knowledgeId,
+        type,
+        topics: normalizeStringArray(body.topics),
+        industries: normalizeStringArray(body.industries),
+        programs: normalizeStringArray(body.programs),
+        tags: normalizeStringArray(body.tags),
+        externalSources: normalizeStringArray(body.externalSources),
+        access,
+        date,
+        dateLabel,
+        title,
+        summary,
+        slug,
+        author,
+        source,
+        body: String(body.body ?? ''),
+        url: cleanString(body.url),
+        asset: cleanString(body.asset),
+        assetKey: slugifyKey(body.assetKey),
+        featured
       };
     }
 
-    const versions = {
-      ko: normalizeKnowledgeVersion(body.versions?.ko, body, 'ko'),
-      other: normalizeKnowledgeVersion(body.versions?.other, body, 'other')
-    };
-    const koHasAny = hasKnowledgeVersionContent(versions.ko);
-    const otherHasAny = hasKnowledgeVersionContent(versions.other);
+    // Legacy mirror fields remain during transition so current public/community
+    // readers do not break. Korean is preferred; otherwise Other is used.
+    const primaryVersion = hasKnowledgeVersionContent(versions.ko)
+      ? versions.ko
+      : versions.other;
 
-    if (!koHasAny && !otherHasAny) {
-      const error = new Error('At least one Knowledge content version is required.');
-      error.statusCode = 400;
-      throw error;
-    }
-    if ((koHasAny && !versions.ko.title) || (otherHasAny && !versions.other.title)) {
-      const error = new Error('Each used Knowledge version requires a Title.');
-      error.statusCode = 400;
-      throw error;
-    }
+    const primaryMedia = hasKnowledgeVersionContent(versions.ko)
+      ? representativeMedia.ko
+      : representativeMedia.other;
 
     return {
-      knowledgeId, type,
+      knowledgeId,
+      type,
       topics: normalizeStringArray(body.topics),
       industries: normalizeStringArray(body.industries),
       programs: normalizeStringArray(body.programs),
       tags: normalizeStringArray(body.tags),
       externalSources: normalizeStringArray(body.externalSources),
-      access, publicationStatus, date, dateLabel, slug, author, source,
-      versions, featured
+      access,
+      date,
+      dateLabel,
+      title: primaryVersion.title,
+      summary: primaryVersion.summary,
+      slug,
+      author,
+      source,
+      body: primaryVersion.body,
+      url: primaryMedia.url,
+      asset: primaryMedia.asset,
+      assetKey: primaryMedia.assetKey,
+      versions,
+      representativeMedia,
+      featured
     };
   }
 
@@ -1363,24 +1108,6 @@ export default async function handler(req, res) {
       ? number
       : null;
   }
-
-  function normalizeAssetTracks(value) {
-    if (!Array.isArray(value)) return [];
-    return value.map(track => ({
-      kind: cleanString(track?.kind || 'subtitles').toLowerCase(),
-      label: cleanString(track?.label || ''),
-      srclang: cleanString(track?.srclang || track?.language || '').toLowerCase(),
-      default: Boolean(track?.default),
-      storageProvider: cleanString(track?.storageProvider || '').toLowerCase(),
-      storageConnection: cleanString(track?.storageConnection || ''),
-      driveId: cleanString(track?.driveId || ''),
-      itemId: cleanString(track?.itemId || ''),
-      name: cleanString(track?.name || ''),
-      relativePath: cleanString(track?.relativePath || ''),
-      url: cleanString(track?.url || '')
-    })).filter(track => track.itemId || track.url);
-  }
-
 
   function normalizeAsset(body) {
 
@@ -1433,30 +1160,6 @@ export default async function handler(req, res) {
     }
 
 
-    const storageProvider =
-      cleanString(body.storageProvider || 'vercel').toLowerCase();
-
-    const storageConnection =
-      cleanString(body.storageConnection);
-
-    const relativePath =
-      cleanString(body.relativePath);
-
-    const driveId =
-      cleanString(body.driveId);
-
-    const itemId =
-      cleanString(body.itemId);
-
-    if (storageProvider === 'onedrive' && (!storageConnection || !relativePath || !driveId || !itemId)) {
-      const error = new Error(
-        'OneDrive assets require storageConnection, relativePath, driveId and itemId.'
-      );
-      error.statusCode = 400;
-      throw error;
-    }
-
-
     return {
 
       key,
@@ -1478,28 +1181,9 @@ export default async function handler(req, res) {
         ),
 
       downloadUrl:
-        storageProvider === 'onedrive'
-          ? ''
-          : cleanString(body.downloadUrl),
-
-      storageProvider,
-
-      storageConnection,
-
-      relativePath,
-
-      driveId,
-
-      itemId,
-
-      webUrl:
-        cleanString(body.webUrl),
-
-      parentItemId:
-        cleanString(body.parentItemId),
-
-      tracks:
-        normalizeAssetTracks(body.tracks),
+        cleanString(
+          body.downloadUrl
+        ),
 
       type:
         cleanString(
@@ -1895,7 +1579,7 @@ export default async function handler(req, res) {
             cleanString(existingItem?.knowledgeId) ||
             cleanString(body.knowledgeId) ||
             createKnowledgeId(),
-          featured: normalized.featured === true
+          featured: undefined
         };
       }
 
@@ -2166,10 +1850,6 @@ export default async function handler(req, res) {
 
       if (resource === 'usage') {
         await assertUsageAssetExists(item.assetKey);
-      }
-
-      if (resource === 'knowledge') {
-        await assertKnowledgeMediaAssetsExist(item);
       }
 
 
@@ -2445,10 +2125,6 @@ export default async function handler(req, res) {
 
       if (resource === 'usage') {
         await assertUsageAssetExists(item.assetKey);
-      }
-
-      if (resource === 'knowledge') {
-        await assertKnowledgeMediaAssetsExist(item);
       }
 
 

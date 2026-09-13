@@ -152,13 +152,19 @@
   }
 
   function resolveMediaItems(item, versionKey, assets){
-    const list = Array.isArray(item.media) ? item.media : [];
+    const canonical = item?.versions?.[versionKey]?.media;
+    const list = Array.isArray(canonical)
+      ? canonical
+      : (Array.isArray(item?.media)
+          ? item.media.filter(media =>
+              media && (
+                String(media.language || '').toLowerCase() === versionKey ||
+                String(media.language || '').toLowerCase() === 'common'
+              )
+            )
+          : []);
 
     return list
-      .filter(media =>
-        media.language === versionKey ||
-        media.language === 'common'
-      )
       .map(media => {
         const key = media.assetKey || '';
         const found = key ? assets.find(asset => asset.key === key) : null;

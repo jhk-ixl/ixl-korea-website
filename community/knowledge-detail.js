@@ -74,9 +74,18 @@ function renderKnowledgeBody(body) {
 }
 
 function createResourceSection(item) {
-  const list = Array.isArray(item?.media) ? item.media : [];
   const language = item?.selectedVersionKey || '';
-  const resources = list.filter(media => media && (media.language === language || media.language === 'common'));
+  const canonical = item?.versions?.[language]?.media;
+  const resources = Array.isArray(canonical)
+    ? canonical.filter(Boolean)
+    : (Array.isArray(item?.media)
+        ? item.media.filter(media => {
+            const mediaLanguage = String(media?.language || '').toLowerCase();
+            // Normalized community payloads already contain selected-version media
+            // and therefore may have no legacy language field.
+            return !mediaLanguage || mediaLanguage === language || mediaLanguage === 'common';
+          })
+        : []);
   if (!resources.length) return null;
 
   const section = createElement('section', 'knowledge-detail-source');

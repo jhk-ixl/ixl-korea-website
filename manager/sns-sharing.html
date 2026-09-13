@@ -1083,8 +1083,18 @@
     }
 
     function getKnowledgeMediaItems(item, language) {
-      const list = Array.isArray(item?.media) ? item.media : [];
-      return list.filter(media => media && (media.language === language || media.language === 'common'));
+      const canonical = item?.versions?.[language]?.media;
+      if (Array.isArray(canonical)) {
+        return canonical.filter(Boolean);
+      }
+
+      // Read-only compatibility for legacy Knowledge records.
+      // New saves use versions.<language>.media[] only.
+      const legacy = Array.isArray(item?.media) ? item.media : [];
+      return legacy.filter(media => media && (
+        String(media.language || '').toLowerCase() === language ||
+        String(media.language || '').toLowerCase() === 'common'
+      ));
     }
 
     function resolveMediaItem(media) {
@@ -1092,7 +1102,12 @@
       const key = String(entry.assetKey || '').trim();
       const registered = findAssetByKey(key);
       const url = String(
-        registered?.url || registered?.pathname || entry.asset || entry.url || ''
+        (registered && window.IXLManager?.media?.getSourceUrl
+          ? IXLManager.media.getSourceUrl(registered)
+          : (registered?.url || registered?.pathname || '')) ||
+        entry.asset ||
+        entry.url ||
+        ''
       ).trim();
       return {
         ...entry,
@@ -1113,7 +1128,12 @@
     }
 
     function getAssetUrl(asset) {
-      return String(asset?.url || asset?.pathname || '').trim();
+      if (!asset) return '';
+      return String(
+        window.IXLManager?.media?.getSourceUrl
+          ? IXLManager.media.getSourceUrl(asset)
+          : (asset.url || asset.pathname || '')
+      ).trim();
     }
 
     function mediaCandidateThumbnail(candidate) {

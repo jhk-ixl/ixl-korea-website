@@ -75,10 +75,18 @@
   function normalizeItem(item, assetRegistry = []) {
     const selected = selectVersion(item);
     const version = selected.value || {};
-    const mediaItems = Array.isArray(item?.media) ? item.media : [];
-    const selectedMedia = mediaItems.find(entry => entry.language === selected.key) ||
-                          mediaItems.find(entry => entry.language === 'common') ||
-                          mediaItems[0] || {};
+    const canonicalMedia = item?.versions?.[selected.key]?.media;
+    const mediaItems = Array.isArray(canonicalMedia)
+      ? canonicalMedia
+      : (Array.isArray(item?.media)
+          ? item.media.filter(media =>
+              media && (
+                String(media.language || '').toLowerCase() === selected.key ||
+                String(media.language || '').toLowerCase() === 'common'
+              )
+            )
+          : []);
+
     const resolvedMedia = mediaItems.map(media => {
       const asset = media.assetKey
         ? assetRegistry.find(entry => String(entry?.key || '') === String(media.assetKey || ''))
@@ -88,10 +96,8 @@
         resolvedUrl: String(asset?.url || asset?.pathname || media.url || media.asset || '').trim()
       };
     });
-    const selectedResolved = resolvedMedia.find(media => media === selectedMedia || (media.assetKey && media.assetKey === selectedMedia.assetKey)) ||
-                             resolvedMedia.find(media => media.language === selected.key) ||
-                             resolvedMedia.find(media => media.language === 'common') ||
-                             resolvedMedia[0] || {};
+
+    const selectedResolved = resolvedMedia[0] || {};
 
     return {
       ...item,

@@ -385,8 +385,16 @@
     }
 
     function getSearchMedia(item) {
-      const list = Array.isArray(item?.media) ? item.media : [];
-      return list.find(entry => entry.language === 'ko') || list.find(entry => entry.language === 'common') || list.find(entry => entry.language === 'other') || {};
+      const versionKey = item?.versions?.ko?.title ? 'ko' : 'other';
+      const canonical = item?.versions?.[versionKey]?.media;
+      if (Array.isArray(canonical)) return canonical[0] || {};
+
+      const legacy = Array.isArray(item?.media) ? item.media : [];
+      return legacy.find(entry =>
+        String(entry?.language || '').toLowerCase() === versionKey
+      ) || legacy.find(entry =>
+        String(entry?.language || '').toLowerCase() === 'common'
+      ) || {};
     }
     function renderResults(items) {
       const tbody = document.getElementById('search-results');

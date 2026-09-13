@@ -219,9 +219,20 @@
     let distributionItems = [];
 
 
+    function getVersionMediaItems(item, versionKey) {
+      const canonical = item?.versions?.[versionKey]?.media;
+      if (Array.isArray(canonical)) return canonical.filter(Boolean);
+
+      const legacy = Array.isArray(item?.media) ? item.media : [];
+      return legacy.filter(media => media && (
+        String(media.language || '').toLowerCase() === versionKey ||
+        String(media.language || '').toLowerCase() === 'common'
+      ));
+    }
+
     function getKnowledgeUrl(item) {
-      const items = Array.isArray(item?.media) ? item.media : [];
-      const media = items.find(entry => entry.language === 'ko') || items.find(entry => entry.language === 'common') || items.find(entry => entry.language === 'other') || {};
+      const versionKey = item?.versions?.ko?.title ? 'ko' : 'other';
+      const media = getVersionMediaItems(item, versionKey)[0] || {};
       const asset = media.assetKey ? getLibraryAssetByKey(media.assetKey) : null;
       return getLibraryAssetSource(asset) || media.asset || media.url || '';
     }
@@ -787,11 +798,8 @@
 
 
     function getKnowledgeMedia(item) {
-      const items = Array.isArray(item?.media) ? item.media : [];
       const versionKey = item?.versions?.ko?.title ? 'ko' : 'other';
-      const media = items.find(entry => entry.language === versionKey) ||
-                    items.find(entry => entry.language === 'common') ||
-                    items[0] || {};
+      const media = getVersionMediaItems(item, versionKey)[0] || {};
       const assetKey = String(media.assetKey || '').trim();
       const registryAsset = getLibraryAssetByKey(assetKey);
       return {
