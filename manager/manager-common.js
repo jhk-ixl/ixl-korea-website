@@ -977,12 +977,18 @@
         cursor: pointer;
       }
 
-      .manager-document-thumbnail-button img {
+      .manager-document-thumbnail-button img,
+      .manager-document-thumbnail-button .manager-pdf-thumbnail-canvas {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
         display: block;
         box-shadow: 0 2px 10px rgba(0,0,0,.12);
+      }
+
+      .manager-document-thumbnail-button .manager-pdf-thumbnail-canvas {
+        width: 100%;
+        height: 100%;
       }
 
       .manager-document-thumbnail-fallback {
@@ -1023,12 +1029,150 @@
     }
   }
 
+
+  let managerPdfJsPromise = null;
+
+  function getManagerStorageProvider(media) {
+    return String(
+      media?.storageProvider ||
+      media?.provider ||
+      media?.storage?.provider ||
+      ''
+    ).trim().toLowerCase();
+  }
+
+  function ensureManagerPdfJs() {
+    if (window.pdfjsLib) {
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      } catch (error) {}
+      return Promise.resolve(window.pdfjsLib);
+    }
+
+    if (managerPdfJsPromise) return managerPdfJsPromise;
+
+    managerPdfJsPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-manager-pdfjs="1"]');
+
+      const finish = () => {
+        if (!window.pdfjsLib) {
+          reject(new Error('PDF.js did not initialize.'));
+          return;
+        }
+
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        resolve(window.pdfjsLib);
+      };
+
+      if (existing) {
+        if (window.pdfjsLib) finish();
+        else {
+          existing.addEventListener('load', finish, { once: true });
+          existing.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
+        }
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      script.async = true;
+      script.dataset.managerPdfjs = '1';
+      script.addEventListener('load', finish, { once: true });
+      script.addEventListener('error', () => reject(new Error('PDF.js could not be loaded.')), { once: true });
+      document.head.appendChild(script);
+    });
+
+    return managerPdfJsPromise;
+  }
+
+  function getManagerVercelPdfThumbnailSource(media) {
+    if (getManagerStorageProvider(media) === 'onedrive') return '';
+
+    const source = String(getManagerMediaSource(media) || '').trim();
+    if (!source) return '';
+
+    try {
+      const absolute = new URL(toManagerUrl(source), window.location.href);
+
+      if (
+        absolute.protocol === 'https:' &&
+        absolute.hostname.endsWith('.public.blob.vercel-storage.com')
+      ) {
+        return `/api/insights-library?resource=assetproxy&url=${encodeURIComponent(absolute.href)}`;
+      }
+
+      if (absolute.origin === window.location.origin) {
+        return absolute.href;
+      }
+    } catch (error) {}
+
+    return '';
+  }
+
+  async function renderManagerVercelPdfThumbnailCanvas(stage, resolved) {
+    if (!stage || getManagerMediaKind(resolved) !== 'pdf') return false;
+
+    const source = getManagerVercelPdfThumbnailSource(resolved);
+    if (!source) return false;
+
+    try {
+      const pdfjsLib = await ensureManagerPdfJs();
+      const task = pdfjsLib.getDocument({
+        url: source,
+        withCredentials: true
+      });
+
+      const pdf = await task.promise;
+      const page = await pdf.getPage(1);
+
+      const baseViewport = page.getViewport({ scale: 1 });
+      const maxWidth = Math.max(
+        Number(stage.clientWidth || 0),
+        Number(stage.parentElement?.clientWidth || 0),
+        240
+      );
+      const maxHeight = Math.max(
+        Number(stage.clientHeight || 0),
+        Number(stage.parentElement?.clientHeight || 0),
+        180
+      );
+
+      const scale = Math.min(
+        Math.max(maxWidth / baseViewport.width, maxHeight / baseViewport.height, 0.6),
+        2
+      );
+
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d', { alpha: false });
+
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+      canvas.className = 'manager-pdf-thumbnail-canvas';
+      canvas.setAttribute('aria-label', 'PDF first page thumbnail');
+
+      await page.render({
+        canvasContext: context,
+        viewport
+      }).promise;
+
+      stage.replaceChildren(canvas);
+
+      try { await pdf.destroy(); } catch (error) {}
+
+      return true;
+    } catch (error) {
+      console.error('Vercel PDF thumbnail could not be rendered.', error);
+      return false;
+    }
+  }
+
   async function renderManagerDocumentThumbnail(stage, resolved, options = {}) {
     const kind = getManagerMediaKind(resolved, options);
     if (!isManagerDocumentKind(kind)) return false;
-
-    const thumbnailUrl = await getManagerOneDriveThumbnailUrl(resolved);
-    if (!thumbnailUrl) return false;
 
     ensureManagerDocumentThumbnailStyle();
 
@@ -1045,12 +1189,21 @@
     button.dataset.managerMediaAction = 'preview';
     button.setAttribute('aria-label', `Open ${label}`);
 
-    const image = document.createElement('img');
-    image.src = thumbnailUrl;
-    image.alt = `${label} thumbnail`;
-    image.loading = 'eager';
+    const thumbnailUrl = await getManagerOneDriveThumbnailUrl(resolved);
 
-    button.appendChild(image);
+    if (thumbnailUrl) {
+      const image = document.createElement('img');
+      image.src = thumbnailUrl;
+      image.alt = `${label} thumbnail`;
+      image.loading = 'eager';
+      button.appendChild(image);
+    } else if (kind === 'pdf') {
+      const rendered = await renderManagerVercelPdfThumbnailCanvas(button, resolved);
+      if (!rendered) return false;
+    } else {
+      return false;
+    }
+
     stage.replaceChildren(button);
 
     button.addEventListener('click', async () => {
@@ -1625,6 +1778,8 @@
         ensureManagerDocumentThumbnailStyle();
         trigger.classList.add('manager-document-thumbnail-button');
         trigger.innerHTML = `<img src="${escapeManagerHtml(thumbnailUrl)}" alt="${escapeManagerHtml(getManagerViewerLabel(resolved, kind))} thumbnail">`;
+      } else if (kind === 'pdf' && await renderManagerVercelPdfThumbnailCanvas(trigger, resolved)) {
+        ensureManagerDocumentThumbnailStyle();
       } else {
         trigger.innerHTML = managerMediaElementHtml(resolved, {
           ...options,
