@@ -18,6 +18,11 @@
   let oneDriveConnectionLabel = '';
   let oneDriveDriveId = '';
   let oneDriveStack = [];
+  const oneDriveFolderCache = new Map();
+  const ONEDRIVE_FOLDER_CACHE_TTL_MS = 2 * 60 * 1000;
+  let oneDriveSelectionVersion = 0;
+  let assetThumbnailObserver = null;
+  const pendingListThumbnails = new WeakMap();
   let assetSorter = null;
   let usageSorter = null;
 
@@ -98,29 +103,30 @@
     return String(asset?.storageProvider || (asset?.driveId && asset?.itemId ? 'onedrive' : 'vercel')).toLowerCase();
   }
 
-  async function loadOneDriveCaptionTracks(asset) {
-    if (!asset?.storageConnection || !asset?.driveId || !asset?.itemId) return [];
-    if (!isVideoType(getExtension(asset.name || asset.relativePath || asset.pathname || ''))) return [];
-
-    const params = new URLSearchParams({
-      action: 'captions',
-      connection: asset.storageConnection,
-      driveId: asset.driveId,
-      itemId: asset.itemId,
-      parentItemId: asset.parentItemId || '',
-      videoName: asset.name || ''
-    });
-
-    try {
-      const response = await fetch(`${API_ONEDRIVE}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Caption lookup failed.');
-      return Array.isArray(data.tracks) ? data.tracks : [];
-    } catch (error) {
-      console.error('OneDrive caption lookup failed:', error);
-      return [];
-    }
+  function getOneDriveFolderCacheKey(connectionId, itemId = '') {
+    return `${String(connectionId || '').trim()}::${String(itemId || '').trim() || 'root'}`;
   }
+
+  function getCachedOneDriveFolder(connectionId, itemId = '') {
+    const key = getOneDriveFolderCacheKey(connectionId, itemId);
+    const cached = oneDriveFolderCache.get(key);
+    if (!cached) return null;
+    if (Date.now() - Number(cached.fetchedAt || 0) > ONEDRIVE_FOLDER_CACHE_TTL_MS) {
+      oneDriveFolderCache.delete(key);
+      return null;
+    }
+    return cached.data || null;
+  }
+
+  function setCachedOneDriveFolder(connectionId, itemId, data) {
+    const key = getOneDriveFolderCacheKey(connectionId, itemId);
+    oneDriveFolderCache.set(key, {
+      fetchedAt: Date.now(),
+      data
+    });
+    return data;
+  }
+
 
   function getOneDriveConnectionLabel(connectionId) {
     const id = String(connectionId || '').trim();
@@ -460,6 +466,38 @@
     };
   }
 
+  function resetListThumbnailObserver() {
+    assetThumbnailObserver?.disconnect();
+    assetThumbnailObserver = null;
+
+    if (!('IntersectionObserver' in window)) return;
+
+    assetThumbnailObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const stage = entry.target;
+        const asset = pendingListThumbnails.get(stage);
+        assetThumbnailObserver?.unobserve(stage);
+        pendingListThumbnails.delete(stage);
+        if (asset) renderListThumbnail(stage, asset);
+      });
+    }, {
+      root: null,
+      rootMargin: '300px 0px',
+      threshold: 0.01
+    });
+  }
+
+  function queueListThumbnail(stage, asset) {
+    if (!stage) return;
+    if (!assetThumbnailObserver) {
+      renderListThumbnail(stage, asset);
+      return;
+    }
+    pendingListThumbnails.set(stage, asset);
+    assetThumbnailObserver.observe(stage);
+  }
+
   async function renderListThumbnail(stage, asset) {
     if (!stage) return;
     const commonMedia = window.IXLManager?.media;
@@ -484,6 +522,8 @@
     const tbody = $('asset-table-body');
     const empty = $('library-empty');
     if (!tbody || !empty) return;
+
+    resetListThumbnailObserver();
 
     const search = String($('asset-search')?.value || '').trim().toLowerCase();
     const folder = String($('asset-folder-filter')?.value || 'all');
@@ -557,18 +597,12 @@
         <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
         <td>${registryButton}</td>
         <td>${downloadUrl ? `<a href="${escapeHtml(downloadUrl)}">Download</a>` : ''}</td>
-        <td>${(provider === 'onedrive' ? (registryItem?.webUrl || asset.webUrl || viewUrl) : viewUrl)
-          ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(provider === 'onedrive' ? (registryItem?.webUrl || asset.webUrl || viewUrl) : viewUrl)}">Copy URL</button>`
-          : ''}</td>
-        <td>${provider === 'vercel' && viewUrl
-          ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
-          : provider === 'onedrive' && registryItem
-            ? `<button type="button" class="library-button" data-delete-registry-key="${escapeHtml(registryItem.key)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
-            : ''}</td>
+        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : ''}</td>
+        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>` : ''}</td>
       `;
 
       tbody.appendChild(row);
-      renderListThumbnail(document.getElementById(previewId), asset);
+      queueListThumbnail(document.getElementById(previewId), asset);
     });
 
     empty.style.display = sorted.length ? 'none' : 'block';
@@ -1168,10 +1202,34 @@ UPDATE will make all of these usages point to the new file. Continue?`
       `${escapeHtml(connectionLabel)} · ${escapeHtml(selectedOneDriveItem.relativePath || selectedOneDriveItem.parentPath || 'OneDrive')} · ${formatFileSize(selectedOneDriveItem.size)}`;
   }
 
-  async function loadOneDriveFolder(itemId = '') {
-    const list = $('onedrive-browser-list');
-    if (list) list.innerHTML = '<div class="onedrive-browser-empty">Loading...</div>';
-    if (!oneDriveConnectionId) throw new Error('Please select a OneDrive storage connection first.');
+  async function renderSelectedOneDrivePreview(item, selectionVersion) {
+    const source = getAssetSourceUrl(item);
+    const previewAsset = {
+      ...item,
+      pathname: item.relativePath,
+      url: source,
+      type: getExtension(item.name)
+    };
+
+    try {
+      await renderPreview('upload-preview', previewAsset, { sourceUrl: source });
+      if (selectionVersion !== oneDriveSelectionVersion || selectedOneDriveItem !== item) return;
+
+      const captionNote = item.tracks?.length ? ` · CC ${item.tracks.length}` : '';
+      $('upload-preview-note').textContent =
+        `${getOneDriveConnectionLabel(item.storageConnection)} · ${item.name} · ${formatFileSize(item.size)}${captionNote}`;
+    } catch (error) {
+      console.error('OneDrive preview failed:', error);
+      if (selectionVersion !== oneDriveSelectionVersion || selectedOneDriveItem !== item) return;
+      $('upload-preview').innerHTML = '<div class="asset-preview-empty">Preview unavailable. The asset can still be registered.</div>';
+      $('upload-preview-note').textContent =
+        `${getOneDriveConnectionLabel(item.storageConnection)} · ${item.name} · ${formatFileSize(item.size)}`;
+    }
+  }
+
+  async function fetchOneDriveFolder(itemId = '') {
+    const cached = getCachedOneDriveFolder(oneDriveConnectionId, itemId);
+    if (cached) return cached;
 
     const params = new URLSearchParams({
       action: 'children',
@@ -1180,7 +1238,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
     if (oneDriveDriveId) params.set('driveId', oneDriveDriveId);
     if (itemId) params.set('itemId', itemId);
 
-    const response = await fetch(`${API_ONEDRIVE}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
+    const response = await fetch(`${API_ONEDRIVE}?${params}`, {
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
     const data = await response.json();
     if (!response.ok) {
       const error = new Error(data.error || 'Failed to browse OneDrive.');
@@ -1188,10 +1249,24 @@ UPDATE will make all of these usages point to the new file. Continue?`
       throw error;
     }
 
+    return setCachedOneDriveFolder(oneDriveConnectionId, itemId, data);
+  }
+
+  async function loadOneDriveFolder(itemId = '') {
+    const list = $('onedrive-browser-list');
+    if (!oneDriveConnectionId) throw new Error('Please select a OneDrive storage connection first.');
+
+    const cached = getCachedOneDriveFolder(oneDriveConnectionId, itemId);
+    if (!cached && list) {
+      list.innerHTML = '<div class="onedrive-browser-empty">Loading...</div>';
+    }
+
+    const data = cached || await fetchOneDriveFolder(itemId);
+
     oneDriveDriveId = data.driveId || oneDriveDriveId;
     oneDriveConnectionId = data.storageConnection || oneDriveConnectionId;
     oneDriveConnectionLabel = data.connectionLabel || getOneDriveConnectionLabel(oneDriveConnectionId);
-    const items = Array.isArray(data.items) ? data.items : [];
+    const items = Array.isArray(data.items) ? data.items.slice() : [];
 
     const breadcrumb = oneDriveStack.length
       ? `${oneDriveConnectionLabel} / ${oneDriveStack.map(x => x.name).join(' / ')}`
@@ -1205,8 +1280,9 @@ UPDATE will make all of these usages point to the new file. Continue?`
       return;
     }
 
+    items.sort((a,b) => Number(b.isFolder) - Number(a.isFolder) || String(a.name).localeCompare(String(b.name)));
+
     list.innerHTML = items
-      .sort((a,b) => Number(b.isFolder) - Number(a.isFolder) || String(a.name).localeCompare(String(b.name)))
       .map(item => `<button type="button" class="onedrive-browser-row" data-od-id="${escapeHtml(item.id)}" data-od-folder="${item.isFolder ? '1' : '0'}">
         <span class="onedrive-browser-name">${item.isFolder ? '▰ ' : ''}${escapeHtml(item.name)}</span>
         <span class="onedrive-browser-meta">${item.isFolder ? 'Folder' : escapeHtml(getFileType(item.name))}</span>
@@ -1217,12 +1293,14 @@ UPDATE will make all of these usages point to the new file. Continue?`
       button.addEventListener('click', async () => {
         const item = items.find(x => x.id === button.dataset.odId);
         if (!item) return;
+
         if (item.isFolder) {
           oneDriveStack.push({ id: item.id, name: item.name });
           await loadOneDriveFolder(item.id);
           return;
         }
 
+        const selectionVersion = ++oneDriveSelectionVersion;
         selectedOneDriveItem = {
           ...item,
           storageProvider: 'onedrive',
@@ -1230,23 +1308,21 @@ UPDATE will make all of these usages point to the new file. Continue?`
           driveId: oneDriveDriveId,
           storageConnection: oneDriveConnectionId,
           parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
-          relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`
+          relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`,
+          tracks: Array.isArray(item.tracks) ? item.tracks : []
         };
-
-        selectedOneDriveItem.tracks = await loadOneDriveCaptionTracks(selectedOneDriveItem);
 
         $('asset-upload-key').value = createAssetKey(item.name);
         renderSelectedOneDriveItem();
-        const source = getAssetSourceUrl(selectedOneDriveItem);
-        await renderPreview('upload-preview', {
-          ...selectedOneDriveItem,
-          pathname: selectedOneDriveItem.relativePath,
-          url: source,
-          type: getExtension(selectedOneDriveItem.name)
-        }, { sourceUrl: source });
-        const captionNote = selectedOneDriveItem.tracks?.length ? ` · CC ${selectedOneDriveItem.tracks.length}` : '';
-        $('upload-preview-note').textContent = `${oneDriveConnectionLabel} · ${item.name} · ${formatFileSize(item.size)}${captionNote}`;
+        $('upload-preview').innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
+        const captionNote = selectedOneDriveItem.tracks.length ? ` · CC ${selectedOneDriveItem.tracks.length}` : '';
+        $('upload-preview-note').textContent =
+          `${oneDriveConnectionLabel} · ${item.name} · ${formatFileSize(item.size)}${captionNote}`;
+
+        // Selection is complete immediately. Preview/media enrichment continues
+        // asynchronously so Microsoft Graph latency never blocks the picker.
         $('onedrive-browser-modal').hidden = true;
+        renderSelectedOneDrivePreview(selectedOneDriveItem, selectionVersion);
       });
     });
   }
@@ -1735,36 +1811,6 @@ Key: ${registered.key || key}`);
     modal.hidden = false;
   }
 
-  async function deleteRegistryAsset(button) {
-    const key = String(button.dataset.deleteRegistryKey || '').trim();
-    const fileName = String(button.dataset.deleteName || key).trim();
-    const index = registryAssets.findIndex(item => item.key === key);
-
-    if (index < 0) {
-      alert('Asset Registry item was not found. Reload the page and try again.');
-      return;
-    }
-
-    if (!confirm(`Remove this OneDrive asset from Asset Registry?\n\n${fileName}\n\nThe original OneDrive file will NOT be deleted.`)) return;
-
-    try {
-      button.disabled = true;
-      button.textContent = 'Deleting...';
-
-      const { response, data } = await postAsset({ index }, { method: 'DELETE' });
-      if (!response.ok) throw new Error(data.error || 'Failed to remove Asset Registry item.');
-
-      alert('Asset Registry item removed.\n\nThe original OneDrive file was not deleted.');
-      await loadAssets();
-    } catch (error) {
-      console.error(error);
-      alert(error.message || 'Failed to remove Asset Registry item.');
-    } finally {
-      button.disabled = false;
-      button.textContent = 'Delete';
-    }
-  }
-
   async function deleteBlobAsset(button) {
     const url = button.dataset.deleteUrl;
     const fileName = button.dataset.deleteName;
@@ -1932,12 +1978,6 @@ Key: ${registered.key || key}`);
         } finally {
           registerButton.disabled = false;
         }
-        return;
-      }
-
-      const registryDeleteButton = event.target.closest('[data-delete-registry-key]');
-      if (registryDeleteButton) {
-        await deleteRegistryAsset(registryDeleteButton);
         return;
       }
 
