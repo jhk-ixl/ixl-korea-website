@@ -1024,9 +1024,18 @@
         options.pdfWorkerSrc ||
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-      const proxyUrl = source.startsWith('blob:')
-        ? source
-        : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
+      let proxyUrl = source;
+      if (!/^(?:blob:|data:)/i.test(source)) {
+        try {
+          const parsed = new URL(source, window.location.href);
+          const isSameOrigin = parsed.origin === window.location.origin;
+          proxyUrl = isSameOrigin
+            ? parsed.href
+            : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
+        } catch (error) {
+          proxyUrl = source;
+        }
+      }
 
       const pdf = await pdfjsLib.getDocument(proxyUrl).promise;
       const page = await pdf.getPage(1);
@@ -1128,8 +1137,12 @@
       trigger.type = 'button';
       trigger.className = String(options.buttonClass || 'manager-media-interactive');
       trigger.dataset.managerMediaAction = 'preview';
-      trigger.setAttribute('aria-label', 'View media');
-      trigger.innerHTML = '<span>View media</span>';
+      trigger.setAttribute('aria-label', kind === 'presentation' ? 'Open presentation' : 'Open document');
+
+      // Word / PowerPoint follow the same contract as PDF:
+      // thumbnail in the Manager preview, click opens the existing Microsoft/OneDrive viewer directly.
+      const typeLabel = kind === 'presentation' ? 'PPTX' : 'DOCX';
+      trigger.innerHTML = `<span>${typeLabel}</span>`;
       trigger.addEventListener('click', async () => {
         await openManagerMedia(resolved, {
           ...options,
@@ -1138,8 +1151,7 @@
       });
       stage.replaceChildren(trigger);
 
-      // Thumbnail is a progressive enhancement only. It must never block the
-      // already-validated OneDrive webUrl open path.
+      // OneDrive thumbnail is visual enhancement only. The click path is ready immediately.
       renderManagerOneDriveOfficeThumbnail(trigger, resolved, options).catch(error => {
         console.error('Office thumbnail could not be rendered:', error);
       });
@@ -1597,10 +1609,8 @@
     if (!source || kind === 'none') return resolved;
 
     if (kind === 'pdf') {
-      return openManagerMediaViewer(resolved, {
-        ...options,
-        resolved: true
-      });
+      window.open(source, '_blank', 'noopener,noreferrer');
+      return resolved;
     }
 
     if (kind === 'document' || kind === 'presentation') {
@@ -1670,7 +1680,8 @@
         });
       }
     } else if (kind === 'document' || kind === 'presentation') {
-      trigger.innerHTML = '<span>View media</span>';
+      const typeLabel = kind === 'presentation' ? 'PPTX' : 'DOCX';
+      trigger.innerHTML = `<span>${typeLabel}</span>`;
       renderManagerOneDriveOfficeThumbnail(trigger, resolved, options).catch(error => {
         console.error('Office thumbnail could not be rendered:', error);
       });
