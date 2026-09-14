@@ -1916,14 +1916,22 @@ let publicKnowledgeItems = [];
         const versions = item && item.versions ? item.versions : {};
         const isKorean = document.documentElement.lang === 'ko';
         const preferredKey = isKorean ? 'ko' : 'other';
+        const fallbackKey = isKorean ? 'other' : 'ko';
         const preferred = versions[preferredKey];
+        const fallback = versions[fallbackKey];
 
-        // Public Website never falls back to the opposite language.
-        // A Knowledge version is visible only when that selected language exists.
-        return {
-            key: preferredKey,
-            value: hasPublicKnowledgeVersionContent(preferred) ? preferred : null
-        };
+        // Website language controls display priority only.
+        // KO prefers ko, EN prefers other; if that translation is absent,
+        // show the available counterpart instead of hiding the Knowledge item.
+        if (hasPublicKnowledgeVersionContent(preferred)) {
+            return { key: preferredKey, value: preferred };
+        }
+
+        if (hasPublicKnowledgeVersionContent(fallback)) {
+            return { key: fallbackKey, value: fallback };
+        }
+
+        return { key: preferredKey, value: null };
     }
 
     function normalizeKnowledgeForPublic(item) {

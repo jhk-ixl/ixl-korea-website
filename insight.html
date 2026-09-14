@@ -125,20 +125,28 @@
     const ko = versions.ko || {};
     const other = versions.other || {};
 
-    // URL language, when present, is authoritative. Otherwise use page language.
-    // Never substitute the opposite Knowledge language automatically.
+    // URL/page language controls version priority only.
+    // KO prefers ko, EN/other prefers other; when the preferred translation
+    // is absent, show the available counterpart instead of hiding the item.
     const pageIsKo = document.documentElement.lang === 'ko';
-    const selectedKey = requestedLang === 'ko'
+    const preferredKey = requestedLang === 'ko'
       ? 'ko'
       : ((requestedLang === 'en' || requestedLang === 'other')
           ? 'other'
           : (pageIsKo ? 'ko' : 'other'));
+    const fallbackKey = preferredKey === 'ko' ? 'other' : 'ko';
+    const preferredVersion = preferredKey === 'ko' ? ko : other;
+    const fallbackVersion = fallbackKey === 'ko' ? ko : other;
 
-    const selectedVersion = selectedKey === 'ko' ? ko : other;
-    return {
-      key: selectedKey,
-      value: hasVersionContent(selectedVersion) ? selectedVersion : null
-    };
+    if (hasVersionContent(preferredVersion)) {
+      return { key: preferredKey, value: preferredVersion };
+    }
+
+    if (hasVersionContent(fallbackVersion)) {
+      return { key: fallbackKey, value: fallbackVersion };
+    }
+
+    return { key: preferredKey, value: null };
   }
 
   function resolveMediaItems(item, versionKey, assets){
@@ -207,7 +215,7 @@
       const selected = selectVersion(item);
       const version = selected.value;
       if (!version) {
-        throw new Error('This Insight is not available in the selected language.');
+        throw new Error('This Insight has no available content version.');
       }
 
       // 실제 선택된 콘텐츠 언어로 문서 lang도 맞춤

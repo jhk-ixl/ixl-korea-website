@@ -43,14 +43,34 @@
     const preferredKey =
       preferKorean ? 'ko' : 'other';
 
+    const fallbackKey =
+      preferKorean ? 'other' : 'ko';
+
     const preferred =
       versions[preferredKey];
 
-    // Community follows the same canonical language rule as Public Website:
-    // never substitute the opposite Knowledge language automatically.
+    const fallback =
+      versions[fallbackKey];
+
+    // Community follows the Public Website rule:
+    // page language sets display priority, not content eligibility.
+    if (hasVersionContent(preferred)) {
+      return {
+        key: preferredKey,
+        value: preferred
+      };
+    }
+
+    if (hasVersionContent(fallback)) {
+      return {
+        key: fallbackKey,
+        value: fallback
+      };
+    }
+
     return {
       key: preferredKey,
-      value: hasVersionContent(preferred) ? preferred : null
+      value: null
     };
   }
 
