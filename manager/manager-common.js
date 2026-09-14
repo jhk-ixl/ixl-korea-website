@@ -1146,44 +1146,28 @@
       return resolved;
     }
 
-    if (kind === 'pdf' && options.pdfCanvas !== false && window.pdfjsLib) {
-      try {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          options.pdfWorkerSrc ||
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        const proxyUrl = source.startsWith('blob:')
-          ? source
-          : `${MANAGER_MEDIA_DEFAULTS.assetProxyEndpoint}${encodeURIComponent(source)}`;
-
-        const pdf = await window.pdfjsLib.getDocument(proxyUrl).promise;
-        const page = await pdf.getPage(Number(options.pdfPage || 1));
-        const viewport = page.getViewport({
-          scale: Number(options.pdfScale || MANAGER_MEDIA_DEFAULTS.pdfScale)
+    if (kind === 'pdf' && options.pdfCanvas !== false) {
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = String(options.buttonClass || 'manager-media-interactive');
+      trigger.dataset.managerMediaAction = 'preview';
+      trigger.setAttribute('aria-label', 'Open PDF');
+      trigger.innerHTML = '<span>Open PDF</span>';
+      trigger.addEventListener('click', async () => {
+        await openManagerMedia(resolved, {
+          ...options,
+          resolved: true
         });
-        const trigger = document.createElement('button');
-        trigger.type = 'button';
-        trigger.className = String(options.buttonClass || 'manager-media-interactive');
-        trigger.dataset.managerMediaAction = 'preview';
-        trigger.setAttribute('aria-label', 'Open PDF');
+      });
+      stage.replaceChildren(trigger);
 
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        trigger.appendChild(canvas);
-        trigger.addEventListener('click', async () => {
-          await openManagerMedia(resolved, {
-            ...options,
-            resolved: true
-          });
-        });
-        stage.replaceChildren(trigger);
-        await page.render({ canvasContext: context, viewport }).promise;
-        return resolved;
-      } catch (error) {
-        console.error(error);
+      // PDF.js is used only to paint the first-page thumbnail.
+      // Opening the PDF stays on the existing browser/PDF viewer path.
+      const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
+      if (!rendered && !trigger.textContent.trim()) {
+        trigger.innerHTML = '<span>Open PDF</span>';
       }
+      return resolved;
     }
 
     if (kind === 'text' && options.loadText !== false) {
