@@ -164,6 +164,27 @@ function buildCaptionTracks(folderItems, videoItem, driveId, storageConnection) 
     });
 }
 
+function getContentTypeFromName(fileName) {
+  const name = String(fileName || '').toLowerCase();
+  if (name.endsWith('.pdf')) return 'application/pdf';
+  if (name.endsWith('.vtt')) return 'text/vtt; charset=utf-8';
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+  if (name.endsWith('.png')) return 'image/png';
+  if (name.endsWith('.gif')) return 'image/gif';
+  if (name.endsWith('.webp')) return 'image/webp';
+  if (name.endsWith('.svg')) return 'image/svg+xml';
+  if (name.endsWith('.mp4') || name.endsWith('.m4v')) return 'video/mp4';
+  if (name.endsWith('.mov')) return 'video/quicktime';
+  if (name.endsWith('.webm')) return 'video/webm';
+  if (name.endsWith('.txt')) return 'text/plain; charset=utf-8';
+  if (name.endsWith('.md')) return 'text/markdown; charset=utf-8';
+  return '';
+}
+
+function isInlineBrowserType(fileName) {
+  return /\.(pdf|vtt|jpe?g|png|gif|webp|svg|mp4|m4v|mov|webm|txt|md)$/i.test(String(fileName || ''));
+}
+
 async function getContext(connectionId, req, res) {
   const connection = getOneDriveConnection(connectionId);
   const token = await getOneDriveAccessToken(connection, req, res);
@@ -349,9 +370,16 @@ export default async function handler(req, res) {
       copyUpstreamHeader(upstream, res, 'etag');
       copyUpstreamHeader(upstream, res, 'last-modified');
 
-      let contentType = upstream.headers.get('content-type') || '';
-      if (/\.vtt$/i.test(String(req.query?.name || ''))) contentType = 'text/vtt; charset=utf-8';
+      const requestedName = String(req.query?.name || '').trim();
+      const namedContentType = getContentTypeFromName(requestedName);
+      let contentType = namedContentType || upstream.headers.get('content-type') || '';
       if (contentType) res.setHeader('Content-Type', contentType);
+
+      if (requestedName && isInlineBrowserType(requestedName)) {
+        const safeName = requestedName.replace(/[\"
+]/g, '_');
+        res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
+      }
 
       return pipeFetchBody(upstream, res);
     }

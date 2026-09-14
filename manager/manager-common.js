@@ -594,6 +594,8 @@
         driveId: media.driveId,
         itemId: media.itemId
       });
+      const fileName = String(media?.name || media?.fileName || '').trim();
+      if (fileName) params.set('name', fileName);
       return `/api/onedrive-assets?${params}`;
     }
 
@@ -838,6 +840,25 @@
     return merged;
   }
 
+  function getManagerOneDriveWebUrl(media) {
+    const provider = String(media?.storageProvider || media?.provider || '').trim().toLowerCase();
+    if (provider !== 'onedrive') return '';
+    return String(media?.webUrl || '').trim();
+  }
+
+  function managerVideoTracksHtml(media) {
+    const tracks = Array.isArray(media?.tracks) ? media.tracks : [];
+    return tracks.map((track, index) => {
+      const source = getManagerMediaSource(track);
+      if (!source) return '';
+      const kind = escapeManagerHtml(track?.kind || 'subtitles');
+      const label = escapeManagerHtml(track?.label || track?.srclang || `CC ${index + 1}`);
+      const srclang = escapeManagerHtml(track?.srclang || 'en');
+      const isDefault = track?.default === true || (index === 0 && !tracks.some(item => item?.default === true));
+      return `<track kind="${kind}" src="${escapeManagerHtml(toManagerUrl(source))}" srclang="${srclang}" label="${label}"${isDefault ? ' default' : ''}>`;
+    }).join('');
+  }
+
   function managerMediaElementHtml(media, options = {}) {
     const resolved = typeof media === 'object' && media ? media : { url: media };
     const source = getManagerMediaSource(resolved);
@@ -868,7 +889,8 @@
     if (kind === 'video') {
       const time = getManagerThumbnailTime(resolved, options);
       const controls = options.controls ? ' controls' : '';
-      return `<video${controls} muted preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+      const tracks = managerVideoTracksHtml(resolved);
+      return `<video${controls} muted preload="metadata" src="${safeSource}#t=${Number(time)}">${tracks}</video>`;
     }
 
     if (kind === 'youtube') {
@@ -880,6 +902,11 @@
 
     if (kind === 'pdf') {
       return `<iframe src="${safeSource}#page=1&view=FitH" title="${label}"></iframe>`;
+    }
+
+    if (kind === 'document' || kind === 'presentation') {
+      const viewUrl = getManagerOneDriveWebUrl(resolved) || source;
+      return `<a href="${escapeManagerHtml(toManagerUrl(viewUrl))}" target="_blank" rel="noopener">View media</a>`;
     }
 
     return `<a href="${safeSource}" target="_blank" rel="noopener">View media</a>`;
@@ -1378,7 +1405,7 @@
 
     if (kind === 'video') {
       const time = getManagerThumbnailTime(resolved, options);
-      stage.innerHTML = `<video controls autoplay preload="metadata" src="${safeSource}#t=${Number(time)}"></video>`;
+      stage.innerHTML = `<video controls autoplay preload="metadata" src="${safeSource}#t=${Number(time)}">${managerVideoTracksHtml(resolved)}</video>`;
 
       const player = stage.querySelector('video');
       if (player) {
@@ -1498,6 +1525,14 @@
        */
       window.open(toManagerUrl(source), '_blank', 'noopener,noreferrer');
       return resolved;
+    }
+
+    if (kind === 'document' || kind === 'presentation') {
+      const oneDriveWebUrl = getManagerOneDriveWebUrl(resolved);
+      if (oneDriveWebUrl) {
+        window.open(oneDriveWebUrl, '_blank', 'noopener,noreferrer');
+        return resolved;
+      }
     }
 
     return openManagerMediaViewer(resolved, {
