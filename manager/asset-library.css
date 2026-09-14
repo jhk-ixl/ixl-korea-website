@@ -190,12 +190,13 @@
 
 .asset-folder-picker {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
   align-items: stretch;
 }
 
 .asset-folder-picker .asset-new-folder-button {
+  justify-self: start;
   white-space: nowrap;
 }
 
@@ -433,17 +434,9 @@
   white-space: nowrap;
 }
 
-.asset-table td:nth-child(2),
-.asset-table td:nth-child(4),
-.asset-table td:nth-child(5),
-.asset-table td:nth-child(6),
-.asset-table td:nth-child(7) {
+.asset-table td:nth-child(2) {
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.asset-table td:nth-child(4) {
-  max-width: 125px;
 }
 
 .asset-table td:nth-child(3) code {

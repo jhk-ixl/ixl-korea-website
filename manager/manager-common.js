@@ -774,7 +774,12 @@
     const requestedAssetKey = String(input.assetKey || options.assetKey || '').trim();
     const inputSource = getManagerMediaSource(input);
 
-    let registered = requestedAssetKey ? findManagerMediaAsset(requestedAssetKey) : null;
+    // Registration previews explicitly opt out of Registry resolution. During
+    // that phase, the currently selected File/OneDrive picker item is the
+    // authoritative source. Registry authority begins after registration.
+    let registered = options.resolveAsset === false
+      ? null
+      : (requestedAssetKey ? findManagerMediaAsset(requestedAssetKey) : null);
 
     if (!registered && options.resolveAsset !== false) {
       await loadManagerMediaAssets();

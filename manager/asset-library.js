@@ -1139,7 +1139,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
       name: file.name,
       thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
     }, {
-      kind
+      kind,
+      // This is a pre-registration preview. The selected File/blob is the
+      // authoritative source until Upload & Register completes.
+      resolveAsset: false
     });
 
     $('upload-preview-note').textContent =
@@ -1197,7 +1200,12 @@ UPDATE will make all of these usages point to the new file. Continue?`
     };
 
     try {
-      await renderPreview('upload-preview', previewAsset);
+      await renderPreview('upload-preview', previewAsset, {
+        // This is a pre-registration OneDrive preview. Keep the picker item
+        // identity (connection + driveId + itemId + tracks + webUrl) intact;
+        // Registry authority begins only after registration completes.
+        resolveAsset: false
+      });
       if (selectionVersion !== oneDriveSelectionVersion || selectedOneDriveItem !== item) return;
 
       const captionNote = item.tracks?.length ? ` · CC ${item.tracks.length}` : '';
