@@ -376,8 +376,7 @@ export default async function handler(req, res) {
       if (contentType) res.setHeader('Content-Type', contentType);
 
       if (requestedName && isInlineBrowserType(requestedName)) {
-        const safeName = requestedName.replace(/[\"
-]/g, '_');
+        const safeName = requestedName.replace(/[\"\r\n]/g, '_');
         res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
       }
 
