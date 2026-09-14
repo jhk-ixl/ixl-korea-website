@@ -1602,6 +1602,7 @@
 
 let assetRegistry = [];
 let assetUsage = [];
+let publicKnowledgeItems = [];
 
     function itemUrl(item) {
         if (item.assetKey) {
@@ -1682,11 +1683,14 @@ let assetUsage = [];
     }
 
     function insightDetailUrl(item) {
+        const language = document.documentElement.lang === 'ko' ? 'ko' : 'other';
         if (item.knowledgeId) {
-            return 'insight.html?id=' + encodeURIComponent(item.knowledgeId);
+            return 'insight.html?id=' + encodeURIComponent(item.knowledgeId) +
+                   '&lang=' + encodeURIComponent(language);
         }
         const slug = item.slug || slugifyInsight(item.title);
-        return 'insight.html?slug=' + encodeURIComponent(slug);
+        return 'insight.html?slug=' + encodeURIComponent(slug) +
+               '&lang=' + encodeURIComponent(language);
     }
 
     const legacyInsightDetailSlugs = new Set([
@@ -1911,40 +1915,37 @@ let assetUsage = [];
     function getPublicKnowledgeVersion(item) {
         const versions = item && item.versions ? item.versions : {};
         const isKorean = document.documentElement.lang === 'ko';
-
         const preferredKey = isKorean ? 'ko' : 'other';
-        const fallbackKey = isKorean ? 'other' : 'ko';
-
         const preferred = versions[preferredKey];
-        const fallback = versions[fallbackKey];
 
-        if (hasPublicKnowledgeVersionContent(preferred)) {
-            return {
-                key: preferredKey,
-                value: preferred
-            };
-        }
-
-        if (hasPublicKnowledgeVersionContent(fallback)) {
-            return {
-                key: fallbackKey,
-                value: fallback
-            };
-        }
-
+        // Public Website never falls back to the opposite language.
+        // A Knowledge version is visible only when that selected language exists.
         return {
-            key: '',
-            value: {}
+            key: preferredKey,
+            value: hasPublicKnowledgeVersionContent(preferred) ? preferred : null
         };
     }
 
     function normalizeKnowledgeForPublic(item) {
         const selected = getPublicKnowledgeVersion(item);
-        const version = selected.value || {};
-        const mediaItems = Array.isArray(item.media) ? item.media : [];
-        const media = mediaItems.find(entry => entry.language === selected.key) ||
-                      mediaItems.find(entry => entry.language === 'common') ||
-                      mediaItems[0] || {};
+        const version = selected.value;
+        if (!version) return null;
+
+        const canonicalMedia = Array.isArray(version.media)
+            ? version.media
+            : null;
+
+        // Read-only migration compatibility for legacy top-level media.
+        const mediaItems = canonicalMedia || (
+            Array.isArray(item.media)
+                ? item.media.filter(function (entry) {
+                    const language = String(entry && entry.language || '').trim().toLowerCase();
+                    return language === selected.key || language === 'common';
+                })
+                : []
+        );
+
+        const media = mediaItems[0] || {};
 
         return {
             ...item,
@@ -1957,6 +1958,12 @@ let assetUsage = [];
             asset: media.asset || '',
             assetKey: media.assetKey || ''
         };
+    }
+
+    function refreshPublicKnowledgeForLanguage() {
+        insightsContent = publicKnowledgeItems
+            .map(normalizeKnowledgeForPublic)
+            .filter(Boolean);
     }
 
 
@@ -2059,62 +2066,68 @@ let assetUsage = [];
         });
     }
 
-    async function loadInsights() {
-        try {
-                const [
-                knowledgeResponse,
-                assetsResponse,
-                usageResponse
-            ] = await Promise.all([
-                fetch('/api/insights-library?resource=public-knowledge', {
-                    cache: 'no-store'
-                }),
-                fetch('insightscontent/asset-registry.json', {
-                    cache: 'no-store'
-                }),
-                fetch('insightscontent/asset-usage.json', {
-                    cache: 'no-store'
-                })
-            ]);
-
-            if (!knowledgeResponse.ok) {
-                throw new Error('Knowledge HTTP ' + knowledgeResponse.status);
-            }
-
-            const knowledgeData = await knowledgeResponse.json();
-            const knowledgeItems = Array.isArray(knowledgeData)
-                ? knowledgeData
-                : (Array.isArray(knowledgeData.items) ? knowledgeData.items : []);
-
-            insightsContent = knowledgeItems
-                .filter(item =>
-                    item.access === 'Public' &&
-                    item.publicationStatus === 'Published' &&
-                    ['news', 'book', 'article', 'video', 'external'].includes(item.type)
-                )
-                .map(normalizeKnowledgeForPublic);
-
-            if (assetsResponse.ok) {
-                const assetsData = await assetsResponse.json();
-                assetRegistry = Array.isArray(assetsData)
-                    ? assetsData
-                    : (Array.isArray(assetsData.assets) ? assetsData.assets : []);
-            } else {
-                console.warn('Asset Registry could not be loaded. Using fallback asset URLs.');
+    async function loadWebsiteAssets() {
+        const loadRegistry = async function () {
+            try {
+                const response = await fetch('insightscontent/asset-registry.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Asset Registry HTTP ' + response.status);
+                const data = await response.json();
+                assetRegistry = Array.isArray(data)
+                    ? data
+                    : (Array.isArray(data.assets) ? data.assets : []);
+            } catch (error) {
+                console.error('Asset Registry could not be loaded:', error);
                 assetRegistry = [];
             }
+        };
 
-            if (usageResponse.ok) {
-                const usageData = await usageResponse.json();
-                assetUsage = Array.isArray(usageData)
-                    ? usageData
-                    : (Array.isArray(usageData.usages) ? usageData.usages : []);
-            } else {
-                console.error('Asset Usage could not be loaded.');
+        const loadUsage = async function () {
+            try {
+                const response = await fetch('insightscontent/asset-usage.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Asset Usage HTTP ' + response.status);
+                const data = await response.json();
+                assetUsage = Array.isArray(data)
+                    ? data
+                    : (Array.isArray(data.usages) ? data.usages : []);
+            } catch (error) {
+                console.error('Asset Usage could not be loaded:', error);
                 assetUsage = [];
             }
+        };
 
-            resolveAssetUsageLinks();
+        await Promise.allSettled([loadRegistry(), loadUsage()]);
+        resolveAssetUsageLinks();
+
+        // Knowledge media may resolve through Asset Registry. If Knowledge already
+        // rendered, refresh it after the independent Website Asset bootstrap finishes.
+        if (insightsContent.length) {
+            renderAllInsights();
+            openInsightFromUrl();
+        }
+    }
+
+    async function loadPublicKnowledge() {
+        try {
+            const response = await fetch('/api/insights-library?resource=public-knowledge', {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error('Knowledge HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+            const items = Array.isArray(data)
+                ? data
+                : (Array.isArray(data.items) ? data.items : []);
+
+            // Public/Published governance is enforced server-side by public-knowledge.
+            // The Website only limits which Knowledge types belong in Insights.
+            publicKnowledgeItems = items.filter(item =>
+                ['news', 'book', 'article', 'video', 'external'].includes(item.type)
+            );
+
+            refreshPublicKnowledgeForLanguage();
             renderAllInsights();
             openInsightFromUrl();
         } catch (error) {
@@ -2128,6 +2141,13 @@ let assetUsage = [];
                 panel.innerHTML = '<div class="insights-empty">Insights content could not be loaded.</div>';
             });
         }
+    }
+
+    function initializePublicWebsiteData() {
+        // Independent failure domains:
+        // Website Assets must not depend on Public Knowledge, and vice versa.
+        loadWebsiteAssets();
+        loadPublicKnowledge();
     }
 
     window.addEventListener('ixl:insights-panel-shown', function (event) {
@@ -2149,6 +2169,9 @@ let assetUsage = [];
 
     const insightLanguageObserver = new MutationObserver(function (mutations) {
         if (mutations.some(mutation => mutation.attributeName === 'lang')) {
+            refreshPublicKnowledgeForLanguage();
+            renderAllInsights();
+            openInsightFromUrl();
             updateInsightUiLabels(document);
         }
     });
@@ -2157,7 +2180,7 @@ let assetUsage = [];
         attributeFilter: ['lang']
     });
 
-    document.addEventListener('DOMContentLoaded', loadInsights);
+    document.addEventListener('DOMContentLoaded', initializePublicWebsiteData);
 })();
 </script>
 

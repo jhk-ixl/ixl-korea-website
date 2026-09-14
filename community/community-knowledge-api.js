@@ -43,38 +43,21 @@
     const preferredKey =
       preferKorean ? 'ko' : 'other';
 
-    const fallbackKey =
-      preferKorean ? 'other' : 'ko';
-
     const preferred =
       versions[preferredKey];
 
-    const fallback =
-      versions[fallbackKey];
-
-    if (hasVersionContent(preferred)) {
-      return {
-        key: preferredKey,
-        value: preferred
-      };
-    }
-
-    if (hasVersionContent(fallback)) {
-      return {
-        key: fallbackKey,
-        value: fallback
-      };
-    }
-
+    // Community follows the same canonical language rule as Public Website:
+    // never substitute the opposite Knowledge language automatically.
     return {
-      key: '',
-      value: {}
+      key: preferredKey,
+      value: hasVersionContent(preferred) ? preferred : null
     };
   }
 
   function normalizeItem(item, assetRegistry = []) {
     const selected = selectVersion(item);
-    const version = selected.value || {};
+    const version = selected.value;
+    if (!version) return null;
     const canonicalMedia = item?.versions?.[selected.key]?.media;
     const mediaItems = Array.isArray(canonicalMedia)
       ? canonicalMedia
@@ -116,21 +99,30 @@
 
 
   async function loadItems() {
-    const [response, assetResponse] = await Promise.all([
-      fetch(PUBLIC_KNOWLEDGE_ENDPOINT, { cache: 'no-store' }),
-      fetch('/insightscontent/asset-registry.json', { cache: 'no-store' })
-    ]);
+    const response = await fetch(PUBLIC_KNOWLEDGE_ENDPOINT, { cache: 'no-store' });
 
     if (!response.ok) {
       throw new Error(`Public Knowledge request failed: ${response.status}`);
     }
 
     const data = await response.json();
-    const assetData = assetResponse.ok ? await assetResponse.json() : {};
-    const assetRegistry = Array.isArray(assetData?.assets) ? assetData.assets : [];
+    let assetRegistry = [];
+
+    try {
+      const assetResponse = await fetch('/insightscontent/asset-registry.json', { cache: 'no-store' });
+      if (assetResponse.ok) {
+        const assetData = await assetResponse.json();
+        assetRegistry = Array.isArray(assetData?.assets) ? assetData.assets : [];
+      }
+    } catch (error) {
+      console.warn('Community Asset Registry unavailable; using Knowledge media fallback URLs.', error);
+    }
+
     const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
 
-    return items.map(item => normalizeItem(item, assetRegistry));
+    return items
+      .map(item => normalizeItem(item, assetRegistry))
+      .filter(Boolean);
   }
 
   function stripFrontmatter(text) {
