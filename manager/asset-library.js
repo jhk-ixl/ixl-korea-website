@@ -597,8 +597,12 @@
         <td>${escapeHtml(formatUploadedDate(asset.uploadedAt))}</td>
         <td>${registryButton}</td>
         <td>${downloadUrl ? `<a href="${escapeHtml(downloadUrl)}">Download</a>` : ''}</td>
-        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : ''}</td>
-        <td>${provider === 'vercel' && viewUrl ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>` : ''}</td>
+        <td>${viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : '—'}</td>
+        <td>${provider === 'onedrive' && registryItem
+          ? `<button type="button" class="library-button" data-delete-registry-key="${escapeHtml(registryItem.key)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
+          : viewUrl
+            ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
+            : '—'}</td>
       `;
 
       tbody.appendChild(row);
@@ -1811,6 +1815,43 @@ Key: ${registered.key || key}`);
     modal.hidden = false;
   }
 
+  async function deleteRegisteredOneDriveAsset(button) {
+    const key = String(button.dataset.deleteRegistryKey || '').trim();
+    const fileName = String(button.dataset.deleteName || key).trim();
+    const index = registryAssets.findIndex(item => item.key === key);
+
+    if (index < 0) {
+      alert('Asset Registry item was not found. Refresh the Asset Library and try again.');
+      return;
+    }
+
+    if (!confirm(`Delete this asset?\n\n${fileName}\n\nThe original OneDrive file will not be deleted.`)) return;
+
+    try {
+      button.disabled = true;
+      button.textContent = 'Deleting...';
+
+      const response = await fetch(`${API_LIBRARY}?resource=assets`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ index })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to delete Asset Registry item.');
+
+      alert('Asset deleted from Asset Registry.\n\nThe original OneDrive file was not changed.');
+      await loadAssets();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to delete Asset Registry item.');
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Delete';
+    }
+  }
+
   async function deleteBlobAsset(button) {
     const url = button.dataset.deleteUrl;
     const fileName = button.dataset.deleteName;
@@ -1978,6 +2019,12 @@ Key: ${registered.key || key}`);
         } finally {
           registerButton.disabled = false;
         }
+        return;
+      }
+
+      const registryDeleteButton = event.target.closest('[data-delete-registry-key]');
+      if (registryDeleteButton) {
+        await deleteRegisteredOneDriveAsset(registryDeleteButton);
         return;
       }
 
