@@ -326,11 +326,19 @@
   }
 
   function getUploadFolderOptions() {
+    const vercelAssetFolders = allAssets
+      .filter(asset => getStorageProvider(asset) === 'vercel')
+      .map(asset => getFolder(asset.pathname));
+
+    const vercelRegistryFolders = registryAssets
+      .filter(asset => getStorageProvider(asset) === 'vercel')
+      .map(asset => asset.folder || getFolder(asset.pathname));
+
     return [
       ...new Set([
         ...DEFAULT_UPLOAD_FOLDERS,
-        ...allAssets.map(asset => getFolder(asset.pathname)),
-        ...registryAssets.map(asset => asset.folder || getFolder(asset.pathname))
+        ...vercelAssetFolders,
+        ...vercelRegistryFolders
       ].map(normalizeAssetFolderName).filter(Boolean))
     ].sort((a, b) => a.localeCompare(b));
   }
@@ -584,9 +592,11 @@
         <td>${viewUrl ? `<button type="button" class="library-button" data-copy-url="${escapeHtml(viewUrl)}">Copy URL</button>` : '—'}</td>
         <td>${provider === 'onedrive' && registryItem
           ? `<button type="button" class="library-button" data-delete-registry-key="${escapeHtml(registryItem.key)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
-          : viewUrl
-            ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
-            : '—'}</td>
+          : provider === 'vercel' && registryItem && viewUrl
+            ? `<button type="button" class="library-button" data-delete-vercel-key="${escapeHtml(registryItem.key)}" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
+            : viewUrl
+              ? `<button type="button" class="library-button" data-delete-url="${escapeHtml(viewUrl)}" data-delete-name="${escapeHtml(fileName)}">Delete</button>`
+              : '—'}</td>
       `;
 
       tbody.appendChild(row);
@@ -1140,6 +1150,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
       thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
     }, {
       kind,
+      sourceUrl: uploadObjectUrl,
+      thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME,
       // This is a pre-registration preview. The selected File/blob is the
       // authoritative source until Upload & Register completes.
       resolveAsset: false
@@ -1193,14 +1205,17 @@ UPDATE will make all of these usages point to the new file. Continue?`
   }
 
   async function renderSelectedOneDrivePreview(item, selectionVersion) {
+    const source = getAssetSourceUrl(item);
     const previewAsset = {
       ...item,
       pathname: item.relativePath,
+      url: source,
       type: getExtension(item.name)
     };
 
     try {
       await renderPreview('upload-preview', previewAsset, {
+        sourceUrl: source,
         // This is a pre-registration OneDrive preview. Keep the picker item
         // identity (connection + driveId + itemId + tracks + webUrl) intact;
         // Registry authority begins only after registration completes.
@@ -1841,6 +1856,73 @@ Key: ${registered.key || key}`);
     }
   }
 
+  async function deleteRegisteredVercelAsset(button) {
+    const key = String(button.dataset.deleteVercelKey || '').trim();
+    const url = String(button.dataset.deleteUrl || '').trim();
+    const fileName = String(button.dataset.deleteName || key).trim();
+    const index = registryAssets.findIndex(item => item.key === key);
+
+    if (index < 0) {
+      alert('Asset Registry item was not found. Refresh the Asset Library and try again.');
+      return;
+    }
+
+    const affectedUsages = usageMappings.filter(usage => usage.assetKey === key);
+    if (affectedUsages.length) {
+      const usageList = affectedUsages
+        .map(usage => `• ${usage.usageKey}${usage.page ? ` — ${usage.page}` : ''}`)
+        .join('\n');
+      alert(
+        `Asset Key "${key}" is used by ${affectedUsages.length} Usage mapping(s):\n\n${usageList}\n\nRemove or change those Usage mappings first.`
+      );
+      return;
+    }
+
+    if (!confirm(`Delete this asset completely?\n\n${fileName}\n\nThis removes both the Asset Registry entry and the Vercel Blob file.`)) return;
+
+    try {
+      button.disabled = true;
+      button.textContent = 'Deleting...';
+
+      const registryResponse = await fetch(`${API_LIBRARY}?resource=assets`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ index })
+      });
+      const registryData = await registryResponse.json();
+      if (!registryResponse.ok) {
+        if (registryResponse.status === 409 && registryData.usageConflict) {
+          throw new Error(registryData.error || 'This asset is still used by one or more Usage mappings.');
+        }
+        throw new Error(registryData.error || 'Failed to delete Asset Registry item.');
+      }
+
+      const blobResponse = await fetch(API_UPLOAD, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ url })
+      });
+      const blobData = await blobResponse.json();
+      if (!blobResponse.ok) {
+        throw new Error(
+          `${blobData.error || 'Failed to delete Vercel Blob file.'}\n\nThe Asset Registry entry was removed, but the Blob file may still remain.`
+        );
+      }
+
+      alert('Asset deleted from Asset Registry and Vercel Blob.');
+      await loadAssets();
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Failed to delete asset.');
+      await loadAssets().catch(() => {});
+    } finally {
+      button.disabled = false;
+      button.textContent = 'Delete';
+    }
+  }
+
   async function deleteBlobAsset(button) {
     const url = button.dataset.deleteUrl;
     const fileName = button.dataset.deleteName;
@@ -2014,6 +2096,12 @@ Key: ${registered.key || key}`);
       const registryDeleteButton = event.target.closest('[data-delete-registry-key]');
       if (registryDeleteButton) {
         await deleteRegisteredOneDriveAsset(registryDeleteButton);
+        return;
+      }
+
+      const vercelDeleteButton = event.target.closest('[data-delete-vercel-key]');
+      if (vercelDeleteButton) {
+        await deleteRegisteredVercelAsset(vercelDeleteButton);
         return;
       }
 

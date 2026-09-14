@@ -546,7 +546,8 @@
     videoThumbnailTime: 1,
     pdfScale: 1.35,
     assetEndpoint: '/api/insights-library?resource=assets',
-    assetProxyEndpoint: '/api/insights-library?resource=assetproxy&url='
+    assetProxyEndpoint: '/api/insights-library?resource=assetproxy&url=',
+    oneDriveEndpoint: '/api/onedrive-assets'
   });
 
   function escapeManagerHtml(value) {
@@ -584,11 +585,18 @@
       ''
     ).trim().toLowerCase();
 
-    if (
-      storageProvider === 'onedrive' &&
+    const hasOneDriveIdentity = Boolean(
       media?.storageConnection &&
       media?.driveId &&
       media?.itemId
+    );
+
+    // Preserve the already-validated OneDrive identity contract. Picker/track
+    // items are OneDrive media whenever they carry connection + driveId + itemId,
+    // even if storageProvider has not been materialized yet.
+    if (
+      (storageProvider === 'onedrive' || hasOneDriveIdentity) &&
+      hasOneDriveIdentity
     ) {
       const params = new URLSearchParams({
         action: 'content',
@@ -945,21 +953,34 @@
     return `${MANAGER_MEDIA_DEFAULTS.oneDriveEndpoint}?${params.toString()}`;
   }
 
-  async function renderManagerOneDriveOfficeThumbnail(stage, resolved) {
+  async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {}) {
     const endpoint = getManagerOneDriveThumbnailApiUrl(resolved);
     if (!stage || !endpoint) return false;
 
     return await new Promise(resolve => {
       const img = document.createElement('img');
-      img.src = toManagerUrl(endpoint);
+      let settled = false;
+      const finish = value => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      };
+
+      const timer = setTimeout(
+        () => finish(false),
+        Math.max(1000, Number(options.thumbnailTimeoutMs || 8000))
+      );
+
       img.alt = String(resolved?.name || resolved?.fileName || resolved?.title || 'Document thumbnail');
       img.loading = 'lazy';
       img.decoding = 'async';
       img.addEventListener('load', () => {
         stage.replaceChildren(img);
-        resolve(true);
+        finish(true);
       }, { once: true });
-      img.addEventListener('error', () => resolve(false), { once: true });
+      img.addEventListener('error', () => finish(false), { once: true });
+      img.src = toManagerUrl(endpoint);
     });
   }
 
@@ -1108,18 +1129,19 @@
       trigger.className = String(options.buttonClass || 'manager-media-interactive');
       trigger.dataset.managerMediaAction = 'preview';
       trigger.setAttribute('aria-label', 'View media');
-      stage.replaceChildren(trigger);
-
-      const rendered = await renderManagerOneDriveOfficeThumbnail(trigger, resolved);
-      if (!rendered) {
-        trigger.innerHTML = '<span>View media</span>';
-      }
-
+      trigger.innerHTML = '<span>View media</span>';
       trigger.addEventListener('click', async () => {
         await openManagerMedia(resolved, {
           ...options,
           resolved: true
         });
+      });
+      stage.replaceChildren(trigger);
+
+      // Thumbnail is a progressive enhancement only. It must never block the
+      // already-validated OneDrive webUrl open path.
+      renderManagerOneDriveOfficeThumbnail(trigger, resolved, options).catch(error => {
+        console.error('Office thumbnail could not be rendered:', error);
       });
       return resolved;
     }
@@ -1150,15 +1172,14 @@
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         trigger.appendChild(canvas);
-        stage.replaceChildren(trigger);
-        await page.render({ canvasContext: context, viewport }).promise;
-
         trigger.addEventListener('click', async () => {
           await openManagerMedia(resolved, {
             ...options,
             resolved: true
           });
         });
+        stage.replaceChildren(trigger);
+        await page.render({ canvasContext: context, viewport }).promise;
         return resolved;
       } catch (error) {
         console.error(error);
@@ -1647,6 +1668,12 @@
       'View media'
     );
 
+    trigger.addEventListener('click', async () => {
+      await openManagerMedia(resolved, {
+        ...options,
+        resolved: true
+      });
+    });
     stage.replaceChildren(trigger);
 
     if (kind === 'pdf') {
@@ -1659,14 +1686,10 @@
         });
       }
     } else if (kind === 'document' || kind === 'presentation') {
-      const rendered = await renderManagerOneDriveOfficeThumbnail(trigger, resolved);
-      if (!rendered) {
-        trigger.innerHTML = managerMediaElementHtml(resolved, {
-          ...options,
-          mode: 'thumbnail',
-          controls: false
-        });
-      }
+      trigger.innerHTML = '<span>View media</span>';
+      renderManagerOneDriveOfficeThumbnail(trigger, resolved, options).catch(error => {
+        console.error('Office thumbnail could not be rendered:', error);
+      });
     } else {
       trigger.innerHTML = managerMediaElementHtml(resolved, {
         ...options,
@@ -1674,13 +1697,6 @@
         controls: false
       });
     }
-
-    trigger.addEventListener('click', async () => {
-      await openManagerMedia(resolved, {
-        ...options,
-        resolved: true
-      });
-    });
 
     return resolved;
   }
