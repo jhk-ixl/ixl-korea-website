@@ -913,6 +913,46 @@
   }
 
 
+
+  function getManagerOneDriveThumbnailApiUrl(media) {
+    const connection = String(media?.storageConnection || media?.connection || '').trim();
+    const driveId = String(media?.driveId || '').trim();
+    const itemId = String(media?.itemId || '').trim();
+    if (!connection || !driveId || !itemId) return '';
+
+    const params = new URLSearchParams({
+      action: 'thumbnail',
+      connection,
+      driveId,
+      itemId
+    });
+    return `${MANAGER_MEDIA_DEFAULTS.oneDriveEndpoint}?${params.toString()}`;
+  }
+
+  async function renderManagerOneDriveOfficeThumbnail(stage, resolved) {
+    const endpoint = getManagerOneDriveThumbnailApiUrl(resolved);
+    if (!stage || !endpoint) return false;
+
+    try {
+      const response = await fetch(endpoint, { credentials: 'same-origin' });
+      if (!response.ok) return false;
+      const data = await response.json();
+      const url = String(data?.url || '').trim();
+      if (!url) return false;
+
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = String(resolved?.name || resolved?.fileName || resolved?.title || 'Document thumbnail');
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      stage.replaceChildren(img);
+      return true;
+    } catch (error) {
+      console.error('OneDrive Office thumbnail could not be rendered:', error);
+      return false;
+    }
+  }
+
   let managerPdfJsPromise = null;
 
   async function ensureManagerPdfJs(options = {}) {
@@ -1013,6 +1053,11 @@
       if (rendered) return resolved;
     }
 
+    if (kind === 'document' || kind === 'presentation') {
+      const rendered = await renderManagerOneDriveOfficeThumbnail(stage, resolved);
+      if (rendered) return resolved;
+    }
+
     stage.innerHTML = managerMediaElementHtml(resolved, {
       ...options,
       mode: 'thumbnail',
@@ -1047,6 +1092,28 @@
       return resolved;
     }
 
+    if (kind === 'document' || kind === 'presentation') {
+      const trigger = document.createElement('button');
+      trigger.type = 'button';
+      trigger.className = String(options.buttonClass || 'manager-media-interactive');
+      trigger.dataset.managerMediaAction = 'preview';
+      trigger.setAttribute('aria-label', 'View media');
+      stage.replaceChildren(trigger);
+
+      const rendered = await renderManagerOneDriveOfficeThumbnail(trigger, resolved);
+      if (!rendered) {
+        trigger.innerHTML = '<span>View media</span>';
+      }
+
+      trigger.addEventListener('click', async () => {
+        await openManagerMedia(resolved, {
+          ...options,
+          resolved: true
+        });
+      });
+      return resolved;
+    }
+
     if (kind === 'pdf' && options.pdfCanvas !== false && window.pdfjsLib) {
       try {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -1062,13 +1129,26 @@
         const viewport = page.getViewport({
           scale: Number(options.pdfScale || MANAGER_MEDIA_DEFAULTS.pdfScale)
         });
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = String(options.buttonClass || 'manager-media-interactive');
+        trigger.dataset.managerMediaAction = 'preview';
+        trigger.setAttribute('aria-label', 'Open PDF');
+
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        stage.innerHTML = '';
-        stage.appendChild(canvas);
+        trigger.appendChild(canvas);
+        stage.replaceChildren(trigger);
         await page.render({ canvasContext: context, viewport }).promise;
+
+        trigger.addEventListener('click', async () => {
+          await openManagerMedia(resolved, {
+            ...options,
+            resolved: true
+          });
+        });
         return resolved;
       } catch (error) {
         console.error(error);
@@ -1519,12 +1599,10 @@
     if (!source || kind === 'none') return resolved;
 
     if (kind === 'pdf') {
-      /*
-       * PDF is always delegated to the browser/Acrobat viewer.
-       * Keep the calling Manager screen intact and open exactly one new tab.
-       */
-      window.open(toManagerUrl(source), '_blank', 'noopener,noreferrer');
-      return resolved;
+      return openManagerMediaViewer(resolved, {
+        ...options,
+        resolved: true
+      });
     }
 
     if (kind === 'document' || kind === 'presentation') {
@@ -1580,6 +1658,15 @@
 
     if (kind === 'pdf') {
       const rendered = await renderManagerPdfThumbnailCanvas(trigger, resolved, options);
+      if (!rendered) {
+        trigger.innerHTML = managerMediaElementHtml(resolved, {
+          ...options,
+          mode: 'thumbnail',
+          controls: false
+        });
+      }
+    } else if (kind === 'document' || kind === 'presentation') {
+      const rendered = await renderManagerOneDriveOfficeThumbnail(trigger, resolved);
       if (!rendered) {
         trigger.innerHTML = managerMediaElementHtml(resolved, {
           ...options,
