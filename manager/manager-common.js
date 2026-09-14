@@ -975,6 +975,13 @@
       img.alt = String(resolved?.name || resolved?.fileName || resolved?.title || 'Document thumbnail');
       img.loading = 'lazy';
       img.decoding = 'async';
+      img.style.display = 'block';
+      img.style.maxWidth = '100%';
+      img.style.maxHeight = '100%';
+      img.style.width = 'auto';
+      img.style.height = 'auto';
+      img.style.objectFit = 'contain';
+      img.style.margin = 'auto';
       img.addEventListener('load', () => {
         stage.replaceChildren(img);
         finish(true);
@@ -1041,8 +1048,11 @@
       const page = await pdf.getPage(1);
       const baseViewport = page.getViewport({ scale: 1 });
 
-      const maxWidth = Math.max(60, Number(options.thumbnailWidth || stage.clientWidth || 180));
-      const maxHeight = Math.max(48, Number(options.thumbnailHeight || stage.clientHeight || 112));
+      const previewHost = stage.parentElement || stage;
+      const availableWidth = Math.max(1, Number(previewHost.clientWidth || stage.clientWidth || 520));
+      const availableHeight = Math.max(1, Number(previewHost.clientHeight || stage.clientHeight || 300));
+      const maxWidth = Math.max(180, Number(options.thumbnailWidth || Math.max(180, availableWidth - 32)));
+      const maxHeight = Math.max(120, Number(options.thumbnailHeight || Math.max(120, availableHeight - 32)));
       const scale = Math.min(
         maxWidth / baseViewport.width,
         maxHeight / baseViewport.height
@@ -1107,6 +1117,22 @@
     return resolved;
   }
 
+  function prepareManagerMediaPreviewTrigger(trigger) {
+    if (!trigger) return trigger;
+    trigger.style.display = 'flex';
+    trigger.style.alignItems = 'center';
+    trigger.style.justifyContent = 'center';
+    trigger.style.width = '100%';
+    trigger.style.height = '100%';
+    trigger.style.minHeight = '240px';
+    trigger.style.padding = '16px';
+    trigger.style.border = '0';
+    trigger.style.background = 'transparent';
+    trigger.style.cursor = 'pointer';
+    trigger.style.overflow = 'hidden';
+    return trigger;
+  }
+
   async function renderManagerMediaPreview(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1138,6 +1164,7 @@
       trigger.className = String(options.buttonClass || 'manager-media-interactive');
       trigger.dataset.managerMediaAction = 'preview';
       trigger.setAttribute('aria-label', kind === 'presentation' ? 'Open presentation' : 'Open document');
+      prepareManagerMediaPreviewTrigger(trigger);
 
       // Word / PowerPoint follow the same contract as PDF:
       // thumbnail in the Manager preview, click opens the existing Microsoft/OneDrive viewer directly.
@@ -1164,6 +1191,7 @@
       trigger.className = String(options.buttonClass || 'manager-media-interactive');
       trigger.dataset.managerMediaAction = 'preview';
       trigger.setAttribute('aria-label', 'Open PDF');
+      prepareManagerMediaPreviewTrigger(trigger);
       trigger.innerHTML = '<span>Open PDF</span>';
       trigger.addEventListener('click', async () => {
         await openManagerMedia(resolved, {
