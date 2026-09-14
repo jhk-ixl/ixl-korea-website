@@ -11,7 +11,9 @@
     const clean = String(value || '').trim();
     if (!clean) return '';
 
-    if (clean.startsWith('http://') || clean.startsWith('https://')) {
+    // Browser-local object/data URLs are already complete URLs. Prefixing them
+    // with ../ corrupts PC-selected image/video/PDF previews.
+    if (/^(?:https?:|blob:|data:)/i.test(clean)) {
       return clean;
     }
 
@@ -660,9 +662,11 @@
   }
 
   function getManagerThumbnailTime(media, options = {}) {
+    // Resolved media metadata is authoritative. Call-site options are only a
+    // fallback for unregistered/temporary media that has no stored value yet.
     const candidates = [
-      options.thumbnailTime,
       typeof media === 'object' ? media?.thumbnailTime : null,
+      options.thumbnailTime,
       MANAGER_MEDIA_DEFAULTS.videoThumbnailTime
     ];
 
@@ -790,11 +794,12 @@
     // Resolve the registered asset through the same common source contract first.
     const registeredSource = registered ? getManagerMediaSource(registered) : '';
 
+    // Registered media owns its source. A call-site sourceUrl is permitted only
+    // while media is still unregistered (for example a local blob: preview).
     const source = String(
-      options.sourceUrl ||
-      registeredSource ||
-      inputSource ||
-      ''
+      registered
+        ? registeredSource
+        : (options.sourceUrl || inputSource || '')
     ).trim();
 
     const registeredThumbnailTime =
@@ -811,16 +816,22 @@
         ? null
         : Number(input.thumbnailTime);
 
-    const authoritativeThumbnailTime =
-      options.thumbnailTime !== null &&
-      options.thumbnailTime !== undefined &&
-      options.thumbnailTime !== ''
-        ? Number(options.thumbnailTime)
-        : Number.isFinite(registeredThumbnailTime)
-          ? registeredThumbnailTime
-          : Number.isFinite(inputThumbnailTime)
-            ? inputThumbnailTime
-            : MANAGER_MEDIA_DEFAULTS.videoThumbnailTime;
+    const optionThumbnailTime =
+      options.thumbnailTime === null ||
+      options.thumbnailTime === undefined ||
+      options.thumbnailTime === ''
+        ? null
+        : Number(options.thumbnailTime);
+
+    // Registry metadata is authoritative once an asset is registered. Temporary
+    // input/options are considered only for media that has not been registered.
+    const authoritativeThumbnailTime = Number.isFinite(registeredThumbnailTime)
+      ? registeredThumbnailTime
+      : Number.isFinite(inputThumbnailTime)
+        ? inputThumbnailTime
+        : Number.isFinite(optionThumbnailTime)
+          ? optionThumbnailTime
+          : MANAGER_MEDIA_DEFAULTS.videoThumbnailTime;
 
     const merged = {
       ...input,
@@ -933,24 +944,18 @@
     const endpoint = getManagerOneDriveThumbnailApiUrl(resolved);
     if (!stage || !endpoint) return false;
 
-    try {
-      const response = await fetch(endpoint, { credentials: 'same-origin' });
-      if (!response.ok) return false;
-      const data = await response.json();
-      const url = String(data?.url || '').trim();
-      if (!url) return false;
-
+    return await new Promise(resolve => {
       const img = document.createElement('img');
-      img.src = url;
+      img.src = toManagerUrl(endpoint);
       img.alt = String(resolved?.name || resolved?.fileName || resolved?.title || 'Document thumbnail');
       img.loading = 'lazy';
       img.decoding = 'async';
-      stage.replaceChildren(img);
-      return true;
-    } catch (error) {
-      console.error('OneDrive Office thumbnail could not be rendered:', error);
-      return false;
-    }
+      img.addEventListener('load', () => {
+        stage.replaceChildren(img);
+        resolve(true);
+      }, { once: true });
+      img.addEventListener('error', () => resolve(false), { once: true });
+    });
   }
 
   let managerPdfJsPromise = null;
@@ -1263,7 +1268,6 @@
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .manager-media-viewer-open-link,
         .manager-media-viewer-close {
           min-height: 36px;
           display: inline-flex;
@@ -1281,10 +1285,6 @@
           cursor: pointer;
         }
 
-        .manager-media-viewer-open-link {
-          padding: 0 12px;
-        }
-
         .manager-media-viewer-close {
           width: 38px;
           padding: 0;
@@ -1292,7 +1292,6 @@
           line-height: 1;
         }
 
-        .manager-media-viewer-open-link:hover,
         .manager-media-viewer-close:hover {
           background: #f2f6fa;
         }
@@ -1363,9 +1362,6 @@
             height: 94vh;
           }
 
-          .manager-media-viewer-open-link {
-            display: none;
-          }
         }
       `;
       document.head.appendChild(style);
@@ -1382,7 +1378,6 @@
       <div class="manager-media-viewer-dialog" role="dialog" aria-modal="true" aria-labelledby="manager-media-viewer-title">
         <div class="manager-media-viewer-head">
           <h3 class="manager-media-viewer-title" id="manager-media-viewer-title">Media Viewer</h3>
-          <a class="manager-media-viewer-open-link" data-manager-media-viewer-open target="_blank" rel="noopener noreferrer">Open in new tab ↗</a>
           <button type="button" class="manager-media-viewer-close" data-manager-media-viewer-close aria-label="Close media viewer">×</button>
         </div>
         <div class="manager-media-viewer-body" data-manager-media-viewer-body></div>
@@ -1539,8 +1534,8 @@
       } else {
         stage.innerHTML = `
           <div class="manager-media-viewer-message">
-            This document cannot be embedded in the browser from its current source.
-            Use “Open in new tab” above to view or download it.
+            This document cannot be embedded before it has a public web URL.
+            Upload and register it first, then open the registered asset.
           </div>
         `;
       }
@@ -1567,14 +1562,7 @@
     const viewer = ensureManagerMediaViewer();
     const body = viewer.querySelector('[data-manager-media-viewer-body]');
     const title = viewer.querySelector('#manager-media-viewer-title');
-    const openLink = viewer.querySelector('[data-manager-media-viewer-open]');
-
     if (title) title.textContent = getManagerViewerLabel(resolved, kind);
-
-    if (openLink) {
-      openLink.href = toManagerUrl(source);
-      openLink.hidden = kind === 'youtube';
-    }
 
     viewer.classList.add('open');
     viewer.setAttribute('aria-hidden', 'false');

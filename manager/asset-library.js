@@ -192,10 +192,7 @@
 
   function getPreviewKind(asset) {
     return window.IXLManager?.media
-      ? IXLManager.media.detectKind({
-          ...asset,
-          url: getAssetSourceUrl(asset)
-        })
+      ? IXLManager.media.detectKind(asset)
       : 'file';
   }
 
@@ -209,9 +206,7 @@
 
   function getThumbnailTime(asset) {
     return window.IXLManager?.media
-      ? IXLManager.media.getThumbnailTime(asset, {
-          thumbnailTime: asset?.thumbnailTime
-        })
+      ? IXLManager.media.getThumbnailTime(asset)
       : DEFAULT_VIDEO_THUMBNAIL_TIME;
   }
 
@@ -266,18 +261,11 @@
 
     stage.innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
 
-    const sourceUrl = options.sourceUrl || getAssetSourceUrl(asset);
-    if (!sourceUrl) {
-      stage.innerHTML = '<div class="asset-preview-empty">No preview source is available.</div>';
-      return;
-    }
-
     try {
-      await IXLManager.media.renderPreview(stage, {
-        ...asset,
-        url: sourceUrl,
-        thumbnailTime: options.thumbnailTime ?? asset?.thumbnailTime
-      }, {
+      // Asset Library supplies media identity/data only. Source resolution,
+      // Registry authority, thumbnail time and preview behavior belong to the
+      // shared IXLManager.media contract.
+      await IXLManager.media.renderPreview(stage, asset, {
         ...options,
         kind: options.kind || undefined,
         controls: true,
@@ -458,11 +446,7 @@
     const registryItem = getRegistryItem(asset);
     return {
       ...asset,
-      ...(registryItem || {}),
-      url: getAssetSourceUrl(asset),
-      assetKey: registryItem?.key || asset?.key || '',
-      key: registryItem?.key || asset?.key || '',
-      thumbnailTime: registryItem?.thumbnailTime ?? asset?.thumbnailTime
+      assetKey: registryItem?.key || asset?.key || ''
     };
   }
 
@@ -940,6 +924,7 @@
 
       if ($('asset-count')) $('asset-count').textContent = allAssets.length;
       renderFolderFilter();
+      renderUploadFolderSelect();
       renderAssets();
       renderUsageMappings();
     } catch (error) {
@@ -1154,9 +1139,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       name: file.name,
       thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
     }, {
-      sourceUrl: uploadObjectUrl,
-      kind,
-      thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
+      kind
     });
 
     $('upload-preview-note').textContent =
@@ -1207,16 +1190,14 @@ UPDATE will make all of these usages point to the new file. Continue?`
   }
 
   async function renderSelectedOneDrivePreview(item, selectionVersion) {
-    const source = getAssetSourceUrl(item);
     const previewAsset = {
       ...item,
       pathname: item.relativePath,
-      url: source,
       type: getExtension(item.name)
     };
 
     try {
-      await renderPreview('upload-preview', previewAsset, { sourceUrl: source });
+      await renderPreview('upload-preview', previewAsset);
       if (selectionVersion !== oneDriveSelectionVersion || selectedOneDriveItem !== item) return;
 
       const captionNote = item.tracks?.length ? ` · CC ${item.tracks.length}` : '';
