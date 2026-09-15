@@ -1338,13 +1338,46 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
           refreshState();
         }, { once: true });
 
-        player.addEventListener('error', () => {
+        player.addEventListener('error', async () => {
           const error = player.error;
           setDebug(
             14,
             `[9] video error                   ERROR code=${error?.code ?? '-'} message=${String(error?.message || '')}`
           );
           refreshState();
+
+          // TEMPORARY SERVER-ERROR PROBE ONLY.
+          // The normal <video> request is untouched. After it fails, issue a
+          // one-byte Range request to the exact same canonical content URL so
+          // the API's 500 response body can be shown directly in VIDEO DEBUG.
+          try {
+            const probeResponse = await fetch(source, {
+              method: 'GET',
+              headers: { Range: 'bytes=0-0' },
+              cache: 'no-store'
+            });
+            const probeType = String(probeResponse.headers.get('content-type') || '');
+            let probeBody = '';
+            if (!probeResponse.ok) {
+              probeBody = (await probeResponse.text()).slice(0, 1200);
+            }
+            debugRows.push(
+              `[11] server probe status            ${probeResponse.status} ${probeResponse.statusText || ''}`.trimEnd(),
+              `     content-type: ${probeType || 'NONE'}`,
+              `     response: ${probeBody || (probeResponse.ok ? 'OK (no error body)' : 'EMPTY')}`
+            );
+            if (debugPanel) {
+              debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
+            }
+          } catch (probeError) {
+            debugRows.push(
+              `[11] server probe                   FETCH ERROR`,
+              `     ${String(probeError?.message || probeError || 'Unknown error')}`
+            );
+            if (debugPanel) {
+              debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
+            }
+          }
         }, { once: true });
 
         player.addEventListener('progress', refreshState);
