@@ -309,10 +309,26 @@
     selectedPcCaptionFiles = Array.from(byName.values());
   }
 
+  function renderSelectedCaptionFiles() {
+    const host = $('asset-upload-caption-list');
+    if (!host) return;
+
+    const captions = getSelectedCaptionFiles();
+    if (!captions.length) {
+      host.textContent = 'No caption files selected.';
+      return;
+    }
+
+    host.innerHTML = captions
+      .map(file => `<div>• ${escapeHtml(file.name)}</div>`)
+      .join('');
+  }
+
   function clearSelectedCaptionFiles() {
     selectedPcCaptionFiles = [];
     const input = $('asset-upload-captions');
     if (input) input.value = '';
+    renderSelectedCaptionFiles();
   }
 
   function validateSelectedCaptionFiles(videoFile) {
@@ -392,13 +408,49 @@
     return stagedPcOfficeAsset;
   }
 
+  function renderStagedPcOfficePreview(stagedUrl, fileName) {
+    const stage = $('upload-preview');
+    if (!stage) return;
+
+    const publicUrl = String(stagedUrl || '').trim();
+    if (!/^https?:\/\//i.test(publicUrl)) {
+      stage.innerHTML = '<div class="asset-preview-empty">Microsoft preview URL is unavailable.</div>';
+      return;
+    }
+
+    const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
+    stage.innerHTML = `
+      <iframe
+        title="${escapeHtml(fileName || 'Office preview')}"
+        src="${escapeHtml(viewerUrl)}"
+        style="width:100%;height:100%;min-height:360px;border:0;background:#fff;"
+        loading="eager"
+        allowfullscreen>
+      </iframe>`;
+  }
+
   function syncPcVideoFields(kind) {
     const video = kind === 'video';
     const captionsField = $('asset-upload-captions-field');
-    if (captionsField) captionsField.hidden = !video;
-    $('asset-upload-thumbnail-field').hidden = !video;
-    if (video) $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
-    if (!video) clearSelectedCaptionFiles();
+    const thumbnailField = $('asset-upload-thumbnail-field');
+
+    // These are PC Video-only fields. Use inline display as well as hidden so
+    // generic form CSS cannot accidentally override the HTML hidden attribute.
+    if (captionsField) {
+      captionsField.hidden = !video;
+      captionsField.style.display = video ? '' : 'none';
+    }
+    if (thumbnailField) {
+      thumbnailField.hidden = !video;
+      thumbnailField.style.display = video ? '' : 'none';
+    }
+
+    if (video) {
+      $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
+      renderSelectedCaptionFiles();
+    } else {
+      clearSelectedCaptionFiles();
+    }
   }
 
   async function renderPreview(target, asset, options = {}) {
@@ -1267,7 +1319,11 @@ UPDATE will make all of these usages point to the new file. Continue?`
     closeNewFolderEditor();
     $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
     $('asset-upload-thumbnail-field').hidden = true;
-    if ($('asset-upload-captions-field')) $('asset-upload-captions-field').hidden = true;
+    $('asset-upload-thumbnail-field').style.display = 'none';
+    if ($('asset-upload-captions-field')) {
+      $('asset-upload-captions-field').hidden = true;
+      $('asset-upload-captions-field').style.display = 'none';
+    }
     $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a file to preview.</div>';
     $('upload-preview-note').textContent = '';
     $('asset-upload-key').value = '';
@@ -1308,18 +1364,12 @@ UPDATE will make all of these usages point to the new file. Continue?`
           `${file.name} · preparing Microsoft preview...`;
 
         const staged = await stagePcOfficeFile(file, folder);
-        await renderPreview('upload-preview', {
-          type,
-          pathname: staged.pathname,
-          url: staged.url,
-          downloadUrl: staged.downloadUrl,
-          name: file.name,
-          size: file.size
-        }, {
-          kind,
-          sourceUrl: staged.url,
-          resolveAsset: false
-        });
+
+        // The existing shared Microsoft Viewer/open path remains unchanged.
+        // For this pre-registration PC staging screen only, show the staged
+        // public Office file directly in Microsoft's embed viewer so the user
+        // gets a real first-page/slide preview instead of a PPTX/DOCX label.
+        renderStagedPcOfficePreview(staged.url, file.name);
 
         $('upload-preview-note').textContent =
           `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)} · staged for Microsoft preview`;
@@ -1360,8 +1410,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
     if (!file || getPreviewKind({ type: getExtension(file.name), pathname: file.name }) !== 'video') return;
 
     addSelectedCaptionFiles(event?.target?.files || []);
+    renderSelectedCaptionFiles();
     if (event?.target) event.target.value = '';
     await handleUploadFileChange();
+    renderSelectedCaptionFiles();
   }
 
   async function handleUploadFolderChange() {
