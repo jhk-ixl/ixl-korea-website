@@ -1133,6 +1133,22 @@
     return trigger;
   }
 
+  function renderManagerVideoDebug(stage, rows = []) {
+    if (!stage) return null;
+    let panel = stage.parentElement?.querySelector?.('[data-manager-video-debug]');
+    if (!panel) {
+      panel = document.createElement('pre');
+      panel.dataset.managerVideoDebug = 'true';
+      panel.style.cssText =
+        'margin:10px 0 0;padding:10px 12px;max-height:260px;overflow:auto;' +
+        'white-space:pre-wrap;background:#0b1624;color:#d8f3dc;border-radius:6px;' +
+        'font:12px/1.45 Consolas,monospace;text-align:left;';
+      stage.insertAdjacentElement('afterend', panel);
+    }
+    panel.textContent = ['VIDEO DEBUG', '', ...rows].join('\n');
+    return panel;
+  }
+
   async function renderManagerMediaPreview(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1232,7 +1248,64 @@
       const player = stage.querySelector('video');
       const thumbnailTime = getManagerThumbnailTime(resolved, options);
 
+      // TEMPORARY DIAGNOSTICS ONLY.
+      // Do not change source resolution, preload, load(), playback, or streaming behavior.
+      const debugRows = [
+        `[1] Preview renderer entered      OK`,
+        `[2] Media kind detection          ${kind === 'video' ? 'OK' : 'FAIL'} (${kind || 'none'})`,
+        `[3] OneDrive identity             ${
+          resolved?.storageConnection && resolved?.driveId && resolved?.itemId ? 'OK' : 'FAIL'
+        }`,
+        `    connection: ${String(resolved?.storageConnection || '')}`,
+        `    driveId: ${String(resolved?.driveId || '')}`,
+        `    itemId: ${String(resolved?.itemId || '')}`,
+        `[4] Media source resolution       ${source ? 'OK' : 'FAIL'}`,
+        `    source: ${String(source || '')}`,
+        `[5] <video> element created       ${player ? 'OK' : 'FAIL'}`,
+        `[6] video src attribute           ${player?.getAttribute('src') ? 'OK' : 'FAIL'}`,
+        `    src: ${String(player?.getAttribute('src') || '')}`,
+        `    currentSrc: ${String(player?.currentSrc || '')}`,
+        `[7] loadstart event               WAITING`,
+        `[8] loadedmetadata event          WAITING`,
+        `[9] video error                   NONE`,
+        `[10] state                        ready=${player?.readyState ?? '-'} network=${player?.networkState ?? '-'}`
+      ];
+      const debugPanel = renderManagerVideoDebug(stage, debugRows);
+      const setDebug = (index, value) => {
+        debugRows[index] = value;
+        if (debugPanel) debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
+      };
+      const refreshState = () => {
+        if (!player) return;
+        setDebug(11, `    currentSrc: ${String(player.currentSrc || '')}`);
+        setDebug(15, `[10] state                        ready=${player.readyState} network=${player.networkState}`);
+      };
+
       if (player) {
+        player.addEventListener('loadstart', () => {
+          setDebug(12, `[7] loadstart event               OK`);
+          refreshState();
+        }, { once: true });
+
+        player.addEventListener('loadedmetadata', () => {
+          setDebug(13, `[8] loadedmetadata event          OK duration=${Number.isFinite(player.duration) ? player.duration : String(player.duration)}`);
+          refreshState();
+        }, { once: true });
+
+        player.addEventListener('error', () => {
+          const error = player.error;
+          setDebug(
+            14,
+            `[9] video error                   ERROR code=${error?.code ?? '-'} message=${String(error?.message || '')}`
+          );
+          refreshState();
+        }, { once: true });
+
+        player.addEventListener('progress', refreshState);
+        player.addEventListener('suspend', refreshState);
+        player.addEventListener('stalled', refreshState);
+        player.addEventListener('canplay', refreshState);
+
         const startPlayback = () => {
           try {
             if (thumbnailTime > 0) player.currentTime = thumbnailTime;
@@ -1245,6 +1318,9 @@
 
         if (player.readyState >= 1) startPlayback();
         else player.addEventListener('loadedmetadata', startPlayback, { once: true });
+
+        // Capture state after listeners are attached. No player.load() call is made.
+        queueMicrotask(refreshState);
       }
     }
 
