@@ -386,11 +386,6 @@ export default async function handler(req, res) {
       let contentType = namedContentType || upstream.headers.get('content-type') || '';
       if (contentType) res.setHeader('Content-Type', contentType);
 
-      if (requestedName && isInlineBrowserType(requestedName)) {
-        const safeName = requestedName.replace(/[\"\r\n]/g, '_');
-        res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
-      }
-
       res.setHeader('X-IXL-Video-Debug-4', 'stream-pipe-start');
       res.setHeader('X-IXL-Video-Debug-Final-Type', String(res.getHeader('Content-Type') || 'NONE'));
       res.setHeader('X-IXL-Video-Debug-Final-Status', String(res.statusCode || 'NONE'));
