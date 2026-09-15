@@ -333,9 +333,6 @@ export default async function handler(req, res) {
     }
 
     if (action === 'content') {
-      res.setHeader('X-IXL-Video-Debug-1', 'content-request-received');
-      res.setHeader('X-IXL-Video-Debug-Request-Range', String(req.headers?.range || 'NONE'));
-
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
 
@@ -349,8 +346,6 @@ export default async function handler(req, res) {
       const range = String(req.headers?.range || '').trim();
       if (range) upstreamHeaders.Range = range;
 
-      res.setHeader('X-IXL-Video-Debug-2', 'graph-content-request-start');
-
       const upstream = await fetch(
         `${GRAPH}/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/content`,
         {
@@ -359,12 +354,6 @@ export default async function handler(req, res) {
           redirect: 'follow'
         }
       );
-
-      res.setHeader('X-IXL-Video-Debug-3', `graph-status-${upstream.status}`);
-      res.setHeader('X-IXL-Video-Debug-Upstream-Type', upstream.headers.get('content-type') || 'NONE');
-      res.setHeader('X-IXL-Video-Debug-Upstream-Length', upstream.headers.get('content-length') || 'NONE');
-      res.setHeader('X-IXL-Video-Debug-Upstream-Range', upstream.headers.get('content-range') || 'NONE');
-      res.setHeader('X-IXL-Video-Debug-Upstream-Accept-Ranges', upstream.headers.get('accept-ranges') || 'NONE');
 
       if (!upstream.ok && upstream.status !== 206) {
         const error = new Error(`OneDrive content request failed (${upstream.status}).`);
@@ -385,10 +374,6 @@ export default async function handler(req, res) {
       const namedContentType = getContentTypeFromName(requestedName);
       let contentType = namedContentType || upstream.headers.get('content-type') || '';
       if (contentType) res.setHeader('Content-Type', contentType);
-
-      res.setHeader('X-IXL-Video-Debug-4', 'stream-pipe-start');
-      res.setHeader('X-IXL-Video-Debug-Final-Type', String(res.getHeader('Content-Type') || 'NONE'));
-      res.setHeader('X-IXL-Video-Debug-Final-Status', String(res.statusCode || 'NONE'));
 
       return pipeFetchBody(upstream, res);
     }

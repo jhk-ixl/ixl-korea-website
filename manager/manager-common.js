@@ -953,51 +953,12 @@
     return `${MANAGER_MEDIA_DEFAULTS.oneDriveEndpoint}?${params.toString()}`;
   }
 
-    function renderManagerOfficeThumbnailDebug(stage, rows = []) {
-    if (!stage) return null;
-    let panel = stage.parentElement?.querySelector?.('[data-manager-office-thumbnail-debug]');
-    if (!panel) {
-      panel = document.createElement('pre');
-      panel.dataset.managerOfficeThumbnailDebug = 'true';
-      panel.style.cssText =
-        'margin:10px 0 0;padding:10px 12px;max-height:260px;overflow:auto;' +
-        'white-space:pre-wrap;background:#0b1624;color:#d8f3dc;border-radius:6px;' +
-        'font:12px/1.45 Consolas,monospace;text-align:left;';
-      stage.insertAdjacentElement('afterend', panel);
-    }
-    panel.textContent = ['OFFICE THUMBNAIL DEBUG', '', ...rows].join('\n');
-    return panel;
-  }
-
-async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {}) {
+  async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {}) {
     const endpoint = getManagerOneDriveThumbnailApiUrl(resolved);
     if (!stage || !endpoint) return false;
 
     return await new Promise(resolve => {
-      const officeDebugRows = [
-      `[1] Office renderer entered       OK`,
-      `[2] file type                     ${String(resolved?.type || resolved?.extension || resolved?.name?.split('.').pop() || '').toUpperCase()}`,
-      `[3] OneDrive identity             ${resolved?.storageConnection && resolved?.driveId && resolved?.itemId ? 'OK' : 'FAIL'}`,
-      `    connection: ${String(resolved?.storageConnection || '')}`,
-      `    driveId: ${String(resolved?.driveId || '')}`,
-      `    itemId: ${String(resolved?.itemId || '')}`,
-      `[4] thumbnail endpoint built      ${endpoint ? 'OK' : 'FAIL'}`,
-      `    endpoint: ${String(endpoint || '')}`,
-      `[5] <img> created                 WAITING`,
-      `[6] img.loading                   WAITING`,
-      `[7] img.src assigned              WAITING`,
-      `[8] request/load event            WAITING`,
-      `[9] img load event                WAITING`,
-      `[10] img error event              NONE`
-    ];
-    const officeDebugPanel = renderManagerOfficeThumbnailDebug(stage, officeDebugRows);
-    const setOfficeDebug = (index, value) => {
-      officeDebugRows[index] = value;
-      if (officeDebugPanel) officeDebugPanel.textContent = ['OFFICE THUMBNAIL DEBUG', '', ...officeDebugRows].join('\n');
-    };
-
-    const img = document.createElement('img');
-    setOfficeDebug(8, `[5] <img> created                 OK`);
+      const img = document.createElement('img');
       let settled = false;
       const finish = value => {
         if (settled) return;
@@ -1015,7 +976,6 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
       // Office thumbnail is created off-DOM and inserted only after load.
       // Asset Library owns list-level lazy hydration, so this image must load eagerly.
       img.loading = 'eager';
-      setOfficeDebug(9, `[6] img.loading                   ${img.loading}`);
       img.decoding = 'async';
       img.style.display = 'block';
       img.style.maxWidth = '100%';
@@ -1025,15 +985,11 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
       img.style.objectFit = 'contain';
       img.style.margin = 'auto';
       img.addEventListener('load', () => {
-      setOfficeDebug(11, `[8] request/load event            OBSERVED`);
-      setOfficeDebug(12, `[9] img load event                OK`);
         stage.replaceChildren(img);
         finish(true);
       }, { once: true });
       img.addEventListener('error', () => finish(false), { once: true });
       img.src = toManagerUrl(endpoint);
-    setOfficeDebug(10, `[7] img.src assigned              ${img.src ? 'OK' : 'FAIL'}`);
-    setOfficeDebug(11, `[8] request/load event            WAITING`);
     });
   }
 
@@ -1179,22 +1135,6 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
     return trigger;
   }
 
-  function renderManagerVideoDebug(stage, rows = []) {
-    if (!stage) return null;
-    let panel = stage.parentElement?.querySelector?.('[data-manager-video-debug]');
-    if (!panel) {
-      panel = document.createElement('pre');
-      panel.dataset.managerVideoDebug = 'true';
-      panel.style.cssText =
-        'margin:10px 0 0;padding:10px 12px;max-height:260px;overflow:auto;' +
-        'white-space:pre-wrap;background:#0b1624;color:#d8f3dc;border-radius:6px;' +
-        'font:12px/1.45 Consolas,monospace;text-align:left;';
-      stage.insertAdjacentElement('afterend', panel);
-    }
-    panel.textContent = ['VIDEO DEBUG', '', ...rows].join('\n');
-    return panel;
-  }
-
   async function renderManagerMediaPreview(target, media, options = {}) {
     const stage = typeof target === 'string'
       ? document.getElementById(target)
@@ -1294,97 +1234,7 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
       const player = stage.querySelector('video');
       const thumbnailTime = getManagerThumbnailTime(resolved, options);
 
-      // TEMPORARY DIAGNOSTICS ONLY.
-      // Do not change source resolution, preload, load(), playback, or streaming behavior.
-      const debugRows = [
-        `[1] Preview renderer entered      OK`,
-        `[2] Media kind detection          ${kind === 'video' ? 'OK' : 'FAIL'} (${kind || 'none'})`,
-        `[3] OneDrive identity             ${
-          resolved?.storageConnection && resolved?.driveId && resolved?.itemId ? 'OK' : 'FAIL'
-        }`,
-        `    connection: ${String(resolved?.storageConnection || '')}`,
-        `    driveId: ${String(resolved?.driveId || '')}`,
-        `    itemId: ${String(resolved?.itemId || '')}`,
-        `[4] Media source resolution       ${source ? 'OK' : 'FAIL'}`,
-        `    source: ${String(source || '')}`,
-        `[5] <video> element created       ${player ? 'OK' : 'FAIL'}`,
-        `[6] video src attribute           ${player?.getAttribute('src') ? 'OK' : 'FAIL'}`,
-        `    src: ${String(player?.getAttribute('src') || '')}`,
-        `    currentSrc: ${String(player?.currentSrc || '')}`,
-        `[7] loadstart event               WAITING`,
-        `[8] loadedmetadata event          WAITING`,
-        `[9] video error                   NONE`,
-        `[10] state                        ready=${player?.readyState ?? '-'} network=${player?.networkState ?? '-'}`
-      ];
-      const debugPanel = renderManagerVideoDebug(stage, debugRows);
-      const setDebug = (index, value) => {
-        debugRows[index] = value;
-        if (debugPanel) debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
-      };
-      const refreshState = () => {
-        if (!player) return;
-        setDebug(11, `    currentSrc: ${String(player.currentSrc || '')}`);
-        setDebug(15, `[10] state                        ready=${player.readyState} network=${player.networkState}`);
-      };
-
       if (player) {
-        player.addEventListener('loadstart', () => {
-          setDebug(12, `[7] loadstart event               OK`);
-          refreshState();
-        }, { once: true });
-
-        player.addEventListener('loadedmetadata', () => {
-          setDebug(13, `[8] loadedmetadata event          OK duration=${Number.isFinite(player.duration) ? player.duration : String(player.duration)}`);
-          refreshState();
-        }, { once: true });
-
-        player.addEventListener('error', async () => {
-          const error = player.error;
-          setDebug(
-            14,
-            `[9] video error                   ERROR code=${error?.code ?? '-'} message=${String(error?.message || '')}`
-          );
-          refreshState();
-
-          // TEMPORARY SERVER-ERROR PROBE ONLY.
-          // The normal <video> request is untouched. After it fails, issue a
-          // one-byte Range request to the exact same canonical content URL so
-          // the API's 500 response body can be shown directly in VIDEO DEBUG.
-          try {
-            const probeResponse = await fetch(source, {
-              method: 'GET',
-              headers: { Range: 'bytes=0-0' },
-              cache: 'no-store'
-            });
-            const probeType = String(probeResponse.headers.get('content-type') || '');
-            let probeBody = '';
-            if (!probeResponse.ok) {
-              probeBody = (await probeResponse.text()).slice(0, 1200);
-            }
-            debugRows.push(
-              `[11] server probe status            ${probeResponse.status} ${probeResponse.statusText || ''}`.trimEnd(),
-              `     content-type: ${probeType || 'NONE'}`,
-              `     response: ${probeBody || (probeResponse.ok ? 'OK (no error body)' : 'EMPTY')}`
-            );
-            if (debugPanel) {
-              debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
-            }
-          } catch (probeError) {
-            debugRows.push(
-              `[11] server probe                   FETCH ERROR`,
-              `     ${String(probeError?.message || probeError || 'Unknown error')}`
-            );
-            if (debugPanel) {
-              debugPanel.textContent = ['VIDEO DEBUG', '', ...debugRows].join('\n');
-            }
-          }
-        }, { once: true });
-
-        player.addEventListener('progress', refreshState);
-        player.addEventListener('suspend', refreshState);
-        player.addEventListener('stalled', refreshState);
-        player.addEventListener('canplay', refreshState);
-
         const startPlayback = () => {
           try {
             if (thumbnailTime > 0) player.currentTime = thumbnailTime;
@@ -1397,9 +1247,6 @@ async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {
 
         if (player.readyState >= 1) startPlayback();
         else player.addEventListener('loadedmetadata', startPlayback, { once: true });
-
-        // Capture state after listeners are attached. No player.load() call is made.
-        queueMicrotask(refreshState);
       }
     }
 
