@@ -953,12 +953,51 @@
     return `${MANAGER_MEDIA_DEFAULTS.oneDriveEndpoint}?${params.toString()}`;
   }
 
-  async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {}) {
+    function renderManagerOfficeThumbnailDebug(stage, rows = []) {
+    if (!stage) return null;
+    let panel = stage.parentElement?.querySelector?.('[data-manager-office-thumbnail-debug]');
+    if (!panel) {
+      panel = document.createElement('pre');
+      panel.dataset.managerOfficeThumbnailDebug = 'true';
+      panel.style.cssText =
+        'margin:10px 0 0;padding:10px 12px;max-height:260px;overflow:auto;' +
+        'white-space:pre-wrap;background:#0b1624;color:#d8f3dc;border-radius:6px;' +
+        'font:12px/1.45 Consolas,monospace;text-align:left;';
+      stage.insertAdjacentElement('afterend', panel);
+    }
+    panel.textContent = ['OFFICE THUMBNAIL DEBUG', '', ...rows].join('\n');
+    return panel;
+  }
+
+async function renderManagerOneDriveOfficeThumbnail(stage, resolved, options = {}) {
     const endpoint = getManagerOneDriveThumbnailApiUrl(resolved);
     if (!stage || !endpoint) return false;
 
     return await new Promise(resolve => {
-      const img = document.createElement('img');
+      const officeDebugRows = [
+      `[1] Office renderer entered       OK`,
+      `[2] file type                     ${String(resolved?.type || resolved?.extension || resolved?.name?.split('.').pop() || '').toUpperCase()}`,
+      `[3] OneDrive identity             ${resolved?.storageConnection && resolved?.driveId && resolved?.itemId ? 'OK' : 'FAIL'}`,
+      `    connection: ${String(resolved?.storageConnection || '')}`,
+      `    driveId: ${String(resolved?.driveId || '')}`,
+      `    itemId: ${String(resolved?.itemId || '')}`,
+      `[4] thumbnail endpoint built      ${endpoint ? 'OK' : 'FAIL'}`,
+      `    endpoint: ${String(endpoint || '')}`,
+      `[5] <img> created                 WAITING`,
+      `[6] img.loading                   WAITING`,
+      `[7] img.src assigned              WAITING`,
+      `[8] request/load event            WAITING`,
+      `[9] img load event                WAITING`,
+      `[10] img error event              NONE`
+    ];
+    const officeDebugPanel = renderManagerOfficeThumbnailDebug(stage, officeDebugRows);
+    const setOfficeDebug = (index, value) => {
+      officeDebugRows[index] = value;
+      if (officeDebugPanel) officeDebugPanel.textContent = ['OFFICE THUMBNAIL DEBUG', '', ...officeDebugRows].join('\n');
+    };
+
+    const img = document.createElement('img');
+    setOfficeDebug(8, `[5] <img> created                 OK`);
       let settled = false;
       const finish = value => {
         if (settled) return;
@@ -973,7 +1012,10 @@
       );
 
       img.alt = String(resolved?.name || resolved?.fileName || resolved?.title || 'Document thumbnail');
-      img.loading = 'lazy';
+      // Office thumbnail is created off-DOM and inserted only after load.
+      // Asset Library owns list-level lazy hydration, so this image must load eagerly.
+      img.loading = 'eager';
+      setOfficeDebug(9, `[6] img.loading                   ${img.loading}`);
       img.decoding = 'async';
       img.style.display = 'block';
       img.style.maxWidth = '100%';
@@ -983,11 +1025,15 @@
       img.style.objectFit = 'contain';
       img.style.margin = 'auto';
       img.addEventListener('load', () => {
+      setOfficeDebug(11, `[8] request/load event            OBSERVED`);
+      setOfficeDebug(12, `[9] img load event                OK`);
         stage.replaceChildren(img);
         finish(true);
       }, { once: true });
       img.addEventListener('error', () => finish(false), { once: true });
       img.src = toManagerUrl(endpoint);
+    setOfficeDebug(10, `[7] img.src assigned              ${img.src ? 'OK' : 'FAIL'}`);
+    setOfficeDebug(11, `[8] request/load event            WAITING`);
     });
   }
 
