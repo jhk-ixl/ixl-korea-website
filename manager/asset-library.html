@@ -103,11 +103,6 @@
               <label for="asset-upload-file">File *</label>
               <input type="file" id="asset-upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt" required>
             </div>
-            <div class="asset-editable-field manager-editable-field" id="asset-upload-caption-field" hidden>
-              <label for="asset-upload-caption-files">Caption Files (VTT)</label>
-              <input type="file" id="asset-upload-caption-files" accept=".vtt,text/vtt" multiple>
-              <small>Optional. Select one or more VTT files for this video. They are uploaded to the same Vercel folder and saved through the existing shared tracks contract.</small>
-            </div>
             <div class="asset-form-row">
               <div class="asset-editable-field manager-editable-field">
                 <label for="asset-upload-folder">Folder *</label>
@@ -134,11 +129,6 @@
               <label for="asset-upload-description">Description</label>
               <textarea id="asset-upload-description" rows="3" placeholder="Short description for administrators and reuse."></textarea>
             </div>
-            <div class="asset-editable-field manager-editable-field" id="asset-upload-thumbnail-field" hidden>
-              <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
-              <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
-              <small>New video assets default to 1 second. Explicit 0 is valid.</small>
-            </div>
             </div>
 
             <div id="asset-onedrive-fields" hidden>
@@ -154,6 +144,12 @@
                 <button type="button" id="onedrive-browse-button" class="library-button">Browse OneDrive</button>
                 <div id="onedrive-selected-file" class="onedrive-selected-file">No OneDrive file selected.</div>
               </div>
+            </div>
+
+            <div class="asset-editable-field manager-editable-field" id="asset-upload-thumbnail-field" hidden>
+              <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
+              <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
+              <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
 
             <div class="asset-form-actions manager-detail-actions">

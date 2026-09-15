@@ -1113,7 +1113,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
     closeNewFolderEditor();
     $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
     $('asset-upload-thumbnail-field').hidden = true;
-    $('asset-upload-caption-field').hidden = true;
     $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a file to preview.</div>';
     $('upload-preview-note').textContent = '';
     $('asset-upload-key').value = '';
@@ -1139,20 +1138,15 @@ UPDATE will make all of these usages point to the new file. Continue?`
     const video = kind === 'video';
 
     $('asset-upload-thumbnail-field').hidden = !video;
-    $('asset-upload-caption-field').hidden = !video;
     if (video) $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
-    if (!video && $('asset-upload-caption-files')) $('asset-upload-caption-files').value = '';
 
     uploadObjectUrl = URL.createObjectURL(file);
-    const captionFiles = video ? getSelectedPcCaptionFiles() : [];
-    const previewTracks = video ? buildPcPreviewTracks(file, captionFiles) : [];
 
     await renderPreview('upload-preview', {
       type,
       pathname: file.name,
       url: uploadObjectUrl,
       name: file.name,
-      tracks: previewTracks,
       thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
     }, {
       kind,
@@ -1164,42 +1158,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     });
 
     $('upload-preview-note').textContent =
-      `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}` +
-      (previewTracks.length ? ` · CC ${previewTracks.length}` : '');
-  }
-
-  function getPcCaptionLanguage(fileName, videoName) {
-    const stripExtension = value => String(value || '').trim().replace(/\.[^.]+$/, '');
-    const videoBase = stripExtension(videoName);
-    const captionStem = stripExtension(fileName);
-    const suffix = captionStem.slice(videoBase.length).replace(/^[._-]+/, '').toLowerCase();
-    const map = {
-      en: 'en', eng: 'en', english: 'en',
-      ko: 'ko', kor: 'ko', korean: 'ko', kr: 'ko',
-      ja: 'ja', jp: 'ja', japanese: 'ja',
-      zh: 'zh', cn: 'zh', chinese: 'zh'
-    };
-    return map[suffix] || suffix || 'en';
-  }
-
-  function getSelectedPcCaptionFiles() {
-    return Array.from($('asset-upload-caption-files')?.files || [])
-      .filter(file => /\.vtt$/i.test(String(file?.name || '')));
-  }
-
-  function buildPcPreviewTracks(videoFile, captionFiles) {
-    return captionFiles.map((file, index) => {
-      const language = getPcCaptionLanguage(file.name, videoFile.name);
-      return {
-        kind: 'subtitles',
-        label: language.toUpperCase(),
-        srclang: language,
-        default: index === 0,
-        storageProvider: 'local',
-        name: file.name,
-        url: URL.createObjectURL(file)
-      };
-    });
+      `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}`;
   }
 
   function getAssetSourceChoice() {
@@ -1211,6 +1170,28 @@ UPDATE will make all of these usages point to the new file. Continue?`
     oneDriveDriveId = '';
     oneDriveStack = [];
     renderSelectedOneDriveItem();
+    syncUploadThumbnailField();
+  }
+
+  function syncUploadThumbnailField() {
+    const field = $('asset-upload-thumbnail-field');
+    const input = $('asset-upload-thumbnail-time');
+    if (!field || !input) return;
+
+    const source = getAssetSourceChoice();
+    const file = $('asset-upload-file')?.files?.[0] || null;
+    const asset = source === 'onedrive' ? selectedOneDriveItem : file;
+    const name = source === 'onedrive' ? asset?.name : file?.name;
+    const isVideo = Boolean(name) && getPreviewKind({
+      type: getExtension(name),
+      pathname: name,
+      name
+    }) === 'video';
+
+    field.hidden = !isVideo;
+    if (isVideo && String(input.value || '').trim() === '') {
+      input.value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
+    }
   }
 
   function syncAssetSourceUI() {
@@ -1231,6 +1212,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       }
       renderSelectedOneDriveItem();
     }
+    syncUploadThumbnailField();
   }
 
   function renderSelectedOneDriveItem() {
@@ -1255,8 +1237,14 @@ UPDATE will make all of these usages point to the new file. Continue?`
     };
 
     try {
+      const thumbnailTime = Number($('asset-upload-thumbnail-time')?.value);
+      if (getPreviewKind(previewAsset) === 'video' && Number.isFinite(thumbnailTime) && thumbnailTime >= 0) {
+        previewAsset.thumbnailTime = thumbnailTime;
+      }
+
       await renderPreview('upload-preview', previewAsset, {
         sourceUrl: source,
+        thumbnailTime: previewAsset.thumbnailTime,
         // This is a pre-registration OneDrive preview. Keep the picker item
         // identity (connection + driveId + itemId + tracks + webUrl) intact;
         // Registry authority begins only after registration completes.
@@ -1358,11 +1346,14 @@ UPDATE will make all of these usages point to the new file. Continue?`
           storageConnection: oneDriveConnectionId,
           parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
           relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`,
-          tracks: Array.isArray(item.tracks) ? item.tracks : []
+          tracks: Array.isArray(item.tracks) ? item.tracks : [],
+          thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
         };
 
         $('asset-upload-key').value = createAssetKey(item.name);
+        $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
         renderSelectedOneDriveItem();
+        syncUploadThumbnailField();
         $('upload-preview').innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
         const captionNote = selectedOneDriveItem.tracks.length ? ` · CC ${selectedOneDriveItem.tracks.length}` : '';
         $('upload-preview-note').textContent =
@@ -1413,6 +1404,11 @@ UPDATE will make all of these usages point to the new file. Continue?`
     const key = createAssetKey($('asset-upload-key').value || item.name);
     if (!key) return alert('A valid Asset Key is required.');
     const ext = getExtension(item.name);
+    const isVideo = ['mp4', 'mov', 'm4v', 'webm'].includes(ext);
+    const thumbnailTime = isVideo ? Number($('asset-upload-thumbnail-time').value) : null;
+    if (isVideo && (!Number.isFinite(thumbnailTime) || thumbnailTime < 0)) {
+      return alert('Thumbnail Time must be 0 or greater.');
+    }
     const registryPath = item.relativePath.replace(/^\/+/, '');
 
     const registered = await registerAsset({
@@ -1441,7 +1437,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
       itemId: item.id,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
-      tracks: Array.isArray(item.tracks) ? item.tracks : []
+      tracks: Array.isArray(item.tracks) ? item.tracks : [],
+      thumbnailTime: isVideo ? thumbnailTime : null
     });
 
     if (!registered) return;
@@ -1490,7 +1487,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
     }
 
     let uploadedAsset = null;
-    const uploadedCaptionAssets = [];
     let registered = null;
 
     try {
@@ -1515,45 +1511,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
         uploadedAt: new Date().toISOString()
       };
 
-      const captionFiles = isVideo ? getSelectedPcCaptionFiles() : [];
-      const tracks = [];
-
-      if (captionFiles.length) {
-        button.textContent = 'Uploading captions...';
-
-        for (let index = 0; index < captionFiles.length; index += 1) {
-          const captionFile = captionFiles[index];
-          const safeCaptionName = captionFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
-          const captionPathname = `${folder}/${safeCaptionName}`;
-          const captionUploaded = await window.vercelBlobUpload(captionPathname, captionFile, {
-            access: 'public',
-            handleUploadUrl: API_UPLOAD
-          });
-
-          const captionAsset = {
-            pathname: captionUploaded.pathname || captionPathname,
-            url: captionUploaded.url || '',
-            downloadUrl: captionUploaded.downloadUrl || captionUploaded.url || '',
-            size: captionFile.size,
-            uploadedAt: new Date().toISOString()
-          };
-          uploadedCaptionAssets.push(captionAsset);
-
-          const language = getPcCaptionLanguage(captionFile.name, file.name);
-          tracks.push({
-            kind: 'subtitles',
-            label: language.toUpperCase(),
-            srclang: language,
-            default: index === 0,
-            storageProvider: 'vercel',
-            name: captionFile.name,
-            pathname: captionAsset.pathname,
-            url: captionAsset.url,
-            downloadUrl: captionAsset.downloadUrl
-          });
-        }
-      }
-
       button.textContent = 'Registering...';
 
       registered = await registerAsset(uploadedAsset, {
@@ -1561,15 +1518,11 @@ UPDATE will make all of these usages point to the new file. Continue?`
         name: file.name,
         description: $('asset-upload-description').value.trim(),
         type: ext,
-        tracks,
         thumbnailTime: isVideo ? thumbnailTime : null
       });
 
       if (!registered) {
         await deleteUploadedBlobQuietly(uploadedAsset);
-        for (const captionAsset of uploadedCaptionAssets) {
-          await deleteUploadedBlobQuietly(captionAsset);
-        }
         uploadedAsset = null;
         return;
       }
@@ -2079,7 +2032,6 @@ Key: ${registered.key || key}`);
     });
 
     $('asset-upload-file')?.addEventListener('change', handleUploadFileChange);
-    $('asset-upload-caption-files')?.addEventListener('change', handleUploadFileChange);
     document.querySelectorAll('input[name="asset-source"]').forEach(input => input.addEventListener('change', async () => {
       syncAssetSourceUI();
       if (getAssetSourceChoice() === 'onedrive' && !oneDriveConnections.length) {
@@ -2094,6 +2046,13 @@ Key: ${registered.key || key}`);
       $('asset-upload-key').value = '';
       $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a OneDrive file to preview.</div>';
       $('upload-preview-note').textContent = '';
+    });
+    $('asset-upload-thumbnail-time')?.addEventListener('change', () => {
+      if (getAssetSourceChoice() !== 'onedrive' || !selectedOneDriveItem) return;
+      const value = Number($('asset-upload-thumbnail-time').value);
+      if (!Number.isFinite(value) || value < 0) return;
+      selectedOneDriveItem.thumbnailTime = value;
+      renderSelectedOneDrivePreview(selectedOneDriveItem, oneDriveSelectionVersion);
     });
     $('onedrive-browse-button')?.addEventListener('click', openOneDriveBrowser);
     $('onedrive-browser-close')?.addEventListener('click', () => { $('onedrive-browser-modal').hidden = true; });
