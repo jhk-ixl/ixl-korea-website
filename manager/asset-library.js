@@ -418,15 +418,41 @@
       return;
     }
 
+    const type = getFileType(fileName);
+    const kind = getPreviewKind({ type, pathname: fileName });
     const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
+
+    // PC/Vercel Office preview follows the validated OneDrive interaction model:
+    // show a non-interactive first-page/slide thumbnail, then use the existing
+    // shared Microsoft Viewer only after the user clicks the thumbnail.
     stage.innerHTML = `
-      <iframe
-        title="${escapeHtml(fileName || 'Office preview')}"
-        src="${escapeHtml(viewerUrl)}"
-        style="width:100%;height:100%;min-height:360px;border:0;background:#fff;"
-        loading="eager"
-        allowfullscreen>
-      </iframe>`;
+      <button type="button" class="manager-media-interactive" data-pc-office-thumbnail
+        aria-label="Open ${escapeHtml(fileName || 'Office file')}"
+        style="position:relative;width:100%;height:100%;min-height:360px;padding:0;border:0;background:#fff;overflow:hidden;cursor:pointer;">
+        <iframe
+          title="${escapeHtml(fileName || 'Office thumbnail')}"
+          src="${escapeHtml(viewerUrl)}"
+          tabindex="-1"
+          aria-hidden="true"
+          style="width:100%;height:100%;min-height:360px;border:0;background:#fff;pointer-events:none;"
+          loading="eager">
+        </iframe>
+        <span style="position:absolute;inset:0;display:block;" aria-hidden="true"></span>
+      </button>`;
+
+    const trigger = stage.querySelector('[data-pc-office-thumbnail]');
+    trigger?.addEventListener('click', async () => {
+      if (!window.IXLManager?.media?.open) return;
+      await IXLManager.media.open({
+        type,
+        pathname: fileName,
+        url: publicUrl,
+        name: fileName
+      }, {
+        kind,
+        resolveAsset: false
+      });
+    });
   }
 
   function syncPcVideoFields(kind) {
