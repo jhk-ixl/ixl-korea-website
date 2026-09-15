@@ -282,33 +282,20 @@ export default async function handler(req, res) {
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
 
-      // Resolve the current OneDrive download URL and proxy the bytes through
-      // this same-origin API endpoint. This keeps <video> and <track> requests
-      // on the Manager origin and preserves HTTP Range requests (206), which
-      // browsers need for duration/seek metadata and progressive playback.
-      const metaResponse = await graph(
-        `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}?$select=id,name,file,size,@microsoft.graph.downloadUrl`,
-        token
-      );
-      const item = await metaResponse.json();
-      const url = item['@microsoft.graph.downloadUrl'] || '';
-      if (!url) return res.status(404).json({ error: 'OneDrive content URL is unavailable.' });
-
+      // Canonical OneDrive content path: let Microsoft Graph resolve /content.
+      // Do not depend on @microsoft.graph.downloadUrl; that annotation is
+      // temporary and may be absent. Proxy the bytes through this same-origin
+      // endpoint so image/PDF/video/VTT all use one stable Manager URL and
+      // video Range requests keep working.
       const upstreamHeaders = {};
       const range = String(req.headers?.range || '').trim();
       if (range) upstreamHeaders.Range = range;
 
-      const upstream = await fetch(url, {
-        method: 'GET',
-        headers: upstreamHeaders,
-        redirect: 'follow'
-      });
-
-      if (!upstream.ok && upstream.status !== 206) {
-        const error = new Error(`OneDrive content request failed (${upstream.status}).`);
-        error.statusCode = upstream.status;
-        throw error;
-      }
+      const upstream = await graph(
+        `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/content`,
+        token,
+        { method: 'GET', headers: upstreamHeaders, redirect: 'follow' }
+      );
 
       res.status(upstream.status);
       res.setHeader('Cache-Control', 'private, no-store');
@@ -319,9 +306,15 @@ export default async function handler(req, res) {
       copyUpstreamHeader(upstream, res, 'etag');
       copyUpstreamHeader(upstream, res, 'last-modified');
 
-      let contentType = upstream.headers.get('content-type') || item.file?.mimeType || '';
-      if (/\.vtt$/i.test(String(item.name || ''))) contentType = 'text/vtt; charset=utf-8';
+      let contentType = upstream.headers.get('content-type') || '';
+      const requestedName = String(req.query?.name || '').trim();
+      if (/\.vtt$/i.test(requestedName)) contentType = 'text/vtt; charset=utf-8';
       if (contentType) res.setHeader('Content-Type', contentType);
+
+      if (requestedName) {
+        const safeName = requestedName.replace(/["\r\n]/g, '_');
+        res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
+      }
 
       return pipeFetchBody(upstream, res);
     }
@@ -330,20 +323,20 @@ export default async function handler(req, res) {
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
 
-      const response = await graph(
-        `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/thumbnails`,
-        token
-      );
+      // Keep thumbnails behind the same-origin IXL Korea endpoint. The Microsoft
+      // thumbnail URL is temporary and should never become a client-side source of truth.
+      const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/thumbnails`, token);
       const data = await response.json();
       const set = data.value?.[0] || {};
       const thumbnailUrl = set.large?.url || set.medium?.url || set.small?.url || '';
-      if (!thumbnailUrl) return res.status(404).json({ error: 'Thumbnail is not available for this file.' });
+      if (!thumbnailUrl) return res.status(404).json({ error: 'OneDrive thumbnail is unavailable.' });
 
       const upstream = await fetch(thumbnailUrl, { redirect: 'follow' });
       if (!upstream.ok) {
-        return res.status(upstream.status || 502).json({ error: 'OneDrive thumbnail download failed.' });
+        return res.status(upstream.status || 502).json({ error: 'OneDrive thumbnail could not be loaded.' });
       }
 
+      res.status(upstream.status || 200);
       copyUpstreamHeader(upstream, res, 'content-type');
       copyUpstreamHeader(upstream, res, 'content-length');
       copyUpstreamHeader(upstream, res, 'etag');
