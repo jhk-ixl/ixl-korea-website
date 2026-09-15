@@ -12,10 +12,10 @@
   let registryAssets = [];
   let usageMappings = [];
   let uploadObjectUrl = '';
+  let stagedPcOfficeAsset = null;
+  let stagedPcOfficeSignature = '';
   let uploadCaptionObjectUrls = [];
-  let stagedOfficeAsset = null;
-  let stagedOfficeFile = null;
-  let pcSelectionVersion = 0;
+  let selectedPcCaptionFiles = [];
   let selectedOneDriveItem = null;
   let oneDriveConnections = [];
   let oneDriveConnectionId = '';
@@ -252,18 +252,38 @@
       URL.revokeObjectURL(uploadObjectUrl);
       uploadObjectUrl = '';
     }
+  }
+
+  function clearUploadCaptionObjectUrls() {
     uploadCaptionObjectUrls.forEach(url => URL.revokeObjectURL(url));
     uploadCaptionObjectUrls = [];
+  }
+
+  function getFileBaseName(name) {
+    return getFileName(name).replace(/\.[^.]+$/, '');
   }
 
   function isOfficeKind(kind) {
     return kind === 'presentation' || kind === 'document';
   }
 
-  function getCaptionLanguage(fileName, videoName) {
-    const videoBase = String(videoName || '').replace(/\.[^.]+$/, '');
-    const captionBase = String(fileName || '').replace(/\.vtt$/i, '');
-    const suffix = captionBase.slice(videoBase.length).replace(/^[._-]+/, '').toLowerCase();
+  function isMatchingCaptionFile(captionName, videoName) {
+    if (getExtension(captionName) !== 'vtt') return false;
+    const videoBase = getFileBaseName(videoName).toLowerCase();
+    const captionBase = getFileBaseName(captionName).toLowerCase();
+    return captionBase === videoBase ||
+      captionBase.startsWith(`${videoBase}.`) ||
+      captionBase.startsWith(`${videoBase}-`) ||
+      captionBase.startsWith(`${videoBase}_`);
+  }
+
+  function getCaptionLanguage(captionName, videoName) {
+    const videoBase = getFileBaseName(videoName);
+    const captionBase = getFileBaseName(captionName);
+    const suffix = captionBase
+      .slice(videoBase.length)
+      .replace(/^[._-]+/, '')
+      .toLowerCase();
     const map = {
       en: 'en', eng: 'en', english: 'en',
       ko: 'ko', kor: 'ko', korean: 'ko', kr: 'ko',
@@ -273,27 +293,73 @@
     return map[suffix] || suffix || 'en';
   }
 
-  function buildLocalCaptionTracks(videoFile, captionFiles) {
-    uploadCaptionObjectUrls.forEach(url => URL.revokeObjectURL(url));
-    uploadCaptionObjectUrls = [];
-    return Array.from(captionFiles || []).map((file, index) => {
+  function getSelectedCaptionFiles() {
+    return selectedPcCaptionFiles.slice();
+  }
+
+  function addSelectedCaptionFiles(files) {
+    const byName = new Map(
+      selectedPcCaptionFiles.map(file => [file.name.toLowerCase(), file])
+    );
+    Array.from(files || []).forEach(file => {
+      if (getExtension(file.name) === 'vtt') {
+        byName.set(file.name.toLowerCase(), file);
+      }
+    });
+    selectedPcCaptionFiles = Array.from(byName.values());
+  }
+
+  function clearSelectedCaptionFiles() {
+    selectedPcCaptionFiles = [];
+    const input = $('asset-upload-captions');
+    if (input) input.value = '';
+  }
+
+  function validateSelectedCaptionFiles(videoFile) {
+    const captions = getSelectedCaptionFiles();
+    const invalid = captions.filter(file => !isMatchingCaptionFile(file.name, videoFile.name));
+    if (invalid.length) {
+      throw new Error(
+        `Caption file name must match the video basename.\n\nVideo: ${videoFile.name}\nInvalid: ${invalid.map(file => file.name).join(', ')}`
+      );
+    }
+    return captions;
+  }
+
+  function buildLocalCaptionTracks(videoFile) {
+    clearUploadCaptionObjectUrls();
+    const captions = validateSelectedCaptionFiles(videoFile);
+    return captions.map((file, index) => {
       const url = URL.createObjectURL(file);
       uploadCaptionObjectUrls.push(url);
-      const language = getCaptionLanguage(file.name, videoFile?.name);
-      return { kind: 'subtitles', label: language.toUpperCase(), srclang: language, default: index === 0, name: file.name, url };
+      const language = getCaptionLanguage(file.name, videoFile.name);
+      return {
+        kind: 'subtitles',
+        label: language.toUpperCase(),
+        srclang: language,
+        default: index === 0,
+        name: file.name,
+        url
+      };
     });
   }
 
-  async function cleanupStagedOfficeAsset() {
-    const staged = stagedOfficeAsset;
-    stagedOfficeAsset = null;
-    stagedOfficeFile = null;
-    if (staged) await deleteUploadedBlobQuietly(staged);
+  function makeSafeUploadFileName(name) {
+    return String(name || '').replace(/[^a-zA-Z0-9._-]/g, '-');
   }
 
-  async function uploadPcFile(file, folder) {
+  function getPcFileSignature(file, folder) {
+    return [
+      file?.name || '',
+      Number(file?.size || 0),
+      Number(file?.lastModified || 0),
+      normalizeAssetFolderName(folder)
+    ].join('|');
+  }
+
+  async function uploadPcBlob(file, folder) {
     if (!window.vercelBlobUpload) throw new Error('Blob upload module is not loaded.');
-    const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+    const safeFileName = makeSafeUploadFileName(file.name);
     const pathname = `${folder}/${safeFileName}`;
     const uploaded = await window.vercelBlobUpload(pathname, file, {
       access: 'public',
@@ -304,9 +370,35 @@
       url: uploaded.url || '',
       downloadUrl: uploaded.downloadUrl || uploaded.url || '',
       size: file.size,
-      uploadedAt: new Date().toISOString(),
-      storageProvider: 'vercel'
+      uploadedAt: new Date().toISOString()
     };
+  }
+
+  async function clearStagedPcOfficeAsset() {
+    const staged = stagedPcOfficeAsset;
+    stagedPcOfficeAsset = null;
+    stagedPcOfficeSignature = '';
+    if (staged) await deleteUploadedBlobQuietly(staged);
+  }
+
+  async function stagePcOfficeFile(file, folder) {
+    const signature = getPcFileSignature(file, folder);
+    if (stagedPcOfficeAsset && stagedPcOfficeSignature === signature) {
+      return stagedPcOfficeAsset;
+    }
+    await clearStagedPcOfficeAsset();
+    stagedPcOfficeAsset = await uploadPcBlob(file, folder);
+    stagedPcOfficeSignature = signature;
+    return stagedPcOfficeAsset;
+  }
+
+  function syncPcVideoFields(kind) {
+    const video = kind === 'video';
+    const captionsField = $('asset-upload-captions-field');
+    if (captionsField) captionsField.hidden = !video;
+    $('asset-upload-thumbnail-field').hidden = !video;
+    if (video) $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
+    if (!video) clearSelectedCaptionFiles();
   }
 
   async function renderPreview(target, asset, options = {}) {
@@ -1161,9 +1253,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
   async function resetUploadForm() {
     const selectedFolder = normalizeAssetFolderName($('asset-upload-folder')?.value);
     const selectedConnection = $('onedrive-storage-connection')?.value || oneDriveConnectionId;
-    pcSelectionVersion += 1;
-    await cleanupStagedOfficeAsset();
     clearUploadObjectUrl();
+    clearUploadCaptionObjectUrls();
+    clearSelectedCaptionFiles();
+    await clearStagedPcOfficeAsset();
     $('asset-upload-form').reset();
     renderUploadFolderSelect(selectedFolder);
     if (selectedConnection && $('onedrive-storage-connection')) {
@@ -1174,8 +1267,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     closeNewFolderEditor();
     $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
     $('asset-upload-thumbnail-field').hidden = true;
-    if ($('asset-upload-caption-field')) $('asset-upload-caption-field').hidden = true;
-    if ($('asset-upload-captions')) $('asset-upload-captions').value = '';
+    if ($('asset-upload-captions-field')) $('asset-upload-captions-field').hidden = true;
     $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a file to preview.</div>';
     $('upload-preview-note').textContent = '';
     $('asset-upload-key').value = '';
@@ -1184,33 +1276,10 @@ UPDATE will make all of these usages point to the new file. Continue?`
     syncAssetSourceUI();
   }
 
-  async function renderPcVideoPreview(file) {
-    if (!file) return;
-    const captionFiles = $('asset-upload-captions')?.files || [];
-    const tracks = buildLocalCaptionTracks(file, captionFiles);
-    if (!uploadObjectUrl) uploadObjectUrl = URL.createObjectURL(file);
-    await renderPreview('upload-preview', {
-      type: getExtension(file.name) || file.type,
-      pathname: file.name,
-      url: uploadObjectUrl,
-      name: file.name,
-      tracks,
-      thumbnailTime: Number($('asset-upload-thumbnail-time')?.value || DEFAULT_VIDEO_THUMBNAIL_TIME)
-    }, {
-      kind: 'video',
-      sourceUrl: uploadObjectUrl,
-      tracks,
-      thumbnailTime: Number($('asset-upload-thumbnail-time')?.value || DEFAULT_VIDEO_THUMBNAIL_TIME),
-      resolveAsset: false
-    });
-    const cc = tracks.length ? ` · CC ${tracks.length}` : '';
-    $('upload-preview-note').textContent = `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}${cc}`;
-  }
-
   async function handleUploadFileChange() {
-    const version = ++pcSelectionVersion;
-    await cleanupStagedOfficeAsset();
     clearUploadObjectUrl();
+    clearUploadCaptionObjectUrls();
+    await clearStagedPcOfficeAsset();
 
     const file = $('asset-upload-file').files[0];
     if (!file) {
@@ -1219,59 +1288,87 @@ UPDATE will make all of these usages point to the new file. Continue?`
     }
 
     $('asset-upload-key').value = createAssetKey(file.name);
-    if ($('asset-upload-captions')) $('asset-upload-captions').value = '';
 
     const ext = getExtension(file.name);
     const type = ext || file.type;
     const kind = getPreviewKind({ type, pathname: file.name });
     const video = kind === 'video';
-    const office = isOfficeKind(kind);
+    syncPcVideoFields(kind);
 
-    if ($('asset-upload-caption-field')) $('asset-upload-caption-field').hidden = !video;
-    syncUploadThumbnailField();
-    if (video) $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
-
-    if (office) {
-      const folder = normalizeAssetFolderName($('asset-upload-folder').value);
-      if (!isValidAssetFolderName(folder)) {
-        $('upload-preview').innerHTML = '<div class="asset-preview-empty">Select a valid folder to prepare the Office preview.</div>';
-        return;
-      }
-      $('upload-preview').innerHTML = '<div class="asset-preview-empty">Preparing Microsoft Viewer preview...</div>';
-      $('upload-preview-note').textContent = `${file.name} · staging to Vercel...`;
-      try {
-        const staged = await uploadPcFile(file, folder);
-        if (version !== pcSelectionVersion || $('asset-upload-file').files[0] !== file) {
-          await deleteUploadedBlobQuietly(staged);
-          return;
+    try {
+      if (isOfficeKind(kind)) {
+        const folder = normalizeAssetFolderName($('asset-upload-folder').value);
+        if (!isValidAssetFolderName(folder)) {
+          throw new Error('Please select or create a valid folder before previewing this Office file.');
         }
-        stagedOfficeAsset = staged;
-        stagedOfficeFile = file;
-        await renderPreview('upload-preview', { ...staged, type: ext, name: file.name }, {
+
+        $('upload-preview').innerHTML =
+          '<div class="asset-preview-empty">Uploading a temporary public copy for Microsoft preview...</div>';
+        $('upload-preview-note').textContent =
+          `${file.name} · preparing Microsoft preview...`;
+
+        const staged = await stagePcOfficeFile(file, folder);
+        await renderPreview('upload-preview', {
+          type,
+          pathname: staged.pathname,
+          url: staged.url,
+          downloadUrl: staged.downloadUrl,
+          name: file.name,
+          size: file.size
+        }, {
           kind,
           sourceUrl: staged.url,
           resolveAsset: false
         });
-        $('upload-preview-note').textContent = `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)} · staged for Microsoft Viewer`;
-      } catch (error) {
-        console.error('Office staging preview failed:', error);
-        if (version !== pcSelectionVersion) return;
-        $('upload-preview').innerHTML = '<div class="asset-preview-empty">Microsoft Viewer preview could not be prepared.</div>';
-        $('upload-preview-note').textContent = error.message || 'Office staging failed.';
+
+        $('upload-preview-note').textContent =
+          `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)} · staged for Microsoft preview`;
+        return;
       }
-      return;
-    }
 
-    uploadObjectUrl = URL.createObjectURL(file);
-    if (video) {
-      await renderPcVideoPreview(file);
-      return;
-    }
+      uploadObjectUrl = URL.createObjectURL(file);
+      const tracks = video ? buildLocalCaptionTracks(file) : [];
 
-    await renderPreview('upload-preview', { type, pathname: file.name, url: uploadObjectUrl, name: file.name }, {
-      kind, sourceUrl: uploadObjectUrl, resolveAsset: false
-    });
-    $('upload-preview-note').textContent = `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}`;
+      await renderPreview('upload-preview', {
+        type,
+        pathname: file.name,
+        url: uploadObjectUrl,
+        name: file.name,
+        tracks,
+        thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
+      }, {
+        kind,
+        sourceUrl: uploadObjectUrl,
+        tracks,
+        thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME,
+        resolveAsset: false
+      });
+
+      const captionNote = video && tracks.length ? ` · CC ${tracks.length}` : '';
+      $('upload-preview-note').textContent =
+        `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}${captionNote}`;
+    } catch (error) {
+      console.error(error);
+      $('upload-preview').innerHTML =
+        '<div class="asset-preview-empty">Preview could not be prepared.</div>';
+      $('upload-preview-note').textContent = error.message || 'Preview failed.';
+    }
+  }
+
+  async function handleUploadCaptionChange(event) {
+    const file = $('asset-upload-file')?.files?.[0];
+    if (!file || getPreviewKind({ type: getExtension(file.name), pathname: file.name }) !== 'video') return;
+
+    addSelectedCaptionFiles(event?.target?.files || []);
+    if (event?.target) event.target.value = '';
+    await handleUploadFileChange();
+  }
+
+  async function handleUploadFolderChange() {
+    const file = $('asset-upload-file')?.files?.[0];
+    if (!file) return;
+    const kind = getPreviewKind({ type: getExtension(file.name), pathname: file.name });
+    if (isOfficeKind(kind)) await handleUploadFileChange();
   }
 
   function getAssetSourceChoice() {
@@ -1283,28 +1380,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
     oneDriveDriveId = '';
     oneDriveStack = [];
     renderSelectedOneDriveItem();
-    syncUploadThumbnailField();
-  }
-
-  function syncUploadThumbnailField() {
-    const field = $('asset-upload-thumbnail-field');
-    const input = $('asset-upload-thumbnail-time');
-    if (!field || !input) return;
-
-    const source = getAssetSourceChoice();
-    const file = $('asset-upload-file')?.files?.[0] || null;
-    const asset = source === 'onedrive' ? selectedOneDriveItem : file;
-    const name = source === 'onedrive' ? asset?.name : file?.name;
-    const isVideo = Boolean(name) && getPreviewKind({
-      type: getExtension(name),
-      pathname: name,
-      name
-    }) === 'video';
-
-    field.hidden = !isVideo;
-    if (isVideo && String(input.value || '').trim() === '') {
-      input.value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
-    }
   }
 
   function syncAssetSourceUI() {
@@ -1313,10 +1388,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
     const od = $('asset-onedrive-fields');
     if (pc) pc.hidden = source !== 'pc';
     if (od) od.hidden = source !== 'onedrive';
-    const captionField = $('asset-upload-caption-field');
-    const pcFile = $('asset-upload-file')?.files?.[0] || null;
-    const pcVideo = source === 'pc' && pcFile && getPreviewKind({ type: getExtension(pcFile.name), pathname: pcFile.name }) === 'video';
-    if (captionField) captionField.hidden = !pcVideo;
     const file = $('asset-upload-file');
     if (file) file.required = source === 'pc';
     const button = $('asset-upload-button');
@@ -1329,7 +1400,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
       }
       renderSelectedOneDriveItem();
     }
-    syncUploadThumbnailField();
   }
 
   function renderSelectedOneDriveItem() {
@@ -1354,14 +1424,8 @@ UPDATE will make all of these usages point to the new file. Continue?`
     };
 
     try {
-      const thumbnailTime = Number($('asset-upload-thumbnail-time')?.value);
-      if (getPreviewKind(previewAsset) === 'video' && Number.isFinite(thumbnailTime) && thumbnailTime >= 0) {
-        previewAsset.thumbnailTime = thumbnailTime;
-      }
-
       await renderPreview('upload-preview', previewAsset, {
         sourceUrl: source,
-        thumbnailTime: previewAsset.thumbnailTime,
         // This is a pre-registration OneDrive preview. Keep the picker item
         // identity (connection + driveId + itemId + tracks + webUrl) intact;
         // Registry authority begins only after registration completes.
@@ -1463,14 +1527,11 @@ UPDATE will make all of these usages point to the new file. Continue?`
           storageConnection: oneDriveConnectionId,
           parentItemId: item.parentId || oneDriveStack.at(-1)?.id || '',
           relativePath: item.relativePath || `/${[...oneDriveStack.map(x => x.name), item.name].join('/')}`,
-          tracks: Array.isArray(item.tracks) ? item.tracks : [],
-          thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
+          tracks: Array.isArray(item.tracks) ? item.tracks : []
         };
 
         $('asset-upload-key').value = createAssetKey(item.name);
-        $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
         renderSelectedOneDriveItem();
-        syncUploadThumbnailField();
         $('upload-preview').innerHTML = '<div class="asset-preview-empty">Loading preview...</div>';
         const captionNote = selectedOneDriveItem.tracks.length ? ` · CC ${selectedOneDriveItem.tracks.length}` : '';
         $('upload-preview-note').textContent =
@@ -1521,11 +1582,6 @@ UPDATE will make all of these usages point to the new file. Continue?`
     const key = createAssetKey($('asset-upload-key').value || item.name);
     if (!key) return alert('A valid Asset Key is required.');
     const ext = getExtension(item.name);
-    const isVideo = ['mp4', 'mov', 'm4v', 'webm'].includes(ext);
-    const thumbnailTime = isVideo ? Number($('asset-upload-thumbnail-time').value) : null;
-    if (isVideo && (!Number.isFinite(thumbnailTime) || thumbnailTime < 0)) {
-      return alert('Thumbnail Time must be 0 or greater.');
-    }
     const registryPath = item.relativePath.replace(/^\/+/, '');
 
     const registered = await registerAsset({
@@ -1554,8 +1610,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
       itemId: item.id,
       webUrl: item.webUrl || '',
       parentItemId: item.parentItemId || '',
-      tracks: Array.isArray(item.tracks) ? item.tracks : [],
-      thumbnailTime: isVideo ? thumbnailTime : null
+      tracks: Array.isArray(item.tracks) ? item.tracks : []
     });
 
     if (!registered) return;
@@ -1595,7 +1650,9 @@ UPDATE will make all of these usages point to the new file. Continue?`
     if (!key) return alert('A valid Asset Key is required.');
 
     const ext = getExtension(file.name);
-    const isVideo = ['mp4', 'mov', 'm4v', 'webm'].includes(ext);
+    const kind = getPreviewKind({ type: ext, pathname: file.name });
+    const isVideo = kind === 'video';
+    const isOffice = isOfficeKind(kind);
     const thumbnailTimeRaw = $('asset-upload-thumbnail-time').value;
     const thumbnailTime = isVideo ? Number(thumbnailTimeRaw) : null;
 
@@ -1603,25 +1660,43 @@ UPDATE will make all of these usages point to the new file. Continue?`
       return alert('Thumbnail Time must be 0 or greater.');
     }
 
+    let captionFiles = [];
+    try {
+      captionFiles = isVideo ? validateSelectedCaptionFiles(file) : [];
+    } catch (error) {
+      return alert(error.message);
+    }
+
     let uploadedAsset = null;
+    const uploadedCaptions = [];
     let registered = null;
-    const uploadedCaptionAssets = [];
+    let usedStagedOfficeAsset = false;
 
     try {
       button.disabled = true;
       button.textContent = 'Uploading...';
 
-      const kind = getPreviewKind({ type: ext, pathname: file.name });
-      const useStagedOffice = isOfficeKind(kind) && stagedOfficeAsset && stagedOfficeFile === file;
-      uploadedAsset = useStagedOffice ? stagedOfficeAsset : await uploadPcFile(file, folder);
+      if (isOffice) {
+        const signature = getPcFileSignature(file, folder);
+        if (stagedPcOfficeAsset && stagedPcOfficeSignature === signature) {
+          uploadedAsset = stagedPcOfficeAsset;
+          usedStagedOfficeAsset = true;
+        } else {
+          uploadedAsset = await stagePcOfficeFile(file, folder);
+          usedStagedOfficeAsset = true;
+        }
+      } else {
+        uploadedAsset = await uploadPcBlob(file, folder);
+      }
 
-      const tracks = [];
-      if (isVideo) {
-        const captionFiles = Array.from($('asset-upload-captions')?.files || []);
+      let tracks = [];
+      if (isVideo && captionFiles.length) {
+        button.textContent = `Uploading captions (0/${captionFiles.length})...`;
+
         for (let index = 0; index < captionFiles.length; index += 1) {
           const captionFile = captionFiles[index];
-          const captionAsset = await uploadPcFile(captionFile, folder);
-          uploadedCaptionAssets.push(captionAsset);
+          const uploadedCaption = await uploadPcBlob(captionFile, folder);
+          uploadedCaptions.push(uploadedCaption);
           const language = getCaptionLanguage(captionFile.name, file.name);
           tracks.push({
             kind: 'subtitles',
@@ -1630,14 +1705,16 @@ UPDATE will make all of these usages point to the new file. Continue?`
             default: index === 0,
             storageProvider: 'vercel',
             name: captionFile.name,
-            pathname: captionAsset.pathname,
-            url: captionAsset.url,
-            downloadUrl: captionAsset.downloadUrl || captionAsset.url
+            pathname: uploadedCaption.pathname,
+            url: uploadedCaption.url,
+            downloadUrl: uploadedCaption.downloadUrl || uploadedCaption.url
           });
+          button.textContent = `Uploading captions (${index + 1}/${captionFiles.length})...`;
         }
       }
 
       button.textContent = 'Registering...';
+
       registered = await registerAsset(uploadedAsset, {
         key,
         name: file.name,
@@ -1648,37 +1725,39 @@ UPDATE will make all of these usages point to the new file. Continue?`
       });
 
       if (!registered) {
+        for (const caption of uploadedCaptions) await deleteUploadedBlobQuietly(caption);
         await deleteUploadedBlobQuietly(uploadedAsset);
-        for (const captionAsset of uploadedCaptionAssets) await deleteUploadedBlobQuietly(captionAsset);
-        if (uploadedAsset === stagedOfficeAsset) {
-          stagedOfficeAsset = null;
-          stagedOfficeFile = null;
+        if (usedStagedOfficeAsset) {
+          stagedPcOfficeAsset = null;
+          stagedPcOfficeSignature = '';
         }
         uploadedAsset = null;
         return;
       }
 
-      if (uploadedAsset === stagedOfficeAsset) {
-        stagedOfficeAsset = null;
-        stagedOfficeFile = null;
+      if (usedStagedOfficeAsset) {
+        stagedPcOfficeAsset = null;
+        stagedPcOfficeSignature = '';
       }
+
+      const captionMessage = isVideo && uploadedCaptions.length
+        ? `
+Captions: ${uploadedCaptions.length}`
+        : '';
 
       alert(`Upload and registration completed.
 
-Key: ${registered.key || key}${tracks.length ? `
-CC: ${tracks.length}` : ''}`);
+Key: ${registered.key || key}${captionMessage}`);
       await resetUploadForm();
       commonNavigation?.go('asset-library.html');
     } catch (error) {
       console.error(error);
-      if (uploadedAsset && !registered) {
-        await deleteUploadedBlobQuietly(uploadedAsset);
-        if (uploadedAsset === stagedOfficeAsset) {
-          stagedOfficeAsset = null;
-          stagedOfficeFile = null;
-        }
+      for (const caption of uploadedCaptions) await deleteUploadedBlobQuietly(caption);
+      if (uploadedAsset && !registered) await deleteUploadedBlobQuietly(uploadedAsset);
+      if (usedStagedOfficeAsset) {
+        stagedPcOfficeAsset = null;
+        stagedPcOfficeSignature = '';
       }
-      for (const captionAsset of uploadedCaptionAssets) await deleteUploadedBlobQuietly(captionAsset);
       alert(error.message || 'Upload failed.');
     } finally {
       button.disabled = false;
@@ -2176,20 +2255,18 @@ CC: ${tracks.length}` : ''}`);
     });
 
     $('asset-upload-file')?.addEventListener('change', handleUploadFileChange);
-    $('asset-upload-captions')?.addEventListener('change', async () => {
-      const file = $('asset-upload-file')?.files?.[0];
-      if (file && getPreviewKind({ type: getExtension(file.name), pathname: file.name }) === 'video') await renderPcVideoPreview(file);
+    $('asset-upload-captions')?.addEventListener('change', handleUploadCaptionChange);
+    $('asset-upload-folder')?.addEventListener('change', handleUploadFolderChange);
+    $('asset-upload-close')?.addEventListener('click', async event => {
+      event.preventDefault();
+      clearUploadObjectUrl();
+      clearUploadCaptionObjectUrls();
+      await clearStagedPcOfficeAsset();
+      commonNavigation?.go('asset-library.html') || (location.href = 'asset-library.html');
     });
     document.querySelectorAll('input[name="asset-source"]').forEach(input => input.addEventListener('change', async () => {
-      const source = getAssetSourceChoice();
-      if (source === 'onedrive' && stagedOfficeAsset) await cleanupStagedOfficeAsset();
       syncAssetSourceUI();
-      if (source === 'pc') {
-        const file = $('asset-upload-file')?.files?.[0];
-        const kind = file ? getPreviewKind({ type: getExtension(file.name), pathname: file.name }) : '';
-        if (file && isOfficeKind(kind) && !stagedOfficeAsset) await handleUploadFileChange();
-      }
-      if (source === 'onedrive' && !oneDriveConnections.length) {
+      if (getAssetSourceChoice() === 'onedrive' && !oneDriveConnections.length) {
         try { await loadOneDriveConnections(); }
         catch (error) { console.error(error); alert(error.message || 'OneDrive connections could not be loaded.'); }
       }
@@ -2202,13 +2279,6 @@ CC: ${tracks.length}` : ''}`);
       $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a OneDrive file to preview.</div>';
       $('upload-preview-note').textContent = '';
     });
-    $('asset-upload-thumbnail-time')?.addEventListener('change', () => {
-      if (getAssetSourceChoice() !== 'onedrive' || !selectedOneDriveItem) return;
-      const value = Number($('asset-upload-thumbnail-time').value);
-      if (!Number.isFinite(value) || value < 0) return;
-      selectedOneDriveItem.thumbnailTime = value;
-      renderSelectedOneDrivePreview(selectedOneDriveItem, oneDriveSelectionVersion);
-    });
     $('onedrive-browse-button')?.addEventListener('click', openOneDriveBrowser);
     $('onedrive-browser-close')?.addEventListener('click', () => { $('onedrive-browser-modal').hidden = true; });
     $('onedrive-browser-up')?.addEventListener('click', async () => {
@@ -2217,14 +2287,8 @@ CC: ${tracks.length}` : ''}`);
       await loadOneDriveFolder(oneDriveStack.at(-1)?.id || '');
     });
     $('asset-upload-form')?.addEventListener('submit', uploadAndRegister);
-    $('[data-reset-upload]')?.addEventListener('click', resetUploadForm);
+    $('[data-reset-upload]')?.addEventListener('click', () => { resetUploadForm(); });
     $('asset-new-folder-button')?.addEventListener('click', openNewFolderEditor);
-    $('asset-upload-folder')?.addEventListener('change', async () => {
-      const file = $('asset-upload-file')?.files?.[0];
-      if (!file) return;
-      const kind = getPreviewKind({ type: getExtension(file.name), pathname: file.name });
-      if (isOfficeKind(kind)) await handleUploadFileChange();
-    });
     $('asset-new-folder-create')?.addEventListener('click', createUploadFolderOption);
     $('asset-new-folder-cancel')?.addEventListener('click', closeNewFolderEditor);
     $('asset-new-folder-name')?.addEventListener('keydown', event => {

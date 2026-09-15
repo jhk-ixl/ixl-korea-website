@@ -361,9 +361,14 @@ export default async function handler(
 
                 'application/vnd.ms-powerpoint',
                 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 
                 'video/mp4',
                 'video/webm',
+                'text/vtt',
+                'text/plain',
+                'text/markdown',
 
                 'audio/mpeg',
                 'audio/mp4',

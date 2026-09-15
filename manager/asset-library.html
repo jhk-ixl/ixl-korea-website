@@ -76,7 +76,7 @@
             <h3>Register Asset</h3>
             <p>Choose the source. PC files are uploaded to Vercel Blob before registration; existing OneDrive files are registered without file transfer.</p>
           </div>
-          <a href="asset-library.html" class="library-button">Close</a>
+          <a href="asset-library.html" id="asset-upload-close" class="library-button">Close</a>
         </div>
 
         <div class="asset-upload-grid">
@@ -102,6 +102,11 @@
             <div class="asset-editable-field manager-editable-field">
               <label for="asset-upload-file">File *</label>
               <input type="file" id="asset-upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt" required>
+            </div>
+            <div class="asset-editable-field manager-editable-field" id="asset-upload-captions-field" hidden>
+              <label for="asset-upload-captions">Caption Files (VTT)</label>
+              <input type="file" id="asset-upload-captions" accept=".vtt,text/vtt" multiple>
+              <small>Add one or more VTT files. You can select several at once or add them one at a time; selections are accumulated. Caption filenames must use the same video basename (for example video.en.vtt, video.ko.vtt).</small>
             </div>
             <div class="asset-form-row">
               <div class="asset-editable-field manager-editable-field">
@@ -129,10 +134,10 @@
               <label for="asset-upload-description">Description</label>
               <textarea id="asset-upload-description" rows="3" placeholder="Short description for administrators and reuse."></textarea>
             </div>
-            <div class="asset-editable-field manager-editable-field" id="asset-upload-caption-field" hidden>
-              <label for="asset-upload-captions">Caption Files (VTT)</label>
-              <input type="file" id="asset-upload-captions" accept=".vtt,text/vtt" multiple>
-              <small>Select zero, one, or multiple VTT files. They are uploaded with the video and stored as tracks on the video Asset.</small>
+            <div class="asset-editable-field manager-editable-field" id="asset-upload-thumbnail-field" hidden>
+              <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
+              <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
+              <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
             </div>
 
@@ -149,12 +154,6 @@
                 <button type="button" id="onedrive-browse-button" class="library-button">Browse OneDrive</button>
                 <div id="onedrive-selected-file" class="onedrive-selected-file">No OneDrive file selected.</div>
               </div>
-            </div>
-
-            <div class="asset-editable-field manager-editable-field" id="asset-upload-thumbnail-field" hidden>
-              <label for="asset-upload-thumbnail-time">Thumbnail Time (seconds)</label>
-              <input id="asset-upload-thumbnail-time" type="number" min="0" step="0.1" value="1">
-              <small>New video assets default to 1 second. Explicit 0 is valid.</small>
             </div>
 
             <div class="asset-form-actions manager-detail-actions">
