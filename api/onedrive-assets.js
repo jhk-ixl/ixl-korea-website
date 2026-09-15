@@ -133,6 +133,58 @@ function isMatchingCaption(fileName, videoName) {
   return captionBase === videoBase || captionBase.startsWith(`${videoBase}.`) || captionBase.startsWith(`${videoBase}-`) || captionBase.startsWith(`${videoBase}_`);
 }
 
+
+function isVideoItem(item) {
+  if (!item?.file) return false;
+  const mimeType = String(item.file?.mimeType || '').toLowerCase();
+  const name = String(item.name || '');
+  return mimeType.startsWith('video/') || /\.(mp4|mov|m4v|webm)$/i.test(name);
+}
+
+function buildCaptionTracks(folderItems, videoItem, driveId, storageConnection) {
+  if (!videoItem?.name) return [];
+  const videoBaseName = getBaseName(videoItem.name);
+
+  return (folderItems || [])
+    .filter(item => item?.file && isMatchingCaption(item.name, videoItem.name))
+    .map((item, index) => {
+      const language = getCaptionLanguage(item.name, videoBaseName);
+      return {
+        kind: 'subtitles',
+        label: language.toUpperCase(),
+        srclang: language,
+        default: index === 0,
+        storageProvider: 'onedrive',
+        storageConnection,
+        driveId,
+        itemId: item.id || '',
+        name: item.name || '',
+        relativePath: buildRelativePath(item, driveId)
+      };
+    });
+}
+
+function getContentTypeFromName(fileName) {
+  const name = String(fileName || '').toLowerCase();
+  if (name.endsWith('.pdf')) return 'application/pdf';
+  if (name.endsWith('.vtt')) return 'text/vtt; charset=utf-8';
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+  if (name.endsWith('.png')) return 'image/png';
+  if (name.endsWith('.gif')) return 'image/gif';
+  if (name.endsWith('.webp')) return 'image/webp';
+  if (name.endsWith('.svg')) return 'image/svg+xml';
+  if (name.endsWith('.mp4') || name.endsWith('.m4v')) return 'video/mp4';
+  if (name.endsWith('.mov')) return 'video/quicktime';
+  if (name.endsWith('.webm')) return 'video/webm';
+  if (name.endsWith('.txt')) return 'text/plain; charset=utf-8';
+  if (name.endsWith('.md')) return 'text/markdown; charset=utf-8';
+  return '';
+}
+
+function isInlineBrowserType(fileName) {
+  return /\.(pdf|vtt|jpe?g|png|gif|webp|svg|mp4|m4v|mov|webm|txt|md)$/i.test(String(fileName || ''));
+}
+
 async function getContext(connectionId, req, res) {
   const connection = getOneDriveConnection(connectionId);
   const token = await getOneDriveAccessToken(connection, req, res);
@@ -214,13 +266,22 @@ export default async function handler(req, res) {
         : `/drives/${encodeURIComponent(driveId)}/root/children?$select=id,name,size,webUrl,file,folder,parentReference,lastModifiedDateTime&$top=200`;
       const response = await graph(endpoint, token);
       const data = await response.json();
+      const folderItems = Array.isArray(data.value) ? data.value : [];
+      const items = folderItems.map(item => {
+        const normalized = normalizeItem(item, driveId, connection.id);
+        if (isVideoItem(item)) {
+          normalized.tracks = buildCaptionTracks(folderItems, item, driveId, connection.id);
+        }
+        return normalized;
+      });
+
       res.setHeader('Cache-Control', 'private, no-store');
       return res.status(200).json({
         storageConnection: connection.id,
         connectionLabel: connection.label,
         driveId,
         parentItemId: requestedItemId,
-        items: (data.value || []).map(item => normalizeItem(item, driveId, connection.id))
+        items
       });
     }
 
@@ -240,19 +301,12 @@ export default async function handler(req, res) {
 
       const response = await graph(`/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(parentItemId)}/children?$select=id,name,size,webUrl,file,parentReference,lastModifiedDateTime&$top=200`, token);
       const data = await response.json();
-      const videoBaseName = getBaseName(videoName);
-      const tracks = (data.value || []).filter(item => item.file && isMatchingCaption(item.name, videoName)).map((item, index) => ({
-        kind: 'subtitles',
-        label: getCaptionLanguage(item.name, videoBaseName).toUpperCase(),
-        srclang: getCaptionLanguage(item.name, videoBaseName),
-        default: index === 0,
-        storageProvider: 'onedrive',
-        storageConnection: connection.id,
+      const tracks = buildCaptionTracks(
+        Array.isArray(data.value) ? data.value : [],
+        { name: videoName },
         driveId,
-        itemId: item.id || '',
-        name: item.name || '',
-        relativePath: buildRelativePath(item, driveId)
-      }));
+        connection.id
+      );
       res.setHeader('Cache-Control', 'private, no-store');
       return res.status(200).json({ tracks });
     }
@@ -282,20 +336,30 @@ export default async function handler(req, res) {
       const itemId = String(req.query?.itemId || '').trim();
       if (!itemId) return res.status(400).json({ error: 'itemId is required.' });
 
-      // Canonical OneDrive content path: let Microsoft Graph resolve /content.
-      // Do not depend on @microsoft.graph.downloadUrl; that annotation is
-      // temporary and may be absent. Proxy the bytes through this same-origin
-      // endpoint so image/PDF/video/VTT all use one stable Manager URL and
-      // video Range requests keep working.
-      const upstreamHeaders = {};
+      // Stream the file through Microsoft Graph's canonical /content endpoint.
+      // Do not depend on @microsoft.graph.downloadUrl being present in driveItem
+      // metadata: that instance annotation is short-lived and can be omitted by
+      // some OneDrive/Graph contexts. fetch() follows Graph's pre-authenticated
+      // redirect server-side, keeping the browser on this stable same-origin URL.
+      // Forward Range so native video can load metadata and seek progressively.
+      const upstreamHeaders = { Authorization: `Bearer ${token}` };
       const range = String(req.headers?.range || '').trim();
       if (range) upstreamHeaders.Range = range;
 
-      const upstream = await graph(
-        `/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/content`,
-        token,
-        { method: 'GET', headers: upstreamHeaders, redirect: 'follow' }
+      const upstream = await fetch(
+        `${GRAPH}/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/content`,
+        {
+          method: 'GET',
+          headers: upstreamHeaders,
+          redirect: 'follow'
+        }
       );
+
+      if (!upstream.ok && upstream.status !== 206) {
+        const error = new Error(`OneDrive content request failed (${upstream.status}).`);
+        error.statusCode = upstream.status;
+        throw error;
+      }
 
       res.status(upstream.status);
       res.setHeader('Cache-Control', 'private, no-store');
@@ -306,13 +370,13 @@ export default async function handler(req, res) {
       copyUpstreamHeader(upstream, res, 'etag');
       copyUpstreamHeader(upstream, res, 'last-modified');
 
-      let contentType = upstream.headers.get('content-type') || '';
       const requestedName = String(req.query?.name || '').trim();
-      if (/\.vtt$/i.test(requestedName)) contentType = 'text/vtt; charset=utf-8';
+      const namedContentType = getContentTypeFromName(requestedName);
+      let contentType = namedContentType || upstream.headers.get('content-type') || '';
       if (contentType) res.setHeader('Content-Type', contentType);
 
-      if (requestedName) {
-        const safeName = requestedName.replace(/["\r\n]/g, '_');
+      if (requestedName && isInlineBrowserType(requestedName)) {
+        const safeName = requestedName.replace(/[\"\r\n]/g, '_');
         res.setHeader('Content-Disposition', `inline; filename="${safeName}"`);
       }
 
