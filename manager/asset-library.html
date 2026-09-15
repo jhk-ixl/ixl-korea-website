@@ -103,6 +103,11 @@
               <label for="asset-upload-file">File *</label>
               <input type="file" id="asset-upload-file" accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.webm,.ppt,.pptx,.doc,.docx,.md,.txt" required>
             </div>
+            <div class="asset-editable-field manager-editable-field" id="asset-upload-caption-field" hidden>
+              <label for="asset-upload-caption-files">Caption Files (VTT)</label>
+              <input type="file" id="asset-upload-caption-files" accept=".vtt,text/vtt" multiple>
+              <small>Optional. Select one or more VTT files for this video. They are uploaded to the same Vercel folder and saved through the existing shared tracks contract.</small>
+            </div>
             <div class="asset-form-row">
               <div class="asset-editable-field manager-editable-field">
                 <label for="asset-upload-folder">Folder *</label>

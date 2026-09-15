@@ -1113,6 +1113,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     closeNewFolderEditor();
     $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
     $('asset-upload-thumbnail-field').hidden = true;
+    $('asset-upload-caption-field').hidden = true;
     $('upload-preview').innerHTML = '<div class="asset-preview-empty">Choose a file to preview.</div>';
     $('upload-preview-note').textContent = '';
     $('asset-upload-key').value = '';
@@ -1138,15 +1139,20 @@ UPDATE will make all of these usages point to the new file. Continue?`
     const video = kind === 'video';
 
     $('asset-upload-thumbnail-field').hidden = !video;
+    $('asset-upload-caption-field').hidden = !video;
     if (video) $('asset-upload-thumbnail-time').value = String(DEFAULT_VIDEO_THUMBNAIL_TIME);
+    if (!video && $('asset-upload-caption-files')) $('asset-upload-caption-files').value = '';
 
     uploadObjectUrl = URL.createObjectURL(file);
+    const captionFiles = video ? getSelectedPcCaptionFiles() : [];
+    const previewTracks = video ? buildPcPreviewTracks(file, captionFiles) : [];
 
     await renderPreview('upload-preview', {
       type,
       pathname: file.name,
       url: uploadObjectUrl,
       name: file.name,
+      tracks: previewTracks,
       thumbnailTime: DEFAULT_VIDEO_THUMBNAIL_TIME
     }, {
       kind,
@@ -1158,7 +1164,42 @@ UPDATE will make all of these usages point to the new file. Continue?`
     });
 
     $('upload-preview-note').textContent =
-      `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}`;
+      `${file.name} · ${formatFileSize(file.size)} · ${getFileType(file.name)}` +
+      (previewTracks.length ? ` · CC ${previewTracks.length}` : '');
+  }
+
+  function getPcCaptionLanguage(fileName, videoName) {
+    const stripExtension = value => String(value || '').trim().replace(/\.[^.]+$/, '');
+    const videoBase = stripExtension(videoName);
+    const captionStem = stripExtension(fileName);
+    const suffix = captionStem.slice(videoBase.length).replace(/^[._-]+/, '').toLowerCase();
+    const map = {
+      en: 'en', eng: 'en', english: 'en',
+      ko: 'ko', kor: 'ko', korean: 'ko', kr: 'ko',
+      ja: 'ja', jp: 'ja', japanese: 'ja',
+      zh: 'zh', cn: 'zh', chinese: 'zh'
+    };
+    return map[suffix] || suffix || 'en';
+  }
+
+  function getSelectedPcCaptionFiles() {
+    return Array.from($('asset-upload-caption-files')?.files || [])
+      .filter(file => /\.vtt$/i.test(String(file?.name || '')));
+  }
+
+  function buildPcPreviewTracks(videoFile, captionFiles) {
+    return captionFiles.map((file, index) => {
+      const language = getPcCaptionLanguage(file.name, videoFile.name);
+      return {
+        kind: 'subtitles',
+        label: language.toUpperCase(),
+        srclang: language,
+        default: index === 0,
+        storageProvider: 'local',
+        name: file.name,
+        url: URL.createObjectURL(file)
+      };
+    });
   }
 
   function getAssetSourceChoice() {
@@ -1449,6 +1490,7 @@ UPDATE will make all of these usages point to the new file. Continue?`
     }
 
     let uploadedAsset = null;
+    const uploadedCaptionAssets = [];
     let registered = null;
 
     try {
@@ -1473,6 +1515,45 @@ UPDATE will make all of these usages point to the new file. Continue?`
         uploadedAt: new Date().toISOString()
       };
 
+      const captionFiles = isVideo ? getSelectedPcCaptionFiles() : [];
+      const tracks = [];
+
+      if (captionFiles.length) {
+        button.textContent = 'Uploading captions...';
+
+        for (let index = 0; index < captionFiles.length; index += 1) {
+          const captionFile = captionFiles[index];
+          const safeCaptionName = captionFile.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+          const captionPathname = `${folder}/${safeCaptionName}`;
+          const captionUploaded = await window.vercelBlobUpload(captionPathname, captionFile, {
+            access: 'public',
+            handleUploadUrl: API_UPLOAD
+          });
+
+          const captionAsset = {
+            pathname: captionUploaded.pathname || captionPathname,
+            url: captionUploaded.url || '',
+            downloadUrl: captionUploaded.downloadUrl || captionUploaded.url || '',
+            size: captionFile.size,
+            uploadedAt: new Date().toISOString()
+          };
+          uploadedCaptionAssets.push(captionAsset);
+
+          const language = getPcCaptionLanguage(captionFile.name, file.name);
+          tracks.push({
+            kind: 'subtitles',
+            label: language.toUpperCase(),
+            srclang: language,
+            default: index === 0,
+            storageProvider: 'vercel',
+            name: captionFile.name,
+            pathname: captionAsset.pathname,
+            url: captionAsset.url,
+            downloadUrl: captionAsset.downloadUrl
+          });
+        }
+      }
+
       button.textContent = 'Registering...';
 
       registered = await registerAsset(uploadedAsset, {
@@ -1480,11 +1561,15 @@ UPDATE will make all of these usages point to the new file. Continue?`
         name: file.name,
         description: $('asset-upload-description').value.trim(),
         type: ext,
+        tracks,
         thumbnailTime: isVideo ? thumbnailTime : null
       });
 
       if (!registered) {
         await deleteUploadedBlobQuietly(uploadedAsset);
+        for (const captionAsset of uploadedCaptionAssets) {
+          await deleteUploadedBlobQuietly(captionAsset);
+        }
         uploadedAsset = null;
         return;
       }
@@ -1994,6 +2079,7 @@ Key: ${registered.key || key}`);
     });
 
     $('asset-upload-file')?.addEventListener('change', handleUploadFileChange);
+    $('asset-upload-caption-files')?.addEventListener('change', handleUploadFileChange);
     document.querySelectorAll('input[name="asset-source"]').forEach(input => input.addEventListener('change', async () => {
       syncAssetSourceUI();
       if (getAssetSourceChoice() === 'onedrive' && !oneDriveConnections.length) {
